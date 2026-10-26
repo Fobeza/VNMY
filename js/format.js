@@ -170,6 +170,8 @@ export function normalizeStory(input) {
       cast: Array.isArray(s.cast) ? s.cast.map(normalizeCast).filter(Boolean) : [],
       steps: Array.isArray(s.steps) && s.steps.length ? s.steps : [newStep()],
     };
+    // над названием сцены — номер акта: «Акт II · Одежда и улица»
+    if (s.act) scene.act = String(s.act).slice(0, 60);
     // «карточка сцены» (название по центру при входе) — можно выключить
     if (s.card === false) scene.card = false;
     if (sceneIds.has(scene.id)) scene.id = uid('sc');
