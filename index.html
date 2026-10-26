@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#08090c" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="description" content="VNMY — минималистичный движок визуальных новелл для телефона" />
+<title>VNMY — визуальные новеллы</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d12'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-size='30' fill='%23f2efe9' text-anchor='middle'%3EV%3C/text%3E%3Ccircle cx='46' cy='42' r='4' fill='%23e0b072'/%3E%3C/svg%3E" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="apple-mobile-web-app-title" content="VNMY" />
+<link rel="preload" href="stories/demo/assets/bg-platform-night.webp" as="image" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/player.css" />
+<link rel="stylesheet" href="css/editor.css" />
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+
+<div id="app">
+  <!-- ─────────────────────────── БИБЛИОТЕКА ─────────────────────────── -->
+  <section id="screen-library" class="screen" data-screen="library">
+    <div class="lib-scroll">
+      <header class="lib-head">
+        <div class="wordmark">VNMY<span class="dot">.</span></div>
+        <p class="lib-sub">движок визуальных новелл</p>
+      </header>
+
+      <div class="lib-actions">
+        <button class="ghost-btn is-primary" id="btn-new-story" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Новая история
+        </button>
+        <div class="lib-actions-row">
+          <button class="ghost-btn" id="btn-import-story" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+            Импорт
+          </button>
+          <button class="ghost-btn" id="btn-backup" type="button" title="Скачать все свои истории одним файлом">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+            Бэкап
+          </button>
+        </div>
+      </div>
+
+      <div id="story-list" class="story-list"></div>
+      <div id="boot-fallback" class="boot-fallback" hidden>
+        <h3>Нужен локальный сервер</h3>
+        <p>Браузеры не дают странице читать файлы с диска. Запустите в папке движка:</p>
+        <pre><code>python3 -m http.server 8000</code></pre>
+        <p>и откройте <code>http://localhost:8000</code>. Или загрузите папку на любой
+        статический хостинг (GitHub Pages, Netlify) — там всё работает сразу.</p>
+      </div>
+      <p id="library-note" class="lib-note"></p>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────── ИГРА ─────────────────────────── -->
+  <section id="screen-player" class="screen" data-screen="player" hidden>
+    <div id="player-host" class="player-host"></div>
+  </section>
+
+  <!-- ─────────────────────────── РЕДАКТОР ─────────────────────────── -->
+  <section id="screen-editor" class="screen" data-screen="editor" hidden>
+    <header class="ed-head">
+      <button class="icon-btn" id="ed-close" type="button" aria-label="Закрыть редактор">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="ed-title">
+        <span id="ed-story-title">История</span>
+        <small id="ed-save-state">сохранено</small>
+      </div>
+      <button class="icon-btn" id="ed-menu" type="button" aria-label="Меню редактора">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+      </button>
+    </header>
+
+    <div class="ed-body">
+      <div class="ed-preview-wrap">
+        <div class="ed-preview" id="ed-preview"></div>
+        <div class="ed-vars-bar" id="ed-vars-bar" hidden></div>
+        <div class="ed-preview-bar">
+          <button class="pill" id="ed-preview-collapse" type="button" aria-label="Свернуть превью">▾</button>
+          <button class="pill" id="ed-preview-restart" type="button">с печатью</button>
+          <button class="pill" id="ed-play-toggle" type="button">Просмотр</button>
+          <span class="ed-hint" id="ed-hint">нажмите на сцену, чтобы перейти к шагу</span>
+        </div>
+      </div>
+
+      <div class="ed-panel">
+        <nav class="ed-tabs" id="ed-tabs">
+          <button type="button" data-tab="step" class="active">Шаг</button>
+          <button type="button" data-tab="scene">Сцена</button>
+          <button type="button" data-tab="story">История</button>
+          <button type="button" data-tab="media">Медиа</button>
+        </nav>
+        <div class="ed-tab-body" id="ed-tab-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="overlay-root" class="overlay-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</div>
+
+<!-- ─────────────────────────── ШАБЛОН СЦЕНЫ ─────────────────────────── -->
+<template id="tpl-stage">
+  <div class="stage" data-mode="play">
+    <div class="bg-wrap">
+      <div class="bg bg-a"></div>
+      <div class="bg bg-b"></div>
+      <div class="bg-shade"></div>
+    </div>
+    <div class="weather-layer" data-weather="none"></div>
+    <div class="sprite-layer"></div>
+    <div class="scene-vignette"></div>
+
+    <div class="tap-layer" role="button" tabindex="0" aria-label="Продолжить"></div>
+
+    <div class="dialogue-layer">
+      <div class="choice-layer"></div>
+      <div class="dialogue">
+        <div class="speaker"></div>
+        <div class="text" aria-live="polite"></div>
+        <div class="next-hint" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <button class="icon-btn topbar-back" type="button" data-act="back" aria-label="В библиотеку">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+      </button>
+      <div class="topbar-title"></div>
+      <button class="icon-btn topbar-menu" type="button" data-act="menu" aria-label="Меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h9"/></svg>
+      </button>
+    </header>
+
+    <div class="ending-layer" hidden></div>
+  </div>
+</template>
+
+<script>
+  // если модуль не загрузился (например, страницу открыли как файл с диска) —
+  // показываем понятную подсказку вместо пустого экрана
+  window.__vnmyBoot = setTimeout(function () {
+    if (window.__VNMY_BOOTED) return;
+    var fallback = document.getElementById('boot-fallback');
+    if (fallback) fallback.hidden = false;
+  }, 1500);
+</script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

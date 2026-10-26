@@ -1,0 +1,15 @@
+{
+  "name": "vnmy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VNMY 1.0 — движок визуальных новелл для мобильного браузера",
+  "type": "module",
+  "scripts": {
+    "start": "./start.sh",
+    "test": "node tests/run.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.3"
+  }
+}
