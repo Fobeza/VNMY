@@ -34,6 +34,11 @@ export async function renderLibrary(nextHooks) {
     el('code', { text: 'stories/' }),
     el('span', { text: ' — по одной папке на историю. Здесь же их можно создать и отредактировать: правки хранятся в этом браузере.' }),
   );
+  if (location.protocol === 'file:') {
+    note.append(el('br'), el('br'), el('span', {
+      text: 'Открыто с диска: встроенные истории работают сразу, а свои и прогресс хранятся в этом браузере — как и при обычном запуске.',
+    }));
+  }
   note.append(el('br'), el('br'), el('span', { class: 'lib-version', text: `VNMY ${APP_VERSION}` }));
 
   const usage = storageUsage();
