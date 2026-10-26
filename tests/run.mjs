@@ -1080,7 +1080,8 @@ await step('новая новелла: пороги, финал и выбор о
   let guard = 0;
   let hubs = 0;
   let adapts = 0;
-  while (guard++ < 2600) {
+  let cases = 0;
+  while (guard++ < 6000) {
     if (document.querySelector('.ending-layer.is-visible')) break;
     const ask = document.querySelector('.stage .ask-layer:not([hidden])');
     if (ask) {
@@ -1094,6 +1095,7 @@ await step('новая новелла: пороги, финал и выбор о
       const labels = choices.map((el) => el.textContent.trim());
       if (labels.some((l) => /^Мост|^Стена|^Лёд|^Костёр|^Кузня|^Крыши/.test(l))) hubs++;
       if (labels.some((l) => /^Гвен:|^Микаса:|^Сакура:|^Энни:|^Фелиция:|^Тентен:/.test(l))) adapts++;
+      if (labels.some((l) => /^Утечка газа|^Звонки|^Пять подъездов|^Восьмая бумажка/.test(l))) cases++;
       choose(choices, ['Останься. Пожалуйста.', 'Взять Микасу за руку.']);
       await sleep(40);
       continue;
@@ -1103,6 +1105,7 @@ await step('новая новелла: пороги, финал и выбор о
   }
   assert(hubs >= 6, 'шесть порогов пройдены, а не ' + hubs);
   assert(adapts >= 6, 'шесть адаптаций пройдены, а не ' + adapts);
+  assert(cases >= 4, 'четыре гипотезы проверены, а не ' + cases);
   assert(document.querySelector('.ending-layer.is-visible'), 'финал наступил за ' + guard + ' шагов');
   const ending = document.querySelector('.ending-title')?.textContent || '';
   assert(/ВАХТА/.test(ending) && /МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
@@ -1120,6 +1123,45 @@ await step('новая новелла: пороги, финал и выбор о
   const byt = ['гвен', 'микаса', 'сакура', 'энни', 'фелиция', 'тентен'].filter((n) => vars['быт_' + n] >= 1);
   assert(byt.length === 6, 'все шесть адаптаций закрыты, а не ' + byt.length);
   assert(vars['порядок'] === 6, 'комендант собрал все шесть галочек: ' + vars['порядок']);
+  assert(vars['улики'] >= 6, 'собрано не меньше шести улик: ' + vars['улики']);
+  assert(vars['проверки'] === 4, 'все четыре гипотезы закрыты: ' + vars['проверки']);
+});
+
+await step('новелла разбита на акты: структура сцены и стыки', async () => {
+  const raw = await fs.readFile(path.join(ROOT, 'stories/peresylka/novels/kto-to-ostanetsya/story.json'), 'utf8');
+  const story = JSON.parse(raw);
+  const acts = story.scenes.map((s) => s.act);
+  assert(acts.every(Boolean), 'у каждой сцены есть акт');
+  assert(new Set(acts).size === 7, 'актов ровно 7, а не ' + new Set(acts).size);
+  const order = [...new Set(acts)];
+  assert(order.join('|') === 'Акт I|Акт II|Акт III|Акт IV|Акт V|Акт VI|Акт VII', 'акты идут по порядку: ' + order.join(' → '));
+  for (const act of order) {
+    const inAct = story.scenes.filter((sc) => sc.act === act);
+    assert(inAct.length >= 3 && inAct.length <= 10, `в «${act}» ${inAct.length} сцен — должно быть от 3 до 10`);
+    const steps = inAct.reduce((n, sc) => n + sc.steps.length, 0);
+    assert(steps >= 60, `в «${act}» только ${steps} кадров — акт получился слишком тонким`);
+  }
+  for (let i = 0; i < story.scenes.length; i++) {
+    const sc = story.scenes[i];
+    const last = sc.steps[sc.steps.length - 1];
+    const linked = last.end || last.goto || last.choices?.length || last.gotoIf?.length;
+    const flowsIntoNext = i + 1 < story.scenes.length;
+    assert(linked || flowsIntoNext, `сцена «${sc.name}» обрывается: ни перехода, ни конца`);
+  }
+  const steps = story.scenes.reduce((n, s) => n + s.steps.length, 0);
+  const chars = story.scenes.reduce((n, s) => n + s.steps.reduce((m, t) => m + (t.text || '').length, 0), 0);
+  assert(steps >= 900, `в новелле ${steps} кадров — на два часа нужно не меньше 900`);
+  assert(chars >= 70000, `объём текста ${chars} символов, нужно от 70 000`);
+  const isHub = (st) => (st.choices || []).length >= 4 && st.choices.every((c) => c.if) && st.gotoIf?.length;
+  const engine = await fs.readFile(path.join(ROOT, 'js/engine.js'), 'utf8');
+  const css = await fs.readFile(path.join(ROOT, 'css/player.css'), 'utf8');
+  assert(/chapter-act/.test(engine), 'карточка сцены не выводит акт');
+  assert(/\.chapter-act\s*\{/.test(css), 'в стилях нет правила для строки акта');
+  const hubSteps = story.scenes.flatMap((sc) => sc.steps.filter(isHub).map((st) => ({ sc, st })));
+  assert(hubSteps.length === 3, 'три хаба: гипотезы, адаптация, пороги — а не ' + hubSteps.length);
+  for (const { sc } of hubSteps) {
+    assert(sc.card === false, 'хаб «' + sc.name + '» показывает карточку сцены при каждом возврате');
+  }
 });
 
 await sleep(200);

@@ -728,6 +728,7 @@ export class Stage {
     const old = $('.chapter-card', this.node);
     old?.remove();
     const card = el('div', { class: 'chapter-card' },
+      scene.act ? el('span', { class: 'chapter-act', text: scene.act }) : null,
       el('span', { class: 'chapter-line' }),
       el('span', { class: 'chapter-name', text: scene.name }),
       el('span', { class: 'chapter-line' }),
