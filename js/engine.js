@@ -288,9 +288,9 @@ export class Stage {
     this.opts.onPosition?.(this.position, step);
 
     // если текста нет — сразу выборы или финал
-    if (!step.text) {
-      if (step.choices?.length) this.showChoices(step);
-      else if (step.end) this.showEnding(step);
+    if (!step.text || step.end) {
+      if (step.end) this.showEnding(step);
+      else if (step.choices?.length) this.showChoices(step);
     }
   }
 
@@ -414,7 +414,8 @@ export class Stage {
   renderDialogue(step, { instant = false } = {}) {
     this.cancelTyping();
     this.renderAsk(step);
-    const hasText = !!step.text;
+    // у финального шага текст показывается на самом экране финала
+    const hasText = !!step.text && !step.end;
     this.dialogueLayer.classList.toggle('is-hidden', !hasText);
     const char = step.speaker ? characterById(this.story, step.speaker) : null;
     this.speakerEl.textContent = char ? interpolate(char.name || '', this.vars) : '';
@@ -584,6 +585,8 @@ export class Stage {
   showChoices(step) {
     const choices = this.visibleChoices(step);
     if (!choices.length) return;
+    // карточка сцены не должна висеть поверх вариантов
+    $('.chapter-card', this.node)?.remove();
     this.awaitingChoices = true;
     this.hintEl.classList.remove('is-visible');
     this.choiceLayer.innerHTML = '';
@@ -721,7 +724,7 @@ export class Stage {
   }
 
   showChapterCard(scene) {
-    if (this.mode !== 'play') return;
+    if (this.mode !== 'play' || scene.card === false) return;
     const old = $('.chapter-card', this.node);
     old?.remove();
     const card = el('div', { class: 'chapter-card' },
@@ -746,6 +749,7 @@ export class Stage {
       el('div', { class: 'ending-card' },
         el('div', { class: 'ending-kicker', text: 'конец' }),
         el('h2', { class: 'ending-title', text: interpolate(step.endTitle || 'КОНЕЦ', this.vars) }),
+        step.text ? el('p', { class: 'ending-text', text: interpolate(step.text, this.vars) }) : null,
         el('div', { class: 'ending-actions' },
           el('button', { class: 'solid-btn', type: 'button', onclick: () => this.restart() }, 'Начать заново'),
           el('button', { class: 'ghost-btn', type: 'button', onclick: () => this.opts.onExit?.() }, 'В библиотеку'),
