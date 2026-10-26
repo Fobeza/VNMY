@@ -700,13 +700,19 @@ await step('выражения: операторы и ошибки разбор�
 });
 
 await step('файлы для двойного щелчка собраны и свежие', async () => {
-  const { buildBundle, buildBuiltinStories } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const { buildBundle, buildBuiltinStories, buildStandalone } = await import(path.join(ROOT, 'tools/build.mjs'));
   const bundle = await buildBundle();
   const builtin = await buildBuiltinStories();
+  const standalone = await buildStandalone();
   const savedBundle = await fs.readFile(path.join(ROOT, 'bundle.js'), 'utf8');
   const savedBuiltin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
+  const savedStandalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
   assert(savedBundle === bundle, 'bundle.js устарел — запустите npm run build');
   assert(savedBuiltin === builtin, 'stories/builtin.js устарел — запустите npm run build');
+  assert(savedStandalone === standalone, 'vnmy.html устарел — запустите npm run build');
+  // один файл не должен тянуть ничего снаружи
+  assert(!/\ssrc="(?!data:)/.test(savedStandalone), 'в vnmy.html есть внешний src');
+  assert(!/\shref="(?!data:|#)/.test(savedStandalone), 'в vnmy.html есть внешний href');
 });
 
 await step('с диска (file://) открывается и играет без сервера', async () => {
@@ -775,6 +781,67 @@ await step('с диска (file://) открывается и играет бе�
 
   assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки на file://: ' + fileErrors.join(' | '));
   fileDom.window.close();
+});
+
+await step('один файл vnmy.html играется без соседних файлов', async () => {
+  const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
+  let fetchCalls = 0;
+  let fileErrors = [];
+  const consoleOut = new VirtualConsole();
+  consoleOut.on('jsdomError', (e) => fileErrors.push('jsdomError: ' + e.message));
+  consoleOut.on('error', (...a) => fileErrors.push('console.error: ' + a.map(String).join(' ')));
+
+  const soloDom = new JSDOM(standalone, {
+    url: 'file:///Downloads/vnmy.html',
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    virtualConsole: consoleOut,
+    beforeParse(window) {
+      window.scrollTo = () => {};
+      window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+      // с диска сети нет вовсе: любой запрос — ошибка
+      window.fetch = async () => { fetchCalls++; throw new TypeError('Failed to fetch'); };
+      window.HTMLCanvasElement.prototype.getContext = function () {
+        const noop = () => {};
+        return {
+          setTransform: noop, clearRect: noop, beginPath: noop, moveTo: noop, lineTo: noop, stroke: noop,
+          fill: noop, ellipse: noop, arc: noop, save: noop, restore: noop, translate: noop, scale: noop,
+          fillRect: noop, strokeRect: noop, closePath: noop, drawImage: noop,
+          globalAlpha: 1, lineWidth: 1, strokeStyle: '', fillStyle: '', lineCap: '',
+        };
+      };
+      window.Element.prototype.getBoundingClientRect = function () {
+        return { x: 0, y: 0, width: 390, height: 844, top: 0, left: 0, right: 390, bottom: 844, toJSON() {} };
+      };
+    },
+  });
+
+  const sdoc = soloDom.window.document;
+  const started = Date.now();
+  while (Date.now() - started < 15000) {
+    if (sdoc.querySelectorAll('#story-list .story-card').length) break;
+    await sleep(50);
+  }
+  const titles = [...sdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
+  assert(titles.includes('Последний поезд'), 'демо не подхватилось из одного файла: ' + titles.join(','));
+  assert(fetchCalls === 0, 'один файл всё-таки ходил в сеть: ' + fetchCalls);
+
+  sdoc.querySelector('#story-list .story-card').dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
+  const playStart = Date.now();
+  while (Date.now() - playStart < 8000) {
+    if (sdoc.querySelector('.stage .text')?.textContent.length > 5) break;
+    await sleep(50);
+  }
+  const text = sdoc.querySelector('.stage .text').textContent;
+  assert(text.includes('02:14') || text.includes('Дождь'), 'реплика не появилась: ' + JSON.stringify(text));
+  const embedded = soloDom.window.__VNMY_BUILTIN_STORIES__ || [];
+  assert(embedded.length >= 1, 'истории не вшиты в файл');
+  const scene = embedded[0].scenes[0];
+  const sprite = Object.values(embedded[0].characters?.[0]?.sprites || {})[0] || '';
+  assert(String(scene.bg).startsWith('data:image/'), 'фон не вшит: ' + String(scene.bg).slice(0, 40));
+  assert(String(sprite).startsWith('data:image/'), 'спрайты не вшиты: ' + String(sprite).slice(0, 40));
+  assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки в одном файле: ' + fileErrors.join(' | '));
+  soloDom.window.close();
 });
 
 await sleep(200);

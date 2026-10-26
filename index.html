@@ -48,8 +48,11 @@
       <div id="story-list" class="story-list"></div>
       <div id="boot-fallback" class="boot-fallback" hidden>
         <h3>Не хватает собранных файлов</h3>
-        <p>При открытии с диска (двойной щелчок) движку нужны <code>bundle.js</code> и
-        <code>stories/builtin.js</code> — браузер не грузит ES-модули с <code>file://</code>.</p>
+        <p>С телефона проще всего открыть <code>vnmy.html</code> — это тот же движок
+        одним файлом: движок, стили, истории и картинки внутри. Рядом ничего не нужно,
+        собирать ничего не надо.</p>
+        <p>Если открываете <code>index.html</code>, движку нужны <code>bundle.js</code>
+        и <code>stories/builtin.js</code> — браузер не грузит ES-модули с <code>file://</code>.</p>
         <p>Соберите их один раз:</p>
         <pre><code>npm run build</code></pre>
         <p>Или откройте папку через сервер: <code>python3 -m http.server 8000</code> →
