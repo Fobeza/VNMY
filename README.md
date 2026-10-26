@@ -23,8 +23,9 @@ VNMY/
 │   ├── silent-rails/       ← вселенная «Тихие пути» (демо)
 │   │   ├── universe.json   ← название, описание, обложка, акцент
 │   │   └── novels/last-train/  ← демо-новелла «Последний поезд»
-│   ├── tyumen/             ← вселенная «Тюмень»: наш город, наш мир
-│   │   └── novels/peresylka/   ← новелла «Пересылка»
+│   ├── peresylka/          ← вселенная «Пересылка»: Тюмень, где застревают чужие
+│   │   ├── universe.json
+│   │   └── novels/kto-to-ostanetsya/  ← новелла «Кто-то останется»
 │   └── _template/          ← заготовки вселенной и новеллы
 ├── assets/                 ← иконки PWA
 ├── CHANGELOG.md            ← что нового по версиям
@@ -40,7 +41,8 @@ VNMY/
 **Версия 1.2** · [что нового](CHANGELOG.md)
 
 <p>
-  <img src="docs/screenshots/player.jpg" width="200" alt="Сцена истории" />
+  <img src="docs/screenshots/player.jpg" width="200" alt="Сцена истории «Кто-то останется»" />
+  <img src="docs/screenshots/ending.jpg" width="200" alt="Финал «Вахта»" />
   <img src="docs/screenshots/library.jpg" width="200" alt="Вселенные" />
   <img src="docs/screenshots/novels.jpg" width="200" alt="Новеллы вселенной" />
   <img src="docs/screenshots/journal.jpg" width="200" alt="Журнал реплик" />
