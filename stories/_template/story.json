@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "id": "story_template",
+  "title": "Шаблон истории",
+  "author": "",
+  "description": "Заготовка: скопируйте папку, замените картинки в assets/ и правьте story.json",
+  "cover": "",
+  "accent": "#e0b072",
+  "vars": [
+    {
+      "name": "sympathy",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "took_hand",
+      "type": "bool",
+      "initial": false
+    }
+  ],
+  "characters": [
+    {
+      "id": "hero",
+      "name": "Персонаж",
+      "color": "#e8c08a",
+      "sprites": {
+        "neutral": "assets/hero-neutral.webp",
+        "smile": "assets/hero-smile.webp"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sc_start",
+      "name": "Начало",
+      "bg": "assets/bg-start.webp",
+      "weather": "rain",
+      "cast": [
+        {
+          "char": "hero",
+          "sprite": "neutral",
+          "pos": "center",
+          "scale": 1
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Здесь начинается история. Это реплика рассказчика — курсив без имени."
+        },
+        {
+          "id": "t2",
+          "speaker": "hero",
+          "text": "А это уже реплика персонажа. *Курсив*, **жирный**, перенос строки — всё работает."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "",
+          "choices": [
+            {
+              "text": "Первый вариант",
+              "goto": "sc_start:t4"
+            },
+            {
+              "text": "Второй вариант",
+              "goto": "sc_start:t6"
+            },
+            {
+              "text": "Скрытый вариант — виден при sympathy >= 1",
+              "goto": "sc_start:t7",
+              "if": "sympathy >= 1"
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "speaker": "hero",
+          "spriteOverride": "smile",
+          "text": "Развилка — это просто два шага с goto.",
+          "set": [
+            {
+              "var": "sympathy",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Ветка сливается обратно в общий шаг.",
+          "goto": "sc_start:t8"
+        },
+        {
+          "id": "t6",
+          "speaker": "hero",
+          "spriteOverride": "neutral",
+          "text": "Смена эмоции задаётся в поле spriteOverride.",
+          "set": [
+            {
+              "var": "took_hand",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t7",
+          "speaker": null,
+          "text": "Вторая ветка тоже возвращается в общий шаг.",
+          "goto": "sc_start:t8"
+        },
+        {
+          "id": "t9",
+          "speaker": null,
+          "if": "sympathy >= 1",
+          "text": "Эта реплика есть только в ветке с симпатией. Значение переменной: {sympathy}.",
+          "goto": "sc_end:t1"
+        },
+        {
+          "id": "t8",
+          "speaker": null,
+          "text": "Переход в следующую сцену — по goto или просто по порядку сцен.",
+          "goto": "sc_end:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_end",
+      "name": "Финал",
+      "bg": "assets/bg-end.webp",
+      "weather": "petals",
+      "cast": [
+        {
+          "char": "hero",
+          "sprite": "smile",
+          "pos": "center",
+          "scale": 1
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "hero",
+          "text": "А это финальная реплика.",
+          "pause": 400,
+          "gotoIf": [
+            {
+              "when": "took_hand",
+              "goto": "sc_end:t3"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "",
+          "end": true,
+          "endTitle": "КОНЕЦ · Обычная концовка"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "",
+          "end": true,
+          "endTitle": "КОНЕЦ · Взял за руку"
+        }
+      ]
+    }
+  ],
+  "lang": "ru"
+}
