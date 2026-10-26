@@ -844,6 +844,25 @@ await step('один файл vnmy.html играется без соседних
   soloDom.window.close();
 });
 
+await step('спрайты сохраняют пропорции картинки на любой ширине экрана', async () => {
+  const css = (await fs.readFile(path.join(ROOT, 'css/player.css'), 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = (selector) => {
+    const i = css.indexOf(selector);
+    assert(i >= 0, 'нет правила ' + selector);
+    return css.slice(i, css.indexOf('}', i));
+  };
+  const sprite = rule('\n.sprite {');
+  const img = rule('.sprite img {');
+  // ширина спрайта должна следовать за картинкой, иначе `max-width: 100%`
+  // из base.css режет её по ширине сцены и картинка плющится
+  assert(/width:\s*max-content/.test(sprite), 'ширина спрайта не следует за картинкой');
+  assert(!/max-width:\s*(?!none)\d/.test(sprite), 'у спрайта ограничена ширина: ' + sprite);
+  assert(/max-width:\s*none/.test(img), 'картинка спрайта ограничена по ширине: ' + img);
+  assert(/width:\s*auto/.test(img), 'ширина картинки спрайта задана не auto: ' + img);
+  const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
+  assert(/\.sprite img\s*\{[^}]*max-width:\s*none/.test(standalone), 'в vnmy.html нет исправления спрайтов');
+});
+
 await sleep(200);
 console.log('\n---');
 const failed = results.filter((r) => r[0] === 'fail');

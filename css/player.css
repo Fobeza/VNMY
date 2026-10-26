@@ -91,6 +91,9 @@
   position: absolute;
   bottom: -2%;
   height: 64cqh;
+  /* ширину задаёт сама картинка: иначе max-width:100% сплющивает спрайт */
+  width: max-content;
+  max-width: none;
   left: 50%;
   transform: translateX(-50%) translateY(4%) scale(var(--scale, 1));
   transform-origin: bottom center;
@@ -108,10 +111,11 @@
 .sprite[data-pos="right"] { left: 77%; }
 .sprite.is-leaving { opacity: 0; transform: translateX(-50%) translateY(2%) scale(calc(var(--scale, 1) * .98)); }
 .sprite.no-anim { transition: none; }
-.sprite-inner { height: 100%; }
+.sprite-inner { height: 100%; width: max-content; }
 .sprite img {
   height: 100%;
   width: auto;
+  max-width: none;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
   transition: opacity .18s linear, filter .35s var(--ease), transform .5s var(--ease);
 }
