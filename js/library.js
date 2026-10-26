@@ -7,6 +7,7 @@ import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
+import { APP_VERSION } from './version.js';
 
 let hooks = {};
 let stories = [];
@@ -33,6 +34,8 @@ export async function renderLibrary(nextHooks) {
     el('code', { text: 'stories/' }),
     el('span', { text: ' — по одной папке на историю. Здесь же их можно создать и отредактировать: правки хранятся в этом браузере.' }),
   );
+  note.append(el('br'), el('br'), el('span', { class: 'lib-version', text: `VNMY ${APP_VERSION}` }));
+
   const usage = storageUsage();
   const usedMb = usage.used / 1024 / 1024;
   if (usedMb > 0.2) {

@@ -113,6 +113,8 @@ await step('библиотека загружает встроенную ист�
   const titles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
   assert(titles.includes('Последний поезд'), 'есть демо: ' + titles.join(','));
   assert(visible('screen-library'), 'виден экран библиотеки');
+  const note = document.querySelector('#library-note').textContent;
+  assert(/VNMY \d+\.\d+/.test(note), 'в подписи нет версии: ' + note.slice(-40));
 });
 
 await step('запуск истории и печать текста', async () => {
