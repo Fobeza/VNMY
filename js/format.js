@@ -4,6 +4,7 @@
  * {
  *   id, title, author, description, cover, accent,
  *   baseUrl,                        // откуда грузить относительные пути к картинкам
+ *   vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
  *   characters: [{ id, name, color, sprites: { neutral: 'assets/anya-neutral.webp' } }],
  *   scenes: [{
  *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim } ],
@@ -20,11 +21,16 @@
  *   cast,             // полностью заменить состав на сцене
  *   mood,             // подсказка для эффектов (например, 'shake')
  *   pause,            // пауза в мс перед показом реплики
- *   choices: [{ text, goto }],
+ *   if,               // условие: шаг покажется только если истинно
+ *   set,              // [{ var, op: set|add|sub|toggle, value }] — при входе в шаг
+ *   gotoIf,           // [{ when: условие, goto }] — условные переходы
+ *   choices: [{ text, goto, if }],
  *   goto,             // переход на шаг «сцена#шаг» или id шага
  *   end               // true — конец истории / развилки
  * }
  */
+
+import { compile as compileExpression, interpolatedVars } from './expr.js';
 
 export const SCHEMA_VERSION = 1;
 
@@ -37,6 +43,34 @@ export const MOOD_LABELS = {
   '': 'обычное', shake: 'тряска', flash: 'вспышка', blush: 'смущение', dim: 'затемнение', zoom: 'наплыв',
 };
 export const ACCENTS = ['#e0b072', '#d98a8a', '#8fb8d8', '#9ecf9a', '#b79ae0', '#d8d2c4'];
+export const VAR_TYPES = ['number', 'bool', 'text'];
+export const VAR_TYPE_LABELS = { number: 'число', bool: 'флаг', text: 'текст' };
+export const VAR_OPS = ['set', 'add', 'sub', 'toggle'];
+export const VAR_OP_LABELS = { set: '=', add: '+', sub: '−', toggle: 'переключить' };
+
+export function newVar(overrides = {}) {
+  return { name: 'переменная', type: 'number', initial: 0, ...overrides };
+}
+
+export function defaultVarValue(v) {
+  if (v.type === 'bool') return v.initial === true || v.initial === 'true' || v.initial === 1 || v.initial === '1';
+  if (v.type === 'number') {
+    const n = Number(v.initial);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return v.initial == null ? '' : String(v.initial);
+}
+
+/** Стартовые значения всех переменных истории. */
+export function defaultVars(story) {
+  const vars = {};
+  for (const v of story.vars || []) vars[v.name] = defaultVarValue(v);
+  return vars;
+}
+
+export function varByName(story, name) {
+  return (story.vars || []).find((v) => v.name === name) || null;
+}
 
 export function uid(prefix = 's') {
   return `${prefix}${Math.random().toString(36).slice(2, 7)}`;
@@ -94,6 +128,15 @@ export function normalizeStory(input) {
   story.baseUrl = story.baseUrl || '';
   story.createdAt = story.createdAt || Date.now();
   story.updatedAt = story.updatedAt || Date.now();
+  if (!Array.isArray(story.vars)) story.vars = [];
+  const varNames = new Set();
+  story.vars = story.vars.filter(Boolean).map((v) => {
+    let name = String(v.name || '').trim().replace(/[^\p{L}\p{N}_]/gu, '_') || 'переменная';
+    while (varNames.has(name)) name += '_2';
+    varNames.add(name);
+    const type = VAR_TYPES.includes(v.type) ? v.type : 'number';
+    return { name, type, initial: v.initial ?? (type === 'bool' ? false : type === 'number' ? 0 : '') };
+  });
   if (!Array.isArray(story.media)) story.media = [];
   story.media = story.media.filter(Boolean).map((m) => ({
     id: m.id || uid('m'),
@@ -155,7 +198,11 @@ function normalizeStep(t) {
     id: t.id || uid('t'),
     speaker: t.speaker || null,
     text: String(t.text ?? ''),
-    choices: Array.isArray(t.choices) ? t.choices.filter(Boolean).map((c) => ({ text: String(c.text || '…'), goto: String(c.goto || '') })) : [],
+    choices: Array.isArray(t.choices) ? t.choices.filter(Boolean).map((c) => ({
+      text: String(c.text || '…'),
+      goto: String(c.goto || ''),
+      ...(c.if ? { if: String(c.if) } : {}),
+    })) : [],
     goto: t.goto ? String(t.goto) : '',
     end: !!t.end,
     mood: MOODS.includes(t.mood) ? t.mood : '',
@@ -166,6 +213,20 @@ function normalizeStep(t) {
   if (Array.isArray(t.cast)) step.cast = t.cast.map(normalizeCast).filter(Boolean);
   if (t.note) step.note = String(t.note);
   if (t.spriteOverride) step.spriteOverride = String(t.spriteOverride);
+  if (t.if) step.if = String(t.if);
+  if (Array.isArray(t.set) && t.set.length) {
+    step.set = t.set.filter(Boolean).map((op) => ({
+      var: String(op.var || ''),
+      op: VAR_OPS.includes(op.op) ? op.op : 'set',
+      value: op.value ?? '',
+    }));
+  }
+  if (Array.isArray(t.gotoIf) && t.gotoIf.length) {
+    step.gotoIf = t.gotoIf.filter(Boolean).map((rule) => ({
+      when: String(rule.when || ''),
+      goto: String(rule.goto || ''),
+    }));
+  }
   if (t.endTitle) step.endTitle = String(t.endTitle);
   return step;
 }
@@ -275,9 +336,29 @@ export function countWords(story) {
   return { words, steps };
 }
 
-/** Проверка ссылок: показывает проблемы в редакторе и при импорте. */
+/** Проверка ссылок и условий: показывает проблемы в редакторе и при импорте. */
 export function lintStory(story) {
   const issues = [];
+  const varNames = new Set((story.vars || []).map((v) => v.name));
+
+  const checkCondition = (src, where, sceneId, stepId) => {
+    if (!src) return;
+    const { ast, deps, error } = compileExpression(src);
+    if (error) {
+      issues.push({ level: 'error', sceneId, stepId, text: `${where}: ошибка в условии — ${error.message}` });
+      return;
+    }
+    for (const dep of deps) {
+      if (!varNames.has(dep)) issues.push({ level: 'error', sceneId, stepId, text: `${where}: переменная «${dep}» не объявлена` });
+    }
+  };
+
+  const checkText = (text, where, sceneId, stepId) => {
+    for (const name of interpolatedVars(text)) {
+      if (!varNames.has(name)) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: в тексте есть {${name}}, но такой переменной нет` });
+    }
+  };
+
   const ids = new Set();
   for (let i = 0; i < story.scenes.length; i++) {
     const scene = story.scenes[i];
@@ -288,7 +369,30 @@ export function lintStory(story) {
     for (let j = 0; j < scene.steps.length; j++) {
       const step = scene.steps[j];
       if (!step.text && !step.choices?.length && !step.end) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Пустая реплика #${j + 1}` });
+      checkCondition(step.if, `Шаг #${j + 1}: условие показа`, scene.id, step.id);
+      checkText(step.text, `Шаг #${j + 1}`, scene.id, step.id);
+      for (const op of step.set || []) {
+        if (!varNames.has(op.var)) {
+          issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: изменение несуществующей переменной «${op.var || '—'}»` });
+        }
+        if (op.op === 'add' || op.op === 'sub') {
+          const type = varByName(story, op.var)?.type;
+          if (type === 'bool' && op.op !== 'toggle') {
+            issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: «${op.var}» — флаг, для него есть «переключить»` });
+          }
+        }
+        if (op.op === 'toggle' && varByName(story, op.var)?.type !== 'bool') {
+          issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: «переключить» для не-флага «${op.var}»` });
+        }
+      }
+      for (const [k, rule] of (step.gotoIf || []).entries()) {
+        checkCondition(rule.when, `Шаг #${j + 1}: условный переход ${k + 1}`, scene.id, step.id);
+        if (!rule.goto) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: у условного перехода ${k + 1} нет цели` });
+        else if (!resolveTarget(story, rule.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: условный переход ${k + 1} ведёт в никуда` });
+      }
       for (const choice of step.choices || []) {
+        checkCondition(choice.if, `Выбор «${choice.text}»`, scene.id, step.id);
+        checkText(choice.text, `Выбор «${choice.text}»`, scene.id, step.id);
         if (!choice.goto) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `У выбора «${choice.text}» нет перехода` });
         else if (!resolveTarget(story, choice.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Выбор «${choice.text}» ведёт в никуда` });
       }

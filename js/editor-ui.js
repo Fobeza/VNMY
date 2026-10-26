@@ -1,6 +1,7 @@
 /* VNMY — элементы управления редактора и медиатека */
 import { el, compressImage, uid } from './util.js';
 import { resolveUrl } from './format.js';
+import { compile as compileExpression } from './expr.js';
 
 /* ─────────────────────────── базовые контролы ─────────────────────────── */
 
@@ -15,7 +16,7 @@ export function field(label, control, hint) {
 export function textInput({ value = '', placeholder = '', onInput, onBlur, onFocus, type = 'text' } = {}) {
   const input = el('input', { class: 'input', type, value, placeholder });
   if (onInput) input.addEventListener('input', () => onInput(input.value));
-  if (onBlur) input.addEventListener('blur', () => onBlur(input.value));
+  if (onBlur) input.addEventListener('blur', () => onBlur(input.value, input));
   // onFocus используется для снимка undo перед правкой — без него шаг не отменяется
   if (onFocus) input.addEventListener('focus', () => onFocus(input));
   return input;
@@ -34,6 +35,74 @@ export function textArea({ value = '', placeholder = '', rows = 3, onInput, onFo
   if (onFocus) area.addEventListener('focus', () => onFocus(area));
   requestAnimationFrame(autoresize);
   return area;
+}
+
+/**
+ * Поле условия с живой проверкой синтаксиса и кнопками-переменными.
+ * Пустое значение = «без условия».
+ */
+export function conditionInput({ story, value = '', placeholder = 'например: sympathy >= 2', onChange, onFocus, compact = false } = {}) {
+  const status = el('span', { class: 'cond-status' });
+  const input = el('input', { class: 'input cond-input', type: 'text', value, placeholder });
+  const vars = story?.vars || [];
+  const wrap = el('div', { class: `cond-field${compact ? ' is-compact' : ''}` });
+
+  const validate = (text) => {
+    const src = String(text || '').trim();
+    if (!src) {
+      status.className = 'cond-status';
+      status.textContent = '';
+      return true;
+    }
+    const { error, deps } = compileExpression(src);
+    if (error) {
+      status.className = 'cond-status is-error';
+      status.textContent = `ошибка: ${error.message}`;
+      return false;
+    }
+    const unknown = deps.filter((d) => !vars.some((v) => v.name === d));
+    if (unknown.length) {
+      status.className = 'cond-status is-error';
+      status.textContent = `не объявлено: ${unknown.join(', ')}`;
+      return false;
+    }
+    status.className = 'cond-status is-ok';
+    status.textContent = 'условие в порядке';
+    return true;
+  };
+
+  input.addEventListener('input', () => {
+    const ok = validate(input.value);
+    input.classList.toggle('has-error', !ok);
+    onChange?.(input.value);
+  });
+  if (onFocus) input.addEventListener('focus', () => onFocus(input));
+
+  wrap.append(input);
+  if (vars.length) {
+    const chipsRow = el('div', { class: 'cond-vars' });
+    for (const v of vars) {
+      chipsRow.append(el('button', {
+        type: 'button',
+        class: 'cond-var',
+        title: `${v.name} (${v.type})`,
+        onclick: () => {
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? input.value.length;
+          input.value = input.value.slice(0, start) + v.name + input.value.slice(end);
+          input.focus();
+          input.selectionStart = input.selectionEnd = start + v.name.length;
+          validate(input.value);
+          onChange?.(input.value);
+        },
+      }, v.name));
+    }
+    wrap.append(chipsRow);
+  }
+  wrap.append(status);
+  validate(value);
+  input.classList.toggle('has-error', status.classList.contains('is-error'));
+  return wrap;
 }
 
 export function selectControl({ value = '', options = [], onChange, compact = false } = {}) {

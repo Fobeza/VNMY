@@ -2,6 +2,7 @@
 import {
   POSITIONS, POSITION_LABELS, WEATHERS, WEATHER_LABELS, ACCENTS, newScene, newCharacter,
   newStep, lintStory, characterById, spritePath, resolveUrl, countWords,
+  VAR_TYPES, VAR_TYPE_LABELS, newVar, defaultVarValue,
 } from './format.js';
 import { el, deepClone, plural, uid } from './util.js';
 import {
@@ -262,6 +263,85 @@ export function renderStoryTab(ctx) {
     }), 'Цвет имён, выборов и кнопок.'),
   ));
 
+  /* переменные */
+  const varsList = el('div', { class: 'var-list' });
+  if (!story.vars.length) {
+    varsList.append(el('p', { class: 'field-hint', text: 'Пока нет переменных. Они нужны для условий: «показывать, если…», «перейти, если…», «изменить при входе в шаг».' }));
+  }
+  story.vars.forEach((v, index) => {
+    varsList.append(el('div', { class: 'var-row' },
+      textInput({
+        value: v.name,
+        placeholder: 'имя',
+        onFocus: () => ctx.pushUndo(),
+        onBlur: (value, input) => {
+          const next = String(value).trim().replace(/[^\p{L}\p{N}_]/gu, '_');
+          if (!next || next === v.name) return;
+          if (story.vars.some((other) => other !== v && other.name === next)) {
+            ctx.toast('Такая переменная уже есть');
+            input.value = v.name;
+            return;
+          }
+          ctx.pushUndo();
+          renameVarInStory(story, v.name, next);
+          ctx.commit();
+        },
+      }),
+      selectControl({
+        value: v.type,
+        compact: true,
+        options: VAR_TYPES.map((t) => ({ value: t, label: VAR_TYPE_LABELS[t] })),
+        onChange: (value) => { ctx.pushUndo(); v.type = value; v.initial = defaultVarValue({ type: value, initial: v.initial }); ctx.commit(); },
+      }),
+      v.type === 'bool'
+        ? switchControl({
+          label: '',
+          checked: !!defaultVarValue(v),
+          onChange: (checked) => { ctx.pushUndo(); v.initial = checked; ctx.commit(); },
+        })
+        : textInput({
+          value: String(v.initial ?? ''),
+          placeholder: 'старт',
+          onFocus: () => ctx.pushUndo(),
+          onInput: (value) => { v.initial = value; ctx.patch(() => {}, { preview: false }); },
+        }),
+      iconButton(ICONS.trash, {
+        label: 'Удалить переменную',
+        danger: true,
+        onclick: async () => {
+          const used = countVarUsages(story, v.name);
+          if (used) {
+            const ok = await ctx.confirmDialog({
+              title: `Удалить «${v.name}»?`,
+              text: `Переменная используется в ${used} ${plural(used, 'месте', 'местах', 'местах')}. Условия с ней станут ложными.`,
+              confirmText: 'Удалить',
+            });
+            if (!ok) return;
+          }
+          ctx.pushUndo();
+          story.vars.splice(index, 1);
+          ctx.commit();
+        },
+      }),
+    ));
+  });
+
+  wrap.append(section('Переменные',
+    varsList,
+    el('button', {
+      type: 'button',
+      class: 'ghost-btn full',
+      onclick: () => {
+        ctx.pushUndo();
+        let n = 1;
+        while (story.vars.some((v) => v.name === `переменная${n}`)) n++;
+        story.vars.push(newVar({ name: `переменная${n}` }));
+        ctx.commit();
+      },
+    }, '+ Переменная'),
+    el('p', { class: 'field-hint', text: 'В тексте пишите {имя} — подставится значение. В условиях: sympathy >= 2, met_anya, not ending_seen. Сравнения: == != > >= < <=, объединение: && (and), || (or), отрицание: ! (not).' }),
+  ));
+
   /* персонажи */
   const chars = el('div', { class: 'char-list' });
   story.characters.forEach((char, index) => {
@@ -430,6 +510,51 @@ export function renderStoryTab(ctx) {
   ));
 
   return wrap;
+}
+
+function renameVarInStory(story, from, to) {
+  const replaceWord = (text) => String(text || '').replace(
+    new RegExp(`(^|[^\\p{L}\\p{N}_])${escapeReg(from)}(?![\\p{L}\\p{N}_])`, 'gu'),
+    (m, prefix) => prefix + to,
+  );
+  const replacePlaceholder = (text) => String(text || '').replace(new RegExp(`\\{${escapeReg(from)}\\}`, 'gu'), `{${to}}`);
+  for (const scene of story.scenes) {
+    for (const step of scene.steps) {
+      if (step.if) step.if = replaceWord(step.if);
+      if (step.text) step.text = replacePlaceholder(step.text);
+      if (step.endTitle) step.endTitle = replacePlaceholder(step.endTitle);
+      for (const op of step.set || []) if (op.var === from) op.var = to;
+      for (const rule of step.gotoIf || []) if (rule.when) rule.when = replaceWord(rule.when);
+      for (const choice of step.choices || []) {
+        if (choice.if) choice.if = replaceWord(choice.if);
+        if (choice.text) choice.text = replacePlaceholder(choice.text);
+      }
+    }
+  }
+}
+
+function escapeReg(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function countVarUsages(story, name) {
+  let count = 0;
+  const uses = (text) => new RegExp(`(^|[^\\p{L}\\p{N}_])${escapeReg(name)}(?![\\p{L}\\p{N}_])`, 'u').test(String(text || ''));
+  const usesPlaceholder = (text) => String(text || '').includes(`{${name}}`);
+  for (const scene of story.scenes) {
+    for (const step of scene.steps) {
+      if (step.if && uses(step.if)) count++;
+      if (step.text && usesPlaceholder(step.text)) count++;
+      if (step.endTitle && usesPlaceholder(step.endTitle)) count++;
+      for (const op of step.set || []) if (op.var === name) count++;
+      for (const rule of step.gotoIf || []) if (rule.when && uses(rule.when)) count++;
+      for (const choice of step.choices || []) {
+        if (choice.if && uses(choice.if)) count++;
+        if (choice.text && usesPlaceholder(choice.text)) count++;
+      }
+    }
+  }
+  return count;
 }
 
 function stat(value, label) {
