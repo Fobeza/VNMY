@@ -43,7 +43,33 @@ const builtinCache = new Map();
  * stories/index.json → stories/<name>/story.json.
  * Требуется http(s) — поэтому index.html открывают через сервер или хостинг.
  */
+/** Истории, вшитые в stories/builtin.js — нужны при открытии с диска (file://). */
+function embeddedBuiltins() {
+  const list = Array.isArray(window.__VNMY_BUILTIN_STORIES__) ? window.__VNMY_BUILTIN_STORIES__ : null;
+  if (!list?.length) return null;
+  const stories = [];
+  for (const raw of list) {
+    const name = raw._builtin || 'builtin';
+    if (builtinCache.has(name)) { stories.push(builtinCache.get(name)); continue; }
+    const copy = deepClone(raw);
+    copy.baseUrl = copy.baseUrl || `stories/${name}/`;
+    const story = normalizeStory(copy);
+    story.readOnly = true;
+    builtinCache.set(name, story);
+    stories.push(story);
+  }
+  return stories;
+}
+
 export async function loadBuiltinStories() {
+  // с file:// читать файлы нельзя: берём истории из stories/builtin.js (npm run build)
+  if (location.protocol === 'file:') {
+    const embedded = embeddedBuiltins();
+    if (embedded) return embedded;
+    console.warn('[vnmy] stories/builtin.js не найден — соберите файлы командой npm run build');
+    return [];
+  }
+
   let names = [];
   try {
     const res = await fetch('stories/index.json', { cache: 'no-cache' });

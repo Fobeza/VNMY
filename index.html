@@ -47,11 +47,14 @@
 
       <div id="story-list" class="story-list"></div>
       <div id="boot-fallback" class="boot-fallback" hidden>
-        <h3>Нужен локальный сервер</h3>
-        <p>Браузеры не дают странице читать файлы с диска. Запустите в папке движка:</p>
-        <pre><code>python3 -m http.server 8000</code></pre>
-        <p>и откройте <code>http://localhost:8000</code>. Или загрузите папку на любой
-        статический хостинг (GitHub Pages, Netlify) — там всё работает сразу.</p>
+        <h3>Не хватает собранных файлов</h3>
+        <p>При открытии с диска (двойной щелчок) движку нужны <code>bundle.js</code> и
+        <code>stories/builtin.js</code> — браузер не грузит ES-модули с <code>file://</code>.</p>
+        <p>Соберите их один раз:</p>
+        <pre><code>npm run build</code></pre>
+        <p>Или откройте папку через сервер: <code>python3 -m http.server 8000</code> →
+        <code>http://localhost:8000</code>. Если папку скачали архивом — проще взять
+        свежую версию из репозитория: там собранные файлы уже лежат.</p>
       </div>
       <p id="library-note" class="lib-note"></p>
     </div>
@@ -143,14 +146,32 @@
 </template>
 
 <script>
-  // если модуль не загрузился (например, страницу открыли как файл с диска) —
-  // показываем понятную подсказку вместо пустого экрана
+  // Если приложение не поднялось — показываем подсказку вместо пустого экрана.
   window.__vnmyBoot = setTimeout(function () {
     if (window.__VNMY_BOOTED) return;
     var fallback = document.getElementById('boot-fallback');
     if (fallback) fallback.hidden = false;
   }, 1500);
+
+  // С диска (file://) браузер не грузит ES-модули и запрещает fetch к файлам.
+  // Для двойного щелчка используем заранее собранные обычные скрипты:
+  // stories/builtin.js (истории) и bundle.js (весь движок).
+  (function () {
+    var fromDisk = location.protocol === 'file:';
+    var add = function (src, asModule) {
+      var node = document.createElement('script');
+      if (asModule) node.type = 'module';
+      else node.async = false; // порядок важен: сначала истории, потом приложение
+      node.src = src;
+      document.head.appendChild(node);
+    };
+    if (fromDisk) {
+      add('stories/builtin.js');
+      add('bundle.js');
+    } else {
+      add('js/app.js', true);
+    }
+  })();
 </script>
-<script type="module" src="js/app.js"></script>
 </body>
 </html>

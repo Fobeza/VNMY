@@ -26,7 +26,8 @@ const build = await esbuild.build({
 const code = build.outputFiles[0].text;
 
 let html = await fs.readFile(path.join(ROOT, 'index.html'), 'utf8');
-html = html.replace(/<script type="module"[^>]*><\/script>/, '');
+// убираем загрузчик приложения: тесты подставляют свой бандл
+html = html.replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, '');
 html = html.replace('</body>', () => `<script>${code.replace(/<\/script>/g, '<\\/script>')}</script></body>`);
 
 const dom = new JSDOM(html, {
@@ -696,6 +697,84 @@ await step('выражения: операторы и ошибки разбор�
     assert(!!ex.compile(bad).error, 'не поймана ошибка: ' + bad);
   }
   assert(ex.interpolate('{a} и {b}', { a: 1, b: true }) === '1 и да', 'подстановка значений');
+});
+
+await step('файлы для двойного щелчка собраны и свежие', async () => {
+  const { buildBundle, buildBuiltinStories } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const bundle = await buildBundle();
+  const builtin = await buildBuiltinStories();
+  const savedBundle = await fs.readFile(path.join(ROOT, 'bundle.js'), 'utf8');
+  const savedBuiltin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
+  assert(savedBundle === bundle, 'bundle.js устарел — запустите npm run build');
+  assert(savedBuiltin === builtin, 'stories/builtin.js устарел — запустите npm run build');
+});
+
+await step('с диска (file://) открывается и играет без сервера', async () => {
+  const bundle = await fs.readFile(path.join(ROOT, 'bundle.js'), 'utf8');
+  const builtin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
+  let shell = await fs.readFile(path.join(ROOT, 'index.html'), 'utf8');
+  shell = shell.replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, '');
+  // как в настоящем браузере с диска: модули и fetch к файлам недоступны
+  const fileErrors = [];
+  const fileConsole = new VirtualConsole();
+  fileConsole.on('jsdomError', (e) => fileErrors.push('jsdomError: ' + e.message));
+  fileConsole.on('error', (...a) => fileErrors.push('console.error: ' + a.map(String).join(' ')));
+
+  const fileDom = new JSDOM(shell, {
+    url: 'file:///vnmy/index.html',
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    virtualConsole: fileConsole,
+    beforeParse(window) {
+      window.scrollTo = () => {};
+      window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+      window.fetch = async () => { throw new TypeError('Failed to fetch'); };
+      window.HTMLCanvasElement.prototype.getContext = function () {
+        const noop = () => {};
+        return {
+          setTransform: noop, clearRect: noop, beginPath: noop, moveTo: noop, lineTo: noop, stroke: noop,
+          fill: noop, ellipse: noop, arc: noop, save: noop, restore: noop, translate: noop, scale: noop,
+          fillRect: noop, strokeRect: noop, closePath: noop, drawImage: noop,
+          globalAlpha: 1, lineWidth: 1, strokeStyle: '', fillStyle: '', lineCap: '',
+        };
+      };
+      window.Element.prototype.getBoundingClientRect = function () {
+        return { x: 0, y: 0, width: 390, height: 844, top: 0, left: 0, right: 390, bottom: 844, toJSON() {} };
+      };
+    },
+  });
+  const inject = (source) => {
+    const node = fileDom.window.document.createElement('script');
+    node.textContent = source;
+    fileDom.window.document.body.append(node);
+  };
+  inject(builtin);
+  inject(bundle);
+
+  const fdoc = fileDom.window.document;
+  const fwindow = fileDom.window;
+  const until = async (fn, label) => {
+    const started = Date.now();
+    while (Date.now() - started < 4000) {
+      if (fn()) return true;
+      await sleep(25);
+    }
+    throw new Error('timeout: ' + label);
+  };
+
+  await until(() => fdoc.querySelectorAll('#story-list .story-card').length >= 1, 'карточка встроенной истории');
+  const titles = [...fdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
+  assert(titles.includes('Последний поезд'), 'демо не подхватилось с диска: ' + titles.join(','));
+
+  [...fdoc.querySelectorAll('#story-list .story-card')][0].dispatchEvent(new fwindow.MouseEvent('click', { bubbles: true }));
+  await until(() => fdoc.querySelector('.stage .text')?.textContent.length > 5, 'первая реплика с диска');
+  const text = fdoc.querySelector('.stage .text').textContent;
+  assert(text.includes('02:14') || text.includes('Дождь'), 'реплика не появилась: ' + JSON.stringify(text));
+  const src = fdoc.querySelector('.stage .bg-a')?.dataset?.src || '';
+  assert(!src.includes('undefined'), 'фон не разрешился: ' + src);
+
+  assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки на file://: ' + fileErrors.join(' | '));
+  fileDom.window.close();
 });
 
 await sleep(200);

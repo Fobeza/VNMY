@@ -31,6 +31,8 @@ const SHELL_FILES = [
   './js/editor.js',
   './js/editor-tabs.js',
   './js/editor-ui.js',
+  './bundle.js',
+  './stories/builtin.js',
   './manifest.webmanifest',
 ];
 
