@@ -6,7 +6,9 @@
 import { el, $, clamp } from './util.js';
 import {
   findScene, resolveTarget, stateAt, spriteUrl, characterById, resolveUrl, bareId, WEATHERS,
+  defaultVars, varByName,
 } from './format.js';
+import { evalCondition, interpolate, applyOperation } from './expr.js';
 import { WeatherLayer } from './weather.js';
 
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
@@ -30,6 +32,7 @@ export class Stage {
     this.typing = null;
     this.awaitingChoices = false;
     this.seen = opts.seen || new Set();
+    this.vars = { ...defaultVars(this.story), ...(opts.vars || {}) };
     this.mounted = false;
     this.spriteNodes = new Map();
     this._timers = new Set();
@@ -127,21 +130,86 @@ export class Stage {
       stepIndex: this.index,
       totalSteps: this.story.scenes.reduce((n, s) => n + s.steps.length, 0),
       ended: this.ended,
+      vars: { ...this.vars },
     };
   }
 
   /** Полный переход к шагу; instant — без анимаций и печати текста. */
-  goTo(sceneId, stepIndex, { instant = false } = {}) {
+  goTo(sceneId, stepIndex, { instant = false, effects = true, force = false } = {}) {
+    return this.enter(sceneId, stepIndex, { instant, effects, force });
+  }
+
+  /**
+   * Вход в шаг: пропускает шаги с ложным условием, применяет изменения
+   * переменных и рисует кадр. Единственный путь «перейти куда-то».
+   */
+  enter(sceneId, stepIndex, { instant = false, effects = true, force = false } = {}) {
     const scene = findScene(this.story, sceneId);
     if (!scene) return false;
+    let index = clamp(stepIndex, 0, scene.steps.length - 1);
+    // в редакторе первый кадр показываем принудительно: автор должен видеть
+    // тот шаг, который выбрал, даже если его условие сейчас ложно
+    const forced = force || (this.opts.forceStart && !this._entered);
+    this._entered = true;
+    let guard = 0;
+    while (!forced && index < scene.steps.length
+      && scene.steps[index].if
+      && !evalCondition(scene.steps[index].if, this.vars)
+      && guard++ < 500) {
+      index++;
+    }
+    if (index >= scene.steps.length) return this.leaveScene(scene);
+
     const sceneChanged = sceneId !== this.sceneId;
     this.sceneId = sceneId;
-    this.index = clamp(stepIndex, 0, scene.steps.length - 1);
+    this.index = index;
     this.ended = false;
     this.hideEnding();
     if (sceneChanged) this.showChapterCard(scene);
-    this.renderInstance(this.index, { instant });
+    if (effects) this.applySet(scene.steps[index]);
+    this.renderInstance(index, { instant });
     return true;
+  }
+
+  /** Сцена закончилась (все шаги позади или скрыты условиями). */
+  leaveScene(scene) {
+    if (this.opts.limitToScene) {
+      this.opts.onSceneEnd?.();
+      return false;
+    }
+    const next = this.story.scenes[this.story.scenes.findIndex((s) => s.id === scene.id) + 1];
+    if (next) {
+      const firstVisible = next.steps.findIndex((step) => !step.if || evalCondition(step.if, this.vars));
+      return this.enter(next.id, firstVisible < 0 ? next.steps.length : firstVisible);
+    }
+    this.showEnding({ endTitle: 'КОНЕЦ' });
+    return false;
+  }
+
+  /** Применяет step.set к переменным (один раз, при входе в шаг). */
+  applySet(step) {
+    if (!step?.set?.length) return;
+    for (const op of step.set) {
+      const type = varByName(this.story, op.var)?.type || 'number';
+      this.vars[op.var] = applyOperation(this.vars[op.var] ?? (type === 'bool' ? false : type === 'text' ? '' : 0), op.op, op.value, type);
+    }
+    this.opts.onVars?.(this.vars);
+  }
+
+  setVar(name, value) {
+    this.vars[name] = value;
+    this.opts.onVars?.(this.vars);
+  }
+
+  resetVars() {
+    this.vars = { ...defaultVars(this.story), ...(this.opts.initialVars || {}) };
+    this.opts.onVars?.(this.vars);
+  }
+
+  /** Какие варианты выбора сейчас доступны (с учётом условий). */
+  visibleChoices(step = this.step) {
+    if (!step?.choices?.length) return [];
+    return step.choices.filter((choice) => !choice.if || evalCondition(choice.if, this.vars));
   }
 
   renderInstance(index, { instant = false } = {}) {
@@ -317,7 +385,7 @@ export class Stage {
     this.speakerEl.classList.toggle('is-empty', !char);
     this.node.classList.toggle('is-narration', !char);
 
-    const segments = parseRich(step.text || '');
+    const segments = parseRich(step.text ? interpolate(step.text, this.vars) : '');
     this.textEl.innerHTML = '';
     const holders = [];
     for (const seg of segments) {
@@ -406,7 +474,7 @@ export class Stage {
     this.node.classList.remove('is-typing');
     this.opts.onTextDone?.(step);
     if (this.awaitingChoices) return;
-    if (step?.choices?.length) {
+    if (this.visibleChoices(step).length) {
       this.showChoices(step);
     } else {
       this.hintEl.classList.add('is-visible');
@@ -440,17 +508,18 @@ export class Stage {
   /* ─────────────────────────── выборы ─────────────────────────── */
 
   showChoices(step) {
-    if (!step.choices?.length) return;
+    const choices = this.visibleChoices(step);
+    if (!choices.length) return;
     this.awaitingChoices = true;
     this.hintEl.classList.remove('is-visible');
     this.choiceLayer.innerHTML = '';
     this.choiceLayer.classList.add('is-visible');
-    step.choices.forEach((choice, i) => {
+    choices.forEach((choice, i) => {
       const btn = el('button', {
         class: 'choice',
         type: 'button',
         style: { '--i': String(i) },
-      }, el('span', { text: choice.text }));
+      }, el('span', { text: interpolate(choice.text, this.vars) }));
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.choose(choice);
@@ -496,7 +565,7 @@ export class Stage {
     const step = this.step;
     if (!step) return;
     if (this.awaitingChoices) return;
-    if (step.choices?.length) {
+    if (this.visibleChoices(step).length) {
       this.showChoices(step);
       return;
     }
@@ -504,6 +573,8 @@ export class Stage {
       this.showEnding(step);
       return;
     }
+    const conditional = this.matchConditionalGoto(step);
+    if (conditional) return;
     if (step.goto) {
       const target = resolveTarget(this.story, step.goto, this.sceneId);
       if (target) {
@@ -513,24 +584,25 @@ export class Stage {
       this.opts.onBrokenLink?.(step.goto);
     }
     if (this.index + 1 < this.scene.steps.length) {
-      this.index++;
-      this.renderInstance(this.index);
+      this.enter(this.sceneId, this.index + 1);
       return;
     }
-    if (this.opts.limitToScene) {
-      this.opts.onSceneEnd?.();
-      return;
+    this.leaveScene(this.scene);
+  }
+
+  /** Первый сработавший условный переход шага. */
+  matchConditionalGoto(step) {
+    for (const rule of step.gotoIf || []) {
+      if (!rule.goto) continue;
+      if (!evalCondition(rule.when, this.vars)) continue;
+      const target = resolveTarget(this.story, rule.goto, this.sceneId);
+      if (target) {
+        this.goTo(target.sceneId, target.stepIndex);
+        return true;
+      }
+      this.opts.onBrokenLink?.(rule.goto);
     }
-    const sceneIndex = this.story.scenes.findIndex((s) => s.id === this.sceneId);
-    const nextScene = this.story.scenes[sceneIndex + 1];
-    if (nextScene) {
-      this.sceneId = nextScene.id;
-      this.index = 0;
-      this.showChapterCard(nextScene);
-      this.renderInstance(0);
-      return;
-    }
-    this.showEnding({ endTitle: 'КОНЕЦ' });
+    return false;
   }
 
   /** Перерисовать текущий шаг без смены позиции (после правок в редакторе). */
@@ -541,6 +613,7 @@ export class Stage {
     this.index = clamp(this.index, 0, Math.max(0, scene.steps.length - 1));
     this.hideEnding();
     this.renderInstance(this.index, { instant });
+    this.opts.onVars?.(this.vars);
   }
 
   /* ─────────────────────────── эффекты ─────────────────────────── */
@@ -592,7 +665,7 @@ export class Stage {
     layer.append(
       el('div', { class: 'ending-card' },
         el('div', { class: 'ending-kicker', text: 'конец' }),
-        el('h2', { class: 'ending-title', text: step.endTitle || 'КОНЕЦ' }),
+        el('h2', { class: 'ending-title', text: interpolate(step.endTitle || 'КОНЕЦ', this.vars) }),
         el('div', { class: 'ending-actions' },
           el('button', { class: 'solid-btn', type: 'button', onclick: () => this.restart() }, 'Начать заново'),
           el('button', { class: 'ghost-btn', type: 'button', onclick: () => this.opts.onExit?.() }, 'В библиотеку'),
@@ -612,6 +685,7 @@ export class Stage {
   restart() {
     this.hideEnding();
     this.ended = false;
+    this.resetVars();
     this.bgUrl = null;
     this.bgLayer = 0;
     this.sceneId = this.story.scenes[0].id;

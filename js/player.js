@@ -35,7 +35,11 @@ export function openPlayer(story, opts = {}) {
   const sceneCount = totalSteps(story);
   const saves = getSaves(story.id);
   const resume = !opts.fresh && saves.auto && !saves.auto.ended && findScene(story, saves.auto.sceneId)
-    ? { sceneId: saves.auto.sceneId, stepIndex: saves.auto.stepIndex }
+    ? {
+      sceneId: saves.auto.sceneId,
+      stepIndex: saves.auto.stepIndex,
+      vars: saves.auto.vars || {},
+    }
     : { sceneId: story.scenes[0].id, stepIndex: 0 };
 
   const seenBefore = getSeen(story.id);
@@ -54,6 +58,7 @@ export function openPlayer(story, opts = {}) {
       sceneName: scene.name,
       percent: Math.min(1, (flatPosition(story, position.sceneId, position.stepIndex) + 1) / Math.max(1, sceneCount)),
       excerpt: (step?.text || '').slice(0, 90),
+      vars: position.vars || {},
       ended: false,
     });
   }, 350);
@@ -73,6 +78,9 @@ export function openPlayer(story, opts = {}) {
     onMenu: () => openPlayerMenu(story, opts),
     onExit: () => opts.onExit?.(),
     onBrokenLink: (ref) => toast(`Переход «${ref}» не найден`),
+    onVars: () => {
+      if (stage && !stage.ended) persist(stage.position, stage.step);
+    },
     onEnding: () => {
       finished = true;
       persist.cancel();
@@ -83,6 +91,7 @@ export function openPlayer(story, opts = {}) {
         sceneName: findScene(story, stage.position.sceneId)?.name || '',
         percent: 1,
         excerpt: '',
+        vars: { ...stage.vars },
         ended: true,
       });
     },

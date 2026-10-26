@@ -396,6 +396,177 @@ await step('битый файл не ломает библиотеку', async (
   assert(document.querySelectorAll('.story-card').length >= 3, 'библиотека пострадала');
 });
 
+
+/* ─────────── переменные и условия ─────────── */
+
+async function importStoryData(story) {
+  const file = new window.File([JSON.stringify(story)], 'story.json', { type: 'application/json' });
+  const picker = document.querySelector('input[type=file]');
+  Object.defineProperty(picker, 'files', { value: [file], configurable: true });
+  picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+  await waitFor(() => [...document.querySelectorAll('.story-card-title')].some((n) => n.textContent === story.title), { label: `import ${story.title}` });
+  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes(story.title)));
+  await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: `open ${story.title}` });
+  await sleep(250);
+}
+
+/** id истории «Логика» после импорта (импорт всегда выдаёт новый id) */
+function logicSaveKey() {
+  const index = JSON.parse(window.localStorage.getItem('vnmy:index') || '[]');
+  for (const id of index) {
+    const story = JSON.parse(window.localStorage.getItem('vnmy:story:' + id) || '{}');
+    if (story.title === logicStory.title) return `vnmy:saves:${id}`;
+  }
+  return null;
+}
+
+async function readText() {
+  for (let i = 0; i < 6 && document.querySelector('.stage').classList.contains('is-typing'); i++) {
+    click(document.querySelector('.stage .tap-layer'));
+    await sleep(70);
+  }
+  await sleep(60);
+  return document.querySelector('.stage .text').textContent.trim();
+}
+
+async function advance() {
+  click(document.querySelector('.stage .tap-layer'));
+  await sleep(140);
+}
+
+const logicStory = {
+  title: 'Логика',
+  vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
+  scenes: [{
+    id: 's', name: 'Сцена', bg: '',
+    steps: [
+      { id: 'v1', text: 'старт' },
+      { id: 'v2', text: 'счёт {sympathy}', set: [{ var: 'sympathy', op: 'add', value: 1 }] },
+      { id: 'v3', text: 'секрет', if: 'sympathy >= 5' },
+      {
+        id: 'v4', text: '', choices: [
+          { text: 'обычный', goto: 's:v5' },
+          { text: 'секретный', goto: 's:v6', if: 'sympathy >= 5' },
+        ],
+      },
+      { id: 'v5', text: 'обычная ветка', goto: 's:v7' },
+      { id: 'v6', text: 'секретная ветка' },
+      { id: 'v7', text: 'финиш', gotoIf: [{ when: 'sympathy >= 1', goto: 's:v8' }], goto: 's:v9' },
+      { id: 'v8', text: 'по условию' },
+      { id: 'v9', text: 'конец', end: true, endTitle: 'КОНЕЦ · {sympathy}' },
+    ],
+  }],
+};
+
+await step('переменные: set, подстановка и пропуск шага по условию', async () => {
+  await importStoryData(logicStory);
+  const first = await readText();
+  assert(first === 'старт', 'первый шаг: ' + first);
+  await advance();
+  const second = await readText();
+  assert(second === 'счёт 1', 'подстановка переменной: ' + second);
+  await advance();
+  const third = await readText();
+  assert(third !== 'секрет', 'шаг с ложным условием не пропущен');
+});
+
+await step('переменные: скрытый вариант выбора не показывается', async () => {
+  const choices = [...document.querySelectorAll('.choice-layer .choice')].map((n) => n.textContent.trim());
+  assert(choices.length === 1, 'вариантов: ' + choices.join('|'));
+  assert(choices[0] === 'обычный', 'не тот вариант: ' + choices[0]);
+  click(document.querySelector('.choice-layer .choice'));
+  await sleep(250);
+  const text = await readText();
+  assert(text === 'обычная ветка', 'переход по выбору: ' + text);
+});
+
+await step('переменные: условный переход срабатывает', async () => {
+  await advance();
+  assert((await readText()) === 'финиш', 'шаг «финиш»');
+  await advance();
+  const next = await readText();
+  assert(next === 'по условию', 'gotoIf не сработал: ' + next);
+});
+
+await step('переменные: подстановка в финале и сохранение в автосейв', async () => {
+  await advance();
+  assert((await readText()) === 'конец', 'последний шаг');
+  await advance();
+  await waitFor(() => document.querySelector('.ending-layer.is-visible'), { label: 'ending' });
+  const title = document.querySelector('.ending-title').textContent;
+  assert(title === 'КОНЕЦ · 1', 'подстановка в заголовке финала: ' + title);
+  const key = logicSaveKey();
+  assert(key, 'история «Логика» не найдена в библиотеке');
+  const auto = JSON.parse(window.localStorage.getItem(key) || '{}').auto;
+  assert(auto?.ended, 'финал не сохранён');
+  const vars = auto.vars;
+  assert(vars && vars.sympathy === 1, 'переменные не попали в сохранение: ' + JSON.stringify(vars));
+  click(document.querySelector('.ending-layer .ghost-btn'));
+  await waitFor(() => visible('screen-library'), { label: 'back' });
+});
+
+await step('переменные: продолжение восстанавливает значения', async () => {
+  // правим сохранение так, будто игрок остановился на шаге v3 с sympathy = 5
+  const key = logicSaveKey();
+  assert(key, 'история «Логика» не найдена в библиотеке');
+  const saves = JSON.parse(window.localStorage.getItem(key) || '{}');
+  assert(saves.auto, 'сохранение истории «Логика» не найдено');
+  saves.auto = { ...saves.auto, sceneId: 's', stepIndex: 2, ended: false, vars: { sympathy: 5 } };
+  window.localStorage.setItem(key, JSON.stringify(saves));
+  await waitFor(() => [...document.querySelectorAll('.story-card')].some((c) => c.textContent.includes('Логика')), { label: 'card Логика' });
+  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes('Логика')));
+  await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: 'resume' });
+  await sleep(300);
+  const text = await readText();
+  assert(text === 'секрет', 'условие не увидело сохранённую переменную: ' + text);
+  click(document.querySelector('.stage .topbar-back'));
+  await waitFor(() => visible('screen-library'), { label: 'back again' });
+});
+
+await step('переменные: демо содержит флаги и не имеет ошибок проверки', async () => {
+  const built = await esbuild.build({
+    entryPoints: [path.join(ROOT, 'js/format.js')],
+    bundle: true,
+    format: 'esm',
+    write: false,
+    logLevel: 'silent',
+  });
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
+  const raw = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/demo/story.json'), 'utf8'));
+  raw.baseUrl = 'stories/demo/';
+  const story = mod.normalizeStory(raw);
+  assert(story.vars.length >= 2, 'в демо нет переменных');
+  const issues = mod.lintStory(story).filter((i) => i.level === 'error');
+  assert(!issues.length, 'ошибки в демо: ' + issues.map((i) => i.text).join('; '));
+});
+
+await step('выражения: операторы и ошибки разбора', async () => {
+  const built = await esbuild.build({
+    entryPoints: [path.join(ROOT, 'js/expr.js')],
+    bundle: true,
+    format: 'esm',
+    write: false,
+    logLevel: 'silent',
+  });
+  const ex = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
+  const cases = [
+    ['sympathy >= 2', { sympathy: 2 }, true],
+    ['sympathy >= 2', { sympathy: 1 }, false],
+    ['not met and score < 10', { met: false, score: 3 }, true],
+    ['name == "Аня"', { name: 'Аня' }, true],
+    ['(a || b) && !c', { a: 0, b: 1, c: false }, true],
+    ['flag == false', { flag: false }, true],
+  ];
+  for (const [src, vars, want] of cases) {
+    const got = ex.evalCondition(src, vars);
+    assert(got === want, `${src} → ${got}, ожидалось ${want}`);
+  }
+  for (const bad of ['a ==', 'a > > b', '(a', 'a @ b']) {
+    assert(!!ex.compile(bad).error, 'не поймана ошибка: ' + bad);
+  }
+  assert(ex.interpolate('{a} и {b}', { a: 1, b: true }) === '1 и да', 'подстановка значений');
+});
+
 await sleep(200);
 console.log('\n---');
 const failed = results.filter((r) => r[0] === 'fail');

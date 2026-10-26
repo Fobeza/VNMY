@@ -75,7 +75,14 @@
           "speaker": "anya",
           "spriteOverride": "smile",
           "text": "О. Это лучший ответ из всех, что я слышала за сегодня.",
-          "mood": "blush"
+          "mood": "blush",
+          "set": [
+            {
+              "var": "sympathy",
+              "op": "add",
+              "value": 1
+            }
+          ]
         },
         {
           "id": "t6",
@@ -118,7 +125,14 @@
           "id": "t11",
           "speaker": "anya",
           "spriteOverride": "smile",
-          "text": "Тогда нам точно по пути. У меня там как раз нет ни одной причины оставаться."
+          "text": "Тогда нам точно по пути. У меня там как раз нет ни одной причины оставаться.",
+          "set": [
+            {
+              "var": "sympathy",
+              "op": "add",
+              "value": 1
+            }
+          ]
         },
         {
           "id": "t12",
@@ -131,7 +145,14 @@
           "speaker": "anya",
           "spriteOverride": "smile",
           "text": "Море. Да. Тогда дождь — это просто волны, которые забыли уйти.",
-          "mood": "zoom"
+          "mood": "zoom",
+          "set": [
+            {
+              "var": "sympathy",
+              "op": "add",
+              "value": 1
+            }
+          ]
         },
         {
           "id": "t14",
@@ -182,6 +203,13 @@
           "speaker": "mark",
           "spriteOverride": "smile",
           "text": "Ладно. Тогда я Марк. И термос я вам всё равно не отдам."
+        },
+        {
+          "id": "t9",
+          "speaker": "mark",
+          "spriteOverride": "smile",
+          "if": "sympathy >= 2",
+          "text": "Вы знакомы час, а смотритесь как люди с общей историей. Я, пожалуй, пересяду."
         },
         {
           "id": "t5",
@@ -243,6 +271,11 @@
             {
               "text": "«Что больше не будем ждать поездов»",
               "goto": "sc_kitchen:t6"
+            },
+            {
+              "text": "«Что ты больше не одна»",
+              "goto": "sc_kitchen:t9",
+              "if": "sympathy >= 2"
             }
           ]
         },
@@ -275,7 +308,27 @@
           "speaker": "anya",
           "spriteOverride": "smile",
           "text": "Пойдём на платформу? Сегодня обещали дождь до утра.",
-          "goto": "sc_dawn:t1"
+          "goto": "sc_dawn:t1",
+          "gotoIf": [
+            {
+              "when": "sympathy >= 3",
+              "goto": "sc_dawn:t9"
+            }
+          ]
+        },
+        {
+          "id": "t9",
+          "speaker": "anya",
+          "spriteOverride": "smile",
+          "text": "Это ты придумал только что. Значит, тоже считается.",
+          "set": [
+            {
+              "var": "sympathy",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_kitchen:t8"
         }
       ]
     },
@@ -321,7 +374,19 @@
           "id": "t4",
           "speaker": null,
           "text": "Ладонь у неё была холодная, как поручень в тамбуре. Никто из нас не отпустил.",
-          "mood": "flash"
+          "mood": "flash",
+          "set": [
+            {
+              "var": "took_hand",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t8",
+          "if": "sympathy >= 2",
+          "text": "За вечер я насчитал {sympathy} поводов остаться. Все они были здесь, в этой руке."
         },
         {
           "id": "t5",
@@ -341,8 +406,25 @@
           "text": "До следующего дождя.",
           "end": true,
           "endTitle": "КОНЕЦ · До следующего дождя"
+        },
+        {
+          "id": "t9",
+          "text": "Мы дошли до платформы молча — так, как умеют только те, кому уже нечего объяснять.",
+          "goto": "sc_dawn:t1"
         }
       ]
+    }
+  ],
+  "vars": [
+    {
+      "name": "sympathy",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "took_hand",
+      "type": "bool",
+      "initial": false
     }
   ]
 }

@@ -512,3 +512,97 @@
   .ed-panel { max-width: 640px; }
   .ed-tab-body { padding: 22px 24px 60px; }
 }
+
+/* ─────────────── условия и переменные ─────────────── */
+.cond-field { display: flex; flex-direction: column; gap: 6px; }
+.cond-field .cond-input { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+.cond-field .cond-input.has-error { border-color: rgba(220, 90, 86, .55); }
+.cond-status { font-size: 11px; line-height: 1.4; color: var(--ink-mute); min-height: 0; }
+.cond-status.is-ok { color: #8fc9a0; }
+.cond-status.is-error { color: #e8908c; }
+.cond-vars { display: flex; flex-wrap: wrap; gap: 4px; }
+.cond-var {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .04);
+  color: var(--ink-soft);
+}
+.cond-var:hover { background: rgba(255, 255, 255, .09); color: var(--ink); }
+.cond-field.is-compact .cond-input { min-height: 34px; padding: 6px 9px; font-size: 12px; }
+
+.var-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.var-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px minmax(0, 64px) 28px;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .02);
+}
+.var-row .input { min-height: 34px; padding: 6px 8px; font-size: 13px; }
+.var-row .switch-row { padding: 0; justify-content: center; }
+.var-row .switch-row .switch-text { display: none; }
+
+.op-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.op-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) 52px minmax(0, 1fr) 28px;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .02);
+}
+.op-row .input { min-height: 34px; padding: 6px 8px; font-size: 13px; }
+.op-row .mini-btn, .gotoif-row .mini-btn { width: 26px; height: 26px; }
+.op-hint { font-size: 10.5px; color: var(--ink-mute); text-align: center; }
+.gotoif-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  gap: 6px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .02);
+}
+.gotoif-row .cond-field { grid-column: 1; }
+.gotoif-row > .select { grid-column: 1; }
+.gotoif-row > .mini-btn { grid-column: 2; grid-row: 1; }
+.choice-cond { display: flex; align-items: center; gap: 6px; }
+.choice-cond-label { font-size: 10px; color: var(--ink-mute); white-space: nowrap; }
+.choice-cond .cond-field { flex: 1; min-width: 0; }
+.choice-cond .cond-vars { display: none; }
+
+/* текущие значения переменных под превью */
+.ed-vars-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0 12px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+}
+.ed-vars-bar::-webkit-scrollbar { display: none; }
+.ed-vars-bar .var-pill {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .03);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.ed-vars-bar .var-pill b { color: var(--accent); font-weight: 500; }
+
+/* поле с несколькими контролами друг под другом (логика шага) */
+.field-col { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.op-list:empty, .var-list:empty, .gotoif-row:empty { display: none; }
+.field-col .text-btn { align-self: flex-start; text-align: left; }

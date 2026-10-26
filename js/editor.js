@@ -6,6 +6,7 @@ import { POSITION_SHORT } from './editor-tabs.js';
 import {
   findScene, newStep, newScene, newCharacter, stateAt, POSITIONS, POSITION_LABELS, WEATHERS,
   WEATHER_LABELS, MOODS, MOOD_LABELS, ACCENTS, lintStory, normalizeStory, bareId, resolveTarget,
+  VAR_TYPES, VAR_TYPE_LABELS, VAR_OPS, VAR_OP_LABELS, newVar,
   characterById, spritePath, createStory, resolveUrl,
 } from './format.js';
 import {
@@ -13,12 +14,13 @@ import {
   getSettings, storageUsage,
 } from './store.js';
 import { el, $, $$, deepClone, debounce, plural } from './util.js';
+import { formatValue } from './expr.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS as MENU_ICONS } from './icons.js';
 import { renderSceneTab, renderStoryTab, renderMediaTab } from './editor-tabs.js';
 import {
   field, textInput, textArea, selectControl, chips, rangeControl, switchControl, segmented,
-  section, iconButton, ICONS, imageControl, pickMedia,
+  section, iconButton, ICONS, imageControl, pickMedia, conditionInput,
 } from './editor-ui.js';
 
 const TABS = [
@@ -189,7 +191,8 @@ function applySnapshot(next) {
   if (S.stage) {
     S.stage.story = S.story;
     S.stage.node.style.setProperty('--accent', S.story.accent || '#e0b072');
-    S.stage.goTo(S.sceneId, S.stepIndex, { instant: !S.previewAnimated });
+    // переход по клику в редакторе не должен повторно применять изменения переменных
+  S.stage.goTo(S.sceneId, S.stepIndex, { instant: !S.previewAnimated, effects: false, force: true });
   } else {
     mountPreview();
   }
@@ -318,7 +321,7 @@ function makeCtx() {
     get step() { return findScene(S.story, S.sceneId)?.steps[S.stepIndex] || null; },
     get stepIndex() { return S.stepIndex; },
     get tab() { return S.tab; },
-    get ui() { return { field, textInput, textArea, selectControl, chips, rangeControl, switchControl, segmented, section, iconButton, ICONS, imageControl, pickMedia, toast, openSheet, confirmDialog }; },
+    get ui() { return { field, textInput, textArea, selectControl, chips, rangeControl, switchControl, segmented, section, iconButton, ICONS, imageControl, pickMedia, conditionInput, toast, openSheet, confirmDialog }; },
     pushUndo,
     markDirty,
     saveNow: flushSave,
@@ -434,6 +437,8 @@ function mountPreview() {
     settings: { ...getSettings(), textSpeed: S.previewAnimated ? 26 : 1 },
     instantFirst: !S.previewAnimated,
     limitToScene: true,
+    // предпросмотр в редакторе всегда начинается с выбранного шага
+    forceStart: true,
     onPosition: (pos) => {
       const changed = pos.sceneId !== S.sceneId || pos.stepIndex !== S.stepIndex;
       S.sceneId = pos.sceneId;
@@ -443,6 +448,7 @@ function mountPreview() {
         renderPanel();
       }
     },
+    onVars: () => renderVarsBar(),
     onSceneEnd: () => toast('Конец сцены — добавьте реплику или переход'),
     onChoice: (choice) => {
       const target = resolveTarget(S.story, choice.goto, S.sceneId);
@@ -454,12 +460,38 @@ function mountPreview() {
     onBrokenLink: (ref) => toast(`Переход «${ref}» не найден`),
   });
   S.stage.mount();
+  renderVarsBar();
+}
+
+/** Текущие значения переменных — чтобы проверять условия прямо в превью. */
+function renderVarsBar() {
+  const wrap = document.querySelector('.ed-preview-wrap');
+  if (!wrap) return;
+  const bar = $('#ed-vars-bar');
+  const vars = S?.stage?.vars || {};
+  const names = Object.keys(vars);
+  if (!bar) return;
+  if (!names.length) { bar.hidden = true; bar.innerHTML = ''; return; }
+  bar.hidden = false;
+  bar.innerHTML = '';
+  const label = document.createElement('span');
+  label.textContent = 'переменные:';
+  bar.append(label);
+  for (const name of names) {
+    const pill = document.createElement('span');
+    pill.className = 'var-pill';
+    const strong = document.createElement('b');
+    strong.textContent = name;
+    pill.append(strong, ` = ${formatValue(vars[name])}`);
+    bar.append(pill);
+  }
 }
 
 function goToCurrent() {
   if (!S?.stage) return;
   S.lastKey = `${S.sceneId}:${S.stepIndex}`;
-  S.stage.goTo(S.sceneId, S.stepIndex, { instant: !S.previewAnimated });
+  // переход по клику в редакторе не должен повторно применять изменения переменных
+  S.stage.goTo(S.sceneId, S.stepIndex, { instant: !S.previewAnimated, effects: false, force: true });
 }
 
 const schedulePreviewRefresh = debounce(() => refreshPreview({ instant: !S.previewAnimated }), 140);
@@ -600,6 +632,9 @@ function renderStepTab(ctx) {
 
   /* кто на сцене с этого шага */
   wrap.append(renderStageCastEditor(ctx, step, scene));
+
+  /* логика: условия и переменные */
+  wrap.append(renderLogicEditor(ctx, step));
 
   /* выборы */
   wrap.append(renderChoicesEditor(ctx, step));
@@ -745,6 +780,126 @@ function updateCast(ctx, step, baseCast, change, { panel = true } = {}) {
   ctx.commit({ panel });
 }
 
+function renderLogicEditor(ctx, step) {
+  const story = ctx.story;
+  const box = el('div', {});
+
+  box.append(field('Показывать шаг, только если', conditionInput({
+    story,
+    value: step.if || '',
+    placeholder: 'пусто — всегда показывать',
+    onFocus: () => ctx.pushUndo(),
+    onChange: (value) => {
+      if (value.trim()) step.if = value;
+      else delete step.if;
+      ctx.patch(() => {}, { preview: false });
+    },
+  }), 'Если условие ложно, шаг пропускается — как будто его нет.'));
+
+  /* изменения переменных */
+  const setList = el('div', { class: 'op-list' });
+  if (!story.vars.length) {
+    setList.append(el('p', { class: 'field-hint', text: 'Сначала объявите переменные: вкладка «История» → «Переменные».' }));
+  }
+  (step.set || []).forEach((op, index) => {
+    const varInfo = story.vars.find((v) => v.name === op.var);
+    const row = el('div', { class: 'op-row' },
+      selectControl({
+        value: op.var,
+        compact: true,
+        options: [{ value: '', label: '— переменная —' }, ...story.vars.map((v) => ({ value: v.name, label: `${v.name} · ${VAR_TYPE_LABELS[v.type]}` }))],
+        onChange: (value) => { ctx.pushUndo(); op.var = value; ctx.commit({ panel: true, preview: false }); },
+      }),
+      selectControl({
+        value: op.op,
+        compact: true,
+        options: VAR_OPS.filter((o) => varInfo?.type === 'bool' ? ['set', 'toggle'].includes(o) : o !== 'toggle')
+          .map((o) => ({ value: o, label: VAR_OP_LABELS[o] })),
+        onChange: (value) => { ctx.pushUndo(); op.op = value; ctx.commit({ panel: true, preview: false }); },
+      }),
+      op.op === 'toggle' ? el('span', { class: 'op-hint', text: 'было ⇄ стало' }) : textInput({
+        value: String(op.value ?? ''),
+        placeholder: varInfo?.type === 'text' ? 'текст' : 'значение',
+        onFocus: () => ctx.pushUndo(),
+        onInput: (value) => { op.value = value; ctx.patch(() => {}, { preview: false }); },
+      }),
+      iconButton(ICONS.trash, {
+        label: 'Убрать изменение',
+        danger: true,
+        onclick: () => { ctx.pushUndo(); step.set.splice(index, 1); if (!step.set.length) delete step.set; ctx.commit(); },
+      }),
+    );
+    setList.append(row);
+  });
+
+  box.append(field('Изменить переменные при входе в шаг',
+    el('div', { class: 'field-col' },
+      setList,
+      el('button', {
+        type: 'button',
+        class: 'text-btn',
+        onclick: () => {
+          if (!story.vars.length) { toast('Сначала создайте переменную во вкладке «История»'); return; }
+          ctx.pushUndo();
+          const first = story.vars[0];
+          step.set = [...(step.set || []), {
+            var: first.name,
+            op: first.type === 'bool' ? 'toggle' : 'add',
+            value: first.type === 'bool' ? '' : '1',
+          }];
+          ctx.commit({ panel: true, preview: false });
+        },
+      }, '+ изменение'),
+    ),
+    'Применяются при входе на шаг — до того, как реплика появится на экране.',
+  ));
+
+  /* условные переходы */
+  const gotoList = el('div', { class: 'op-list' });
+  (step.gotoIf || []).forEach((rule, index) => {
+    gotoList.append(el('div', { class: 'gotoif-row' },
+      conditionInput({
+        story,
+        value: rule.when,
+        placeholder: 'если…',
+        compact: true,
+        onFocus: () => ctx.pushUndo(),
+        onChange: (value) => { rule.when = value; ctx.patch(() => {}, { preview: false }); },
+      }),
+      selectControl({
+        value: rule.goto,
+        options: targetOptions(story, { includeAuto: false }),
+        compact: true,
+        onChange: (value) => { ctx.pushUndo(); rule.goto = value; ctx.commit({ panel: false, preview: false }); },
+      }),
+      iconButton(ICONS.trash, {
+        label: 'Убрать переход',
+        danger: true,
+        onclick: () => { ctx.pushUndo(); step.gotoIf.splice(index, 1); if (!step.gotoIf.length) delete step.gotoIf; ctx.commit(); },
+      }),
+    ));
+  });
+
+  box.append(field('Условные переходы',
+    el('div', { class: 'field-col' },
+      gotoList,
+      el('button', {
+        type: 'button',
+        class: 'text-btn',
+        onclick: () => {
+          if (!story.vars.length) { toast('Сначала создайте переменную во вкладке «История»'); return; }
+          ctx.pushUndo();
+          step.gotoIf = [...(step.gotoIf || []), { when: '', goto: '' }];
+          ctx.commit({ panel: true, preview: false });
+        },
+      }, '+ переход по условию'),
+    ),
+    'Проверяются по порядку и раньше обычного перехода: первый истинный уводит на свой шаг.',
+  ));
+
+  return section('Логика', box);
+}
+
 function renderChoicesEditor(ctx, step) {
   const wrap = el('div', { class: 'field choices-editor' },
     el('div', { class: 'field-row' },
@@ -783,6 +938,21 @@ function renderChoicesEditor(ctx, step) {
           compact: true,
           onChange: (value) => { ctx.pushUndo(); choice.goto = value; ctx.commit({ panel: false, preview: false }); },
         }),
+        el('div', { class: 'choice-cond' },
+          el('span', { class: 'choice-cond-label', text: 'показывать если' }),
+          conditionInput({
+            story: ctx.story,
+            value: choice.if || '',
+            placeholder: 'пусто — всегда',
+            compact: true,
+            onFocus: () => ctx.pushUndo(),
+            onChange: (value) => {
+              if (value.trim()) choice.if = value;
+              else delete choice.if;
+              ctx.patch(() => {}, { preview: false });
+            },
+          }),
+        ),
       ),
       iconButton(ICONS.trash, {
         label: 'Удалить вариант',
