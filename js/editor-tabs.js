@@ -38,6 +38,16 @@ export function renderSceneTab(ctx) {
       value: scene.weather,
       onChange: (value) => { ctx.pushUndo(); scene.weather = value; ctx.commit({ panel: false }); },
     })),
+    switchControl({
+      label: 'Название сцены при входе',
+      hint: 'карточка по центру на пару секунд',
+      checked: scene.card !== false,
+      onChange: (value) => {
+        ctx.pushUndo();
+        if (value) delete scene.card; else scene.card = false;
+        ctx.commit({ panel: false });
+      },
+    }),
   ));
 
   /* состав на сцене */

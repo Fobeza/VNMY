@@ -682,9 +682,9 @@ await step('переменные: условный переход срабаты
 
 await step('переменные: подстановка в финале и сохранение в автосейв', async () => {
   await advance();
-  assert((await readText()) === 'конец', 'последний шаг');
-  await advance();
   await waitFor(() => document.querySelector('.ending-layer.is-visible'), { label: 'ending' });
+  const last = document.querySelector('.ending-text')?.textContent || '';
+  assert(last === 'конец', 'последняя реплика на экране финала: ' + last);
   const title = document.querySelector('.ending-title').textContent;
   assert(title === 'КОНЕЦ · 1', 'подстановка в заголовке финала: ' + title);
   const key = logicSaveKey();
@@ -1038,6 +1038,58 @@ await step('спрайты сохраняют пропорции картинк�
   assert(/width:\s*auto/.test(img), 'ширина картинки спрайта задана не auto: ' + img);
   const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
   assert(/\.sprite img\s*\{[^}]*max-width:\s*none/.test(standalone), 'в vnmy.html нет исправления спрайтов');
+});
+
+await step('новая новелла: имя спрашивают в начале и подставляют в текст', async () => {
+  await openUniverse('Тюмень');
+  const cards = storyCards();
+  assert(cards.length >= 1, 'во вселенной «Тюмень» есть новелла');
+  assert(cards.some((c) => c.textContent.includes('Пересылка')), 'новелла «Пересылка»: ' + cards.map((c) => c.textContent.trim()).join(' | '));
+  click(cards.find((c) => c.textContent.includes('Пересылка')));
+  await waitFor(() => visible('screen-player') && document.querySelector('.stage'), { label: 'player peresylka' });
+
+  const name = 'Артём';
+  let asked = false;
+  let speaker = '';
+  for (let i = 0; i < 40 && !asked; i++) {
+    const ask = document.querySelector('.stage .ask-layer:not([hidden])');
+    if (ask) {
+      asked = true;
+      assert(ask.querySelector('.ask-label').textContent.includes('зовут'), 'вопрос про имя: ' + ask.textContent.trim());
+      const input = ask.querySelector('.ask-input');
+      setInput(input, name);
+      click(ask.querySelector('.ask-submit'));
+      break;
+    }
+    click(document.querySelector('.stage .tap-layer'));
+    await sleep(30);
+  }
+  assert(asked, 'игра спросила имя');
+  await waitFor(() => document.querySelector('.stage .ask-layer')?.hidden !== false, { label: 'ask hidden' });
+  await sleep(60);
+  speaker = document.querySelector('.stage .speaker').textContent.trim();
+  assert(speaker === name, 'имя героя в подписи: «' + speaker + '»');
+  await waitFor(() => document.querySelector('.stage .text').textContent.includes(name), { label: 'имя в тексте' });
+});
+
+await step('новая новелла: пороги, финал и выбор остаётся', async () => {
+  let guard = 0;
+  while (guard++ < 900) {
+    if (document.querySelector('.ending-layer.is-visible')) break;
+    const choices = [...document.querySelectorAll('.choice-layer .choice')];
+    if (choices.length) click(choices[0]);
+    else click(document.querySelector('.stage .tap-layer'));
+    await sleep(12);
+  }
+  assert(document.querySelector('.ending-layer.is-visible'), 'финал наступил за ' + guard + ' шагов');
+  const ending = document.querySelector('.ending-title')?.textContent || '';
+  assert(/МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
+  const keys = Object.keys(window.localStorage).filter((k) => k.startsWith('vnmy:saves:'));
+  const saves = keys.map((k) => JSON.parse(window.localStorage.getItem(k)));
+  const done = saves.find((s) => s.auto && s.auto.ended && s.auto.vars && 'близость_микаса' in s.auto.vars);
+  assert(done, 'сохранение финала новой новеллы');
+  assert(done.auto.vars['близость_микаса'] >= 2, 'близость накопилась: ' + JSON.stringify(done.auto.vars['близость_микаса']));
+  assert(done.auto.vars['вахта'] === 6, 'пройдены все шесть порогов, а не ' + done.auto.vars['вахта']);
 });
 
 await sleep(200);

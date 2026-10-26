@@ -22,6 +22,7 @@
  *   cast,             // полностью заменить состав на сцене
  *   mood,             // подсказка для эффектов (например, 'shake')
  *   pause,            // пауза в мс перед показом реплики
+ *   ask,              // { var, label, placeholder, value } — спросить у игрока значение
  *   if,               // условие: шаг покажется только если истинно
  *   set,              // [{ var, op: set|add|sub|toggle, value }] — при входе в шаг
  *   gotoIf,           // [{ when: условие, goto }] — условные переходы
@@ -169,6 +170,8 @@ export function normalizeStory(input) {
       cast: Array.isArray(s.cast) ? s.cast.map(normalizeCast).filter(Boolean) : [],
       steps: Array.isArray(s.steps) && s.steps.length ? s.steps : [newStep()],
     };
+    // «карточка сцены» (название по центру при входе) — можно выключить
+    if (s.card === false) scene.card = false;
     if (sceneIds.has(scene.id)) scene.id = uid('sc');
     sceneIds.add(scene.id);
     const ids = new Set();
@@ -229,6 +232,15 @@ function normalizeStep(t) {
       when: String(rule.when || ''),
       goto: String(rule.goto || ''),
     }));
+  }
+  if (t.ask && typeof t.ask === 'object' && t.ask.var) {
+    // знакомство: спросить значение у игрока и положить его в переменную
+    step.ask = {
+      var: String(t.ask.var),
+      label: String(t.ask.label || 'Как тебя зовут?'),
+      placeholder: String(t.ask.placeholder || ''),
+      value: t.ask.value == null ? '' : String(t.ask.value),
+    };
   }
   if (t.endTitle) step.endTitle = String(t.endTitle);
   return step;
@@ -356,6 +368,18 @@ export function lintStory(story) {
     }
   };
 
+  const checkAsk = (step, where, sceneId) => {
+    if (!step.ask) return;
+    if (!varNames.has(step.ask.var)) {
+      issues.push({ level: 'error', sceneId, stepId: step.id, text: `${where}: спрашиваем «${step.ask.var}», но такой переменной нет` });
+      return;
+    }
+    const variable = (story.vars || []).find((v) => v.name === step.ask.var);
+    if (variable && variable.type !== 'text') {
+      issues.push({ level: 'warn', sceneId, stepId: step.id, text: `${where}: «${step.ask.var}» не текстовая переменная — имя сохранится как число` });
+    }
+  };
+
   const checkText = (text, where, sceneId, stepId) => {
     for (const name of interpolatedVars(text)) {
       if (!varNames.has(name)) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: в тексте есть {${name}}, но такой переменной нет` });
@@ -371,9 +395,10 @@ export function lintStory(story) {
     }
     for (let j = 0; j < scene.steps.length; j++) {
       const step = scene.steps[j];
-      if (!step.text && !step.choices?.length && !step.end) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Пустая реплика #${j + 1}` });
+      if (!step.text && !step.ask && !step.choices?.length && !step.end) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Пустая реплика #${j + 1}` });
       checkCondition(step.if, `Шаг #${j + 1}: условие показа`, scene.id, step.id);
       checkText(step.text, `Шаг #${j + 1}`, scene.id, step.id);
+      checkAsk(step, `Шаг #${j + 1}`, scene.id);
       for (const op of step.set || []) {
         if (!varNames.has(op.var)) {
           issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: изменение несуществующей переменной «${op.var || '—'}»` });
