@@ -8,7 +8,10 @@ import {
   WEATHER_LABELS, MOODS, MOOD_LABELS, ACCENTS, lintStory, normalizeStory, bareId, resolveTarget,
   characterById, spritePath, createStory, resolveUrl,
 } from './format.js';
-import { saveStory, exportStory, duplicateStory, deleteStory, clearSaves, getSettings } from './store.js';
+import {
+  saveStory, exportStory, exportStoryPortable, duplicateStory, deleteStory, clearSaves,
+  getSettings, storageUsage,
+} from './store.js';
 import { el, $, $$, deepClone, debounce, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS as MENU_ICONS } from './icons.js';
@@ -45,12 +48,15 @@ export function openEditor(story, opts = {}) {
     dirty: false,
     undo: [],
     redo: [],
+    undoBytes: 0,
+    redoBytes: 0,
     previewAnimated: false,
     lastKey: '',
     textFocus: false,
   };
   S.sceneId = S.story.scenes[0].id;
 
+  document.documentElement.lang = S.story.lang || 'ru';
   $('#ed-story-title').textContent = S.story.title || 'История';
   setSaveState('сохранено');
   wireOnce();
@@ -119,33 +125,74 @@ function setSaveState(text) {
 
 /* ─────────────────────────── undo ─────────────────────────── */
 
+const UNDO_LIMIT = 50;
+const UNDO_BUDGET = 2 * 1024 * 1024; // символы, а не мегабайты: снимки живут в памяти
+
+/**
+ * Снимок истории для undo. Картинки, загруженные в редакторе (data URL),
+ * не копируются: они неизменяемы, поэтому берём их из текущей истории.
+ * Так снимок весит килобайты, а не мегабайты.
+ */
+function snapshot() {
+  const data = { ...S.story, media: undefined };
+  return JSON.stringify(data);
+}
+
+function restoreMedia(snapshotJson) {
+  const parsed = JSON.parse(snapshotJson);
+  parsed.media = S.story.media || [];
+  return normalizeStory(parsed);
+}
+
 function pushUndo() {
-  S.undo.push(JSON.stringify(S.story));
-  if (S.undo.length > 50) S.undo.shift();
+  if (!S) return;
+  const snap = snapshot();
+  S.undo.push(snap);
+  S.undoBytes = (S.undoBytes || 0) + snap.length;
+  while (S.undo.length > UNDO_LIMIT || (S.undoBytes > UNDO_BUDGET && S.undo.length > 1)) {
+    const dropped = S.undo.shift();
+    S.undoBytes -= dropped.length;
+  }
   S.redo.length = 0;
+  S.redoBytes = 0;
   updateUndoButtons();
 }
 
 function undo() {
   if (!S.undo.length) return;
-  S.redo.push(JSON.stringify(S.story));
-  applySnapshot(S.undo.pop());
+  const current = snapshot();
+  S.redo.push(current);
+  S.redoBytes = (S.redoBytes || 0) + current.length;
+  const snap = S.undo.pop();
+  S.undoBytes = Math.max(0, (S.undoBytes || 0) - snap.length);
+  applySnapshot(restoreMedia(snap));
   toast('Отменено');
 }
 
 function redo() {
   if (!S.redo.length) return;
-  S.undo.push(JSON.stringify(S.story));
-  applySnapshot(S.redo.pop());
+  const current = snapshot();
+  S.undo.push(current);
+  S.undoBytes = (S.undoBytes || 0) + current.length;
+  const snap = S.redo.pop();
+  S.redoBytes = Math.max(0, (S.redoBytes || 0) - snap.length);
+  applySnapshot(restoreMedia(snap));
 }
 
-function applySnapshot(json) {
-  const next = normalizeStory(JSON.parse(json));
+function applySnapshot(next) {
   S.story = next;
   if (!findScene(S.story, S.sceneId)) S.sceneId = S.story.scenes[0].id;
   S.stepIndex = Math.min(S.stepIndex, Math.max(0, findScene(S.story, S.sceneId).steps.length - 1));
   markDirty();
-  mountPreview();
+  $('#ed-story-title').textContent = S.story.title || 'История';
+  // превью не пересоздаём: подменяем историю и обновляем текущий шаг
+  if (S.stage) {
+    S.stage.story = S.story;
+    S.stage.node.style.setProperty('--accent', S.story.accent || '#e0b072');
+    S.stage.goTo(S.sceneId, S.stepIndex, { instant: !S.previewAnimated });
+  } else {
+    mountPreview();
+  }
   renderPanel();
   updateUndoButtons();
 }
@@ -194,6 +241,19 @@ function wireOnce() {
     renderPanel();
   });
   document.addEventListener('keydown', onKeyDown);
+
+  // не терять последние правки, если вкладку свернули или закрыли
+  window.addEventListener('pagehide', flushSafe);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) flushSafe();
+  });
+}
+
+function flushSafe() {
+  if (!S) return;
+  try {
+    if (S.dirty) flushSave();
+  } catch { /* в pagehide уже ничего не показать */ }
 }
 
 function onKeyDown(e) {
@@ -329,6 +389,20 @@ function makeCtx() {
   return ctx;
 }
 
+async function portableExport(story) {
+  flushSave();
+  toast('Собираю картинки…', 8000);
+  try {
+    const result = await exportStoryPortable(story);
+    toast(result.skipped
+      ? `Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, ${result.images} картинок, ${result.skipped} пропущено`
+      : `Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, картинок: ${result.images}`);
+  } catch (err) {
+    console.error(err);
+    toast('Не получилось собрать файл');
+  }
+}
+
 function openEditorMenu() {
   if (!S) return;
   openSheet({
@@ -336,7 +410,8 @@ function openEditorMenu() {
     subtitle: 'Редактор · изменения сохраняются в браузере',
     rows: [
       { label: 'Играть с начала', icon: MENU_ICONS.play, onSelect: () => { flushSave(); S.opts.onPlay?.(S.story); } },
-      { label: 'Экспорт JSON', icon: MENU_ICONS.download, hint: 'файл story.json со сценарием', onSelect: () => exportStory(S.story) },
+      { label: 'Экспорт с картинками', icon: MENU_ICONS.download, hint: 'один файл, переносится на любое устройство', onSelect: () => portableExport(S.story) },
+      { label: 'Экспорт JSON', icon: MENU_ICONS.download, hint: 'только сценарий, картинки — путями', onSelect: () => exportStory(S.story) },
       { label: 'Дублировать историю', icon: MENU_ICONS.copy, onSelect: () => { const ctx = makeCtx(); ctx.duplicate(); } },
       { label: 'Забыть прогресс чтения', icon: MENU_ICONS.restart, hint: 'снять отметки «прочитано»', onSelect: () => { clearSaves(S.story.id); toast('Прогресс сброшен'); } },
       { label: 'Удалить историю', icon: MENU_ICONS.trash, danger: true, onSelect: () => makeCtx().removeStory() },
@@ -541,6 +616,7 @@ function renderStepTab(ctx) {
         ctx.commit();
       },
     }),
+    step.end && step.choices?.length ? el('p', { class: 'field-warn', text: 'У шага есть и выборы, и «конец» — сработают выборы. Уберите одно из двух.' }) : null,
     !step.end ? field('Переход', selectControl({
       value: step.goto || '',
       options: targetOptions(ctx.story),
@@ -596,7 +672,7 @@ function renderStageCastEditor(ctx, step, scene) {
           updateCast(ctx, step, cast, (next) => {
             const target = next.find((x) => x.char === entry.char);
             if (target) target.sprite = value;
-          });
+          }, { panel: false });
         },
       }),
       segmented({
@@ -607,7 +683,7 @@ function renderStageCastEditor(ctx, step, scene) {
           updateCast(ctx, step, cast, (next) => {
             const target = next.find((x) => x.char === entry.char);
             if (target) target.pos = value;
-          });
+          }, { panel: false });
         },
       }),
       iconButton(ICONS.close, {
@@ -662,11 +738,11 @@ function renderStageCastEditor(ctx, step, scene) {
 }
 
 /** Любая правка состава на шаге становится переопределением (step.cast). */
-function updateCast(ctx, step, baseCast, change) {
+function updateCast(ctx, step, baseCast, change, { panel = true } = {}) {
   const next = baseCast.map((item) => ({ ...item }));
   change(next);
   step.cast = next;
-  ctx.commit({ panel: true });
+  ctx.commit({ panel });
 }
 
 function renderChoicesEditor(ctx, step) {

@@ -24,6 +24,7 @@ function show(name) {
 async function backToLibrary() {
   closePlayer();
   closeEditor();
+  document.documentElement.lang = 'ru';
   show('library');
   await renderLibrary(hooks);
 }
@@ -83,9 +84,20 @@ function installHistoryGuard() {
   });
 }
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  if (!/^https?:$/.test(location.protocol)) return;
+  // офлайн-режим не нужен в режиме разработки на localhost со сборочными инструментами,
+  // но для игры с телефона он обязателен
+  navigator.serviceWorker.register('sw.js').catch((err) => {
+    console.warn('[vnmy] service worker не зарегистрирован', err);
+  });
+}
+
 async function boot() {
   window.__VNMY_BOOTED = true;
   clearTimeout(window.__vnmyBoot);
+  registerServiceWorker();
   wireLibrary();
   installHistoryGuard();
   show('library');

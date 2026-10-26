@@ -143,9 +143,136 @@ export function importStoryJSON(json, { keepId = false } = {}) {
   return story;
 }
 
+/** Все картинки истории в одном месте: путь → как он записан. */
+export function storyAssets(story) {
+  const urls = new Set();
+  if (story.cover) urls.add(story.cover);
+  for (const m of story.media || []) if (m.url) urls.add(m.url);
+  for (const scene of story.scenes) {
+    if (scene.bg) urls.add(scene.bg);
+    for (const step of scene.steps) if (step.bg) urls.add(step.bg);
+  }
+  for (const char of story.characters) {
+    for (const url of Object.values(char.sprites || {})) if (url) urls.add(url);
+  }
+  return [...urls];
+}
+
+function replaceAssetPaths(story, map) {
+  const swap = (url) => (url && map.has(url) ? map.get(url) : url);
+  if (story.cover) story.cover = swap(story.cover);
+  for (const m of story.media || []) m.url = swap(m.url);
+  for (const scene of story.scenes) {
+    scene.bg = swap(scene.bg);
+    for (const step of scene.steps) if (step.bg) step.bg = swap(step.bg);
+  }
+  for (const char of story.characters) {
+    for (const key of Object.keys(char.sprites || {})) char.sprites[key] = swap(char.sprites[key]);
+  }
+  return story;
+}
+
+async function toDataUrl(url) {
+  if (!url || /^data:/i.test(url)) return url;
+  try {
+    const res = await fetch(url, { cache: 'force-cache' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Портируемый экспорт: все картинки вшиваются в JSON как data URL,
+ * поэтому файл открывается на любом устройстве без папки stories.
+ * limitMb ограничивает суммарный размер картинок (по умолчанию 24 МБ).
+ */
+export async function exportStoryPortable(story, { limitMb = 24 } = {}) {
+  const data = deepClone(story);
+  delete data.readOnly;
+  const map = new Map();
+  const budget = limitMb * 1024 * 1024;
+  let used = 0;
+  let skipped = 0;
+
+  for (const url of storyAssets(data)) {
+    if (/^data:/i.test(url)) { used += url.length; continue; }
+    if (url.startsWith('http') && !data.baseUrl) {
+      // внешние ссылки оставляем как есть
+      continue;
+    }
+    const absolute = /^https?:|^\//.test(url) ? url : (data.baseUrl || '') + url;
+    if (used > budget) { skipped++; continue; }
+    const dataUrl = await toDataUrl(absolute);
+    if (dataUrl) {
+      map.set(url, dataUrl);
+      used += dataUrl.length;
+    } else {
+      skipped++;
+    }
+  }
+
+  replaceAssetPaths(data, map);
+  data.baseUrl = '';
+  data.exportedAt = Date.now();
+  data.portable = true;
+  const json = JSON.stringify(data, null, 2);
+  const slug = slugify(story.title) || 'story';
+  download(`${slug}.json`, json);
+  return { bytes: json.length, images: map.size, skipped };
+}
+
+/** Экспорт всех локальных историй одним файлом — бэкап браузера. */
+export function exportBackup() {
+  const stories = listLocalStories().map((s) => {
+    const copy = deepClone(s);
+    delete copy.readOnly;
+    return copy;
+  });
+  const payload = {
+    format: 'vnmy-backup',
+    version: 1,
+    exportedAt: Date.now(),
+    stories,
+  };
+  const stamp = new Date().toISOString().slice(0, 10);
+  download(`vnmy-backup-${stamp}.json`, JSON.stringify(payload));
+  return stories.length;
+}
+
+/** Импорт файла: одна история, портируемая история или бэкап со списком. */
 export async function importStoryFile(file) {
   const text = await readFileAsText(file);
-  return importStoryJSON(text);
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('BAD_JSON');
+  }
+  const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.stories) ? parsed.stories : [parsed];
+  const imported = [];
+  for (const raw of list) {
+    const story = importStoryJSON(raw);
+    try {
+      saveStory(story);
+      imported.push(story);
+    } catch (err) {
+      if (String(err?.message) === 'STORAGE_FULL') {
+        const error = new Error('STORAGE_FULL');
+        error.imported = imported;
+        throw error;
+      }
+      throw err;
+    }
+  }
+  return imported;
 }
 
 export function exportStory(story) {
@@ -159,6 +286,19 @@ export function exportStoryData(story) {
   const data = deepClone(story);
   delete data.readOnly;
   return data;
+}
+
+/** Сколько места занято и сколько примерно осталось. */
+export function storageUsage() {
+  let used = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('vnmy:')) continue;
+      used += key.length + (localStorage.getItem(key)?.length || 0);
+    }
+  } catch { /* ignore */ }
+  return { used, limit: 5 * 1024 * 1024 };
 }
 
 /* ─────────────────────────── сохранения прохождения ─────────────────────────── */

@@ -1,5 +1,5 @@
 /* VNMY — элементы управления редактора и медиатека */
-import { el, $, compressImage, uid, download } from './util.js';
+import { el, compressImage, uid } from './util.js';
 import { resolveUrl } from './format.js';
 
 /* ─────────────────────────── базовые контролы ─────────────────────────── */
@@ -12,10 +12,12 @@ export function field(label, control, hint) {
   );
 }
 
-export function textInput({ value = '', placeholder = '', onInput, onBlur, type = 'text' } = {}) {
+export function textInput({ value = '', placeholder = '', onInput, onBlur, onFocus, type = 'text' } = {}) {
   const input = el('input', { class: 'input', type, value, placeholder });
   if (onInput) input.addEventListener('input', () => onInput(input.value));
   if (onBlur) input.addEventListener('blur', () => onBlur(input.value));
+  // onFocus используется для снимка undo перед правкой — без него шаг не отменяется
+  if (onFocus) input.addEventListener('focus', () => onFocus(input));
   return input;
 }
 
@@ -66,8 +68,11 @@ export function chips({ options, value, onChange, multi = false, values = [] } =
       onclick: () => {
         if (multi) {
           const next = values.includes(opt.value) ? values.filter((v) => v !== opt.value) : [...values, opt.value];
+          btn.classList.toggle('is-active', next.includes(opt.value));
           onChange?.(next);
         } else {
+          for (const sibling of wrap.children) sibling.classList.remove('is-active');
+          btn.classList.add('is-active');
           onChange?.(opt.value);
         }
       },
@@ -111,7 +116,11 @@ export function segmented({ options, value, onChange } = {}) {
     wrap.append(el('button', {
       type: 'button',
       class: `segment${opt.value === value ? ' is-active' : ''}`,
-      onclick: () => onChange?.(opt.value),
+      onclick: (e) => {
+        for (const sibling of wrap.children) sibling.classList.remove('is-active');
+        e.currentTarget.classList.add('is-active');
+        onChange?.(opt.value);
+      },
     }, opt.label));
   }
   return wrap;
@@ -293,8 +302,4 @@ export function imageControl({ story, value, label, ratio = '9 / 16', onPick } =
     class: 'image-control',
     onclick: () => pickMedia({ story, title: label || 'Выберите картинку', current: value, onPick }),
   }, preview, el('span', { class: 'image-control-label', text: value ? 'Заменить' : 'Выбрать' }));
-}
-
-export function downloadProject(story, filename = 'story.json') {
-  download(filename, JSON.stringify(story, null, 2));
 }

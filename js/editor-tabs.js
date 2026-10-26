@@ -78,7 +78,7 @@ export function renderSceneTab(ctx) {
       segmented({
         options: POSITIONS.map((p) => ({ value: p, label: POSITION_LABELS[p] })),
         value: entry.pos || 'center',
-        onChange: (value) => { ctx.pushUndo(); entry.pos = value; ctx.commit({ panel: true, instant: true }); },
+        onChange: (value) => { ctx.pushUndo(); entry.pos = value; ctx.commit({ panel: false, instant: true }); },
       }),
       rangeControl({
         label: 'Размер',
@@ -224,6 +224,25 @@ export function renderStoryTab(ctx) {
       onFocus: () => ctx.pushUndo(),
       onInput: (value) => { story.description = value; ctx.patch(() => {}, { preview: false }); },
     })),
+    field('Язык текста', selectControl({
+      value: story.lang || 'ru',
+      options: [
+        { value: 'ru', label: 'Русский' },
+        { value: 'en', label: 'English' },
+        { value: 'de', label: 'Deutsch' },
+        { value: 'uk', label: 'Українська' },
+        { value: 'es', label: 'Español' },
+        { value: 'fr', label: 'Français' },
+        { value: 'ja', label: '日本語' },
+        { value: 'zh', label: '中文' },
+      ],
+      onChange: (value) => {
+        ctx.pushUndo();
+        story.lang = value;
+        document.documentElement.lang = value;
+        ctx.commit({ panel: false, preview: false });
+      },
+    }), 'Влияет на переносы, кавычки и озвучку экранным диктором.'),
     field('Обложка', imageControl({
       story,
       value: story.cover,

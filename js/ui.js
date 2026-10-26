@@ -107,12 +107,3 @@ export function confirmDialog({ title, text, confirmText = 'Удалить', can
     });
   });
 }
-
-/** Поле ввода внутри шторки/панели */
-export function textField({ label, value = '', placeholder = '', multiline = false, rows = 3, onInput, onBlur, maxLength } = {}) {
-  const input = multiline ? el('textarea', { rows, placeholder, value }) : el('input', { type: 'text', placeholder, value });
-  if (maxLength) input.maxLength = maxLength;
-  if (onInput) input.addEventListener('input', () => onInput(input.value));
-  if (onBlur) input.addEventListener('blur', () => onBlur(input.value));
-  return el('div', { class: 'field' }, label ? el('label', { text: label }) : null, input);
-}

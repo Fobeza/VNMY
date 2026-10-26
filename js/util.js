@@ -25,7 +25,6 @@ export function el(tag, props = {}, ...children) {
 }
 
 export const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const now = () => Date.now();
 
 export function uid(prefix = 'id') {
@@ -38,10 +37,6 @@ export function deepClone(value) {
     try { return structuredClone(value); } catch { /* fall through */ }
   }
   return JSON.parse(JSON.stringify(value));
-}
-
-export function escapeHtml(str = '') {
-  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 export function debounce(fn, ms = 250) {
@@ -57,10 +52,6 @@ export function debounce(fn, ms = 250) {
 
 export function prefersReducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
-export function haptic(pattern = 8) {
-  try { navigator.vibrate?.(pattern); } catch { /* ignore */ }
 }
 
 export function download(filename, content, type = 'application/json') {

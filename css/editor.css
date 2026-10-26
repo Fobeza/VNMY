@@ -148,6 +148,16 @@
 }
 .field-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .field-row label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-mute); }
+.field-warn {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(224, 176, 114, .1);
+  border: 1px solid rgba(224, 176, 114, .3);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #f0d3a8;
+}
 .field-hint { margin: 6px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-mute); }
 .field-compact { margin-bottom: 10px; }
 

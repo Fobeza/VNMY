@@ -8,6 +8,7 @@ import { ICONS } from './icons.js';
 
 let stage = null;
 let currentStory = null;
+let pendingPersist = null;
 let wakeLock = null;
 let keyHandler = null;
 
@@ -39,7 +40,10 @@ export function openPlayer(story, opts = {}) {
 
   const seenBefore = getSeen(story.id);
 
+  let finished = false;
   const persist = debounce((position, step) => {
+    // после финала автосейв не перезаписываем: иначе теряется отметка «прочитано»
+    if (finished || stage?.ended) return;
     const scene = findScene(story, position.sceneId);
     if (!scene) return;
     writeSave(story.id, 'auto', {
@@ -53,6 +57,7 @@ export function openPlayer(story, opts = {}) {
       ended: false,
     });
   }, 350);
+  pendingPersist = persist;
 
   stage = new Stage(host, {
     story,
@@ -69,6 +74,8 @@ export function openPlayer(story, opts = {}) {
     onExit: () => opts.onExit?.(),
     onBrokenLink: (ref) => toast(`Переход «${ref}» не найден`),
     onEnding: () => {
+      finished = true;
+      persist.cancel();
       writeSave(story.id, 'auto', {
         sceneId: stage.position.sceneId,
         sceneIndex: stage.position.sceneIndex,
@@ -101,6 +108,9 @@ export function openPlayer(story, opts = {}) {
 export function closePlayer() {
   if (keyHandler) document.removeEventListener('keydown', keyHandler);
   keyHandler = null;
+  // отложенное сохранение не должно сработать после выхода и перезаписать финал
+  pendingPersist?.cancel?.();
+  pendingPersist = null;
   stage?.destroy();
   stage = null;
   currentStory = null;

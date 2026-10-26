@@ -33,6 +33,7 @@ export class Stage {
     this.mounted = false;
     this.spriteNodes = new Map();
     this._timers = new Set();
+    this._pauseToken = 0;
   }
 
   /* ─────────────────────────── жизненный цикл ─────────────────────────── */
@@ -60,9 +61,17 @@ export class Stage {
     this.weather = new WeatherLayer($('.weather-layer', node));
     this.topTitle.textContent = this.story.title || '';
     this.node.style.setProperty('--accent', this.story.accent || '#e0b072');
+    if (this.story.lang) document.documentElement.lang = this.story.lang;
     this.applyFontSize();
 
     this.tapLayer.addEventListener('click', () => this.handleTap());
+    // тап по тексту реплики — самая очевидная цель для игрока: тоже листает
+    this.dialogue.addEventListener('click', () => {
+      const selection = window.getSelection?.();
+      if (selection && String(selection).trim()) return; // не мешаем выделять текст
+      if (this.textEl.classList.contains('is-scrollable') && this.textEl.scrollTop > 4) return;
+      this.handleTap();
+    });
     this.tapLayer.addEventListener('keydown', (e) => {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
         e.preventDefault();
@@ -150,7 +159,21 @@ export class Stage {
     this.applyWeather(state.weather, { instant });
     this.applyCast(cast, { instant, speaker: step.speaker });
 
-    this.renderDialogue(step, { instant });
+    const pause = instant ? 0 : Math.min(4000, Math.max(0, Number(step.pause) || 0));
+    if (pause && step.text) {
+      const token = ++this._pauseToken;
+      this.dialogueLayer.classList.add('is-hidden');
+      this.cancelTyping();
+      // не оставляем в разметке текст прошлой реплики
+      this.textEl.textContent = '';
+      this.speakerEl.textContent = '';
+      this.later(() => {
+        if (token !== this._pauseToken) return;
+        this.renderDialogue(step, { instant: false });
+      }, pause);
+    } else {
+      this.renderDialogue(step, { instant });
+    }
     this.hideChoices();
 
     if (!this.mode || this.mode === 'play') {

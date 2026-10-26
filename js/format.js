@@ -90,6 +90,7 @@ export function normalizeStory(input) {
   story.description = String(story.description || '');
   story.cover = typeof story.cover === 'string' ? story.cover : '';
   story.accent = story.accent || ACCENTS[0];
+  story.lang = typeof story.lang === 'string' && story.lang ? story.lang : 'ru';
   story.baseUrl = story.baseUrl || '';
   story.createdAt = story.createdAt || Date.now();
   story.updatedAt = story.updatedAt || Date.now();
@@ -292,6 +293,7 @@ export function lintStory(story) {
         else if (!resolveTarget(story, choice.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Выбор «${choice.text}» ведёт в никуда` });
       }
       if (step.goto && !resolveTarget(story, step.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Переход после реплики #${j + 1} ведёт в никуда` });
+      if (step.end && step.choices?.length) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: одновременно «конец» и выборы — сработают выборы` });
       if (step.goto) ids.add(step.goto);
       if (step.end) continue;
       const isLast = j === scene.steps.length - 1;
