@@ -682,9 +682,9 @@ await step('переменные: условный переход срабаты
 
 await step('переменные: подстановка в финале и сохранение в автосейв', async () => {
   await advance();
-  assert((await readText()) === 'конец', 'последний шаг');
-  await advance();
   await waitFor(() => document.querySelector('.ending-layer.is-visible'), { label: 'ending' });
+  const last = document.querySelector('.ending-text')?.textContent || '';
+  assert(last === 'конец', 'последняя реплика на экране финала: ' + last);
   const title = document.querySelector('.ending-title').textContent;
   assert(title === 'КОНЕЦ · 1', 'подстановка в заголовке финала: ' + title);
   const key = logicSaveKey();
