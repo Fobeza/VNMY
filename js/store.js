@@ -1,6 +1,6 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
 import { normalizeStory, createStory, findScene, bareId, globalId } from './format.js';
-import { uid, download, readFileAsText, deepClone } from './util.js';
+import { uid, download, readFileAsText, deepClone, prefersReducedMotion } from './util.js';
 
 const K = {
   index: 'vnmy:index',
@@ -322,6 +322,14 @@ export function writeSave(storyId, slot, payload) {
   return saves;
 }
 
+/** Удаляет один слот (автосейв не трогает). */
+export function deleteSave(storyId, slot) {
+  const saves = getSaves(storyId);
+  saves.slots = saves.slots.filter((entry) => entry.slot !== slot);
+  lsSet(K.saves(storyId), JSON.stringify(saves));
+  return saves;
+}
+
 export function clearSaves(storyId) {
   lsRemove(K.saves(storyId));
   lsRemove(K.seen(storyId));
@@ -343,7 +351,10 @@ export function markSeen(storyId, stepId) {
 const DEFAULT_SETTINGS = { textSpeed: 22, fontSize: 1, skipSeen: false, keepAwake: true };
 
 export function getSettings() {
-  return { ...DEFAULT_SETTINGS, ...lsJSON(K.settings, {}) };
+  const settings = { ...DEFAULT_SETTINGS, ...lsJSON(K.settings, {}) };
+  // «меньше анимации» по умолчанию повторяет системную настройку
+  if (typeof settings.reduceMotion !== 'boolean') settings.reduceMotion = prefersReducedMotion();
+  return settings;
 }
 
 export function saveSettings(patch) {

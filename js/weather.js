@@ -31,6 +31,7 @@ export class WeatherLayer {
     this.kind = kind in PRESETS ? kind : 'none';
     this.host.dataset.weather = this.kind;
     this.host.classList.toggle('is-visible', this.kind !== 'none');
+    if (this.reduced) this.host.classList.add('is-reduced');
     if (this.kind === 'none') {
       this.stop();
       this.particles = [];
@@ -107,8 +108,24 @@ export class WeatherLayer {
     ctx.globalAlpha = 1;
   }
 
+  /** «Меньше анимации»: погоду не рисуем вовсе, чтобы не мельтешило. */
+  setReduced(reduced) {
+    this.reduced = !!reduced;
+    this.host.classList.toggle('is-reduced', this.reduced);
+    if (this.reduced) {
+      this.stop();
+      this.clear();
+      return;
+    }
+    if (this.kind !== 'none') {
+      this.resize();
+      this.seed();
+      this.start();
+    }
+  }
+
   start() {
-    if (this.raf || this.kind === 'none') return;
+    if (this.raf || this.kind === 'none' || this.reduced) return;
     const loop = () => {
       this.step();
       this.raf = requestAnimationFrame(loop);
