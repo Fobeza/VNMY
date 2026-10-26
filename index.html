@@ -29,14 +29,20 @@
       </header>
 
       <div class="lib-actions">
-        <button class="ghost-btn" id="btn-new-story" type="button">
+        <button class="ghost-btn is-primary" id="btn-new-story" type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Новая история
         </button>
-        <button class="ghost-btn" id="btn-import-story" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-          Импорт
-        </button>
+        <div class="lib-actions-row">
+          <button class="ghost-btn" id="btn-import-story" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+            Импорт
+          </button>
+          <button class="ghost-btn" id="btn-backup" type="button" title="Скачать все свои истории одним файлом">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+            Бэкап
+          </button>
+        </div>
       </div>
 
       <div id="story-list" class="story-list"></div>

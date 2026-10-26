@@ -24,25 +24,69 @@
       "bg": "assets/bg-start.webp",
       "weather": "rain",
       "cast": [
-        { "char": "hero", "sprite": "neutral", "pos": "center", "scale": 1 }
+        {
+          "char": "hero",
+          "sprite": "neutral",
+          "pos": "center",
+          "scale": 1
+        }
       ],
       "steps": [
-        { "id": "t1", "speaker": null, "text": "Здесь начинается история. Это реплика рассказчика — курсив без имени." },
-        { "id": "t2", "speaker": "hero", "text": "А это уже реплика персонажа. *Курсив*, **жирный**, перенос строки — всё работает." },
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Здесь начинается история. Это реплика рассказчика — курсив без имени."
+        },
+        {
+          "id": "t2",
+          "speaker": "hero",
+          "text": "А это уже реплика персонажа. *Курсив*, **жирный**, перенос строки — всё работает."
+        },
         {
           "id": "t3",
           "speaker": null,
           "text": "",
           "choices": [
-            { "text": "Первый вариант", "goto": "sc_start:t4" },
-            { "text": "Второй вариант", "goto": "sc_start:t6" }
+            {
+              "text": "Первый вариант",
+              "goto": "sc_start:t4"
+            },
+            {
+              "text": "Второй вариант",
+              "goto": "sc_start:t6"
+            }
           ]
         },
-        { "id": "t4", "speaker": "hero", "spriteOverride": "smile", "text": "Развилка — это просто два шага с goto." },
-        { "id": "t5", "speaker": null, "text": "Ветка сливается обратно в общий шаг.", "goto": "sc_start:t8" },
-        { "id": "t6", "speaker": "hero", "spriteOverride": "neutral", "text": "Смена эмоции задаётся в поле spriteOverride." },
-        { "id": "t7", "speaker": null, "text": "Вторая ветка тоже возвращается в общий шаг.", "goto": "sc_start:t8" },
-        { "id": "t8", "speaker": null, "text": "Переход в следующую сцену — по goto или просто по порядку сцен.", "goto": "sc_end:t1" }
+        {
+          "id": "t4",
+          "speaker": "hero",
+          "spriteOverride": "smile",
+          "text": "Развилка — это просто два шага с goto."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Ветка сливается обратно в общий шаг.",
+          "goto": "sc_start:t8"
+        },
+        {
+          "id": "t6",
+          "speaker": "hero",
+          "spriteOverride": "neutral",
+          "text": "Смена эмоции задаётся в поле spriteOverride."
+        },
+        {
+          "id": "t7",
+          "speaker": null,
+          "text": "Вторая ветка тоже возвращается в общий шаг.",
+          "goto": "sc_start:t8"
+        },
+        {
+          "id": "t8",
+          "speaker": null,
+          "text": "Переход в следующую сцену — по goto или просто по порядку сцен.",
+          "goto": "sc_end:t1"
+        }
       ]
     },
     {
@@ -51,12 +95,29 @@
       "bg": "assets/bg-end.webp",
       "weather": "petals",
       "cast": [
-        { "char": "hero", "sprite": "smile", "pos": "center", "scale": 1 }
+        {
+          "char": "hero",
+          "sprite": "smile",
+          "pos": "center",
+          "scale": 1
+        }
       ],
       "steps": [
-        { "id": "t1", "speaker": "hero", "text": "А это финальная реплика." },
-        { "id": "t2", "speaker": null, "text": "", "end": true, "endTitle": "КОНЕЦ · Название концовки" }
+        {
+          "id": "t1",
+          "speaker": "hero",
+          "text": "А это финальная реплика.",
+          "pause": 400
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "",
+          "end": true,
+          "endTitle": "КОНЕЦ · Название концовки"
+        }
       ]
     }
-  ]
+  ],
+  "lang": "ru"
 }

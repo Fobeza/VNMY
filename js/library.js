@@ -1,7 +1,7 @@
 /* VNMY — экран библиотеки */
 import {
   loadBuiltinStories, listLocalStories, duplicateStory, deleteStory, exportStory, progressOf,
-  importStoryFile, saveStory, clearSaves, getSaves,
+  importStoryFile, saveStory, clearSaves, getSaves, exportBackup, exportStoryPortable, storageUsage, listLocalStoryIds,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
@@ -33,6 +33,13 @@ export async function renderLibrary(nextHooks) {
     el('code', { text: 'stories/' }),
     el('span', { text: ' — по одной папке на историю. Здесь же их можно создать и отредактировать: правки хранятся в этом браузере.' }),
   );
+  const usage = storageUsage();
+  const usedMb = usage.used / 1024 / 1024;
+  if (usedMb > 0.2) {
+    note.append(el('br'), el('br'), el('span', {
+      text: `Занято в браузере: ${usedMb.toFixed(1)} МБ из ~5 МБ (${Math.round((usage.used / usage.limit) * 100)}%). Бэкап — кнопка «Бэкап» вверху.`,
+    }));
+  }
   if (builtinWarning) {
     note.append(el('br'), el('br'), el('span', { text: 'Встроенные истории не открылись. Проверьте, что папка stories на месте и страница открыта через сервер (а не как файл с диска).' }));
   }
@@ -49,12 +56,12 @@ function storyCard(story) {
     el('div', { class: 'story-card-body' },
       el('div', { class: 'story-card-title', text: story.title }),
       el('div', { class: 'story-card-meta' },
-        story.readOnly ? el('span', { class: 'story-card-badge', text: 'встроенная' }) : null,
         el('span', { text: story.author || 'без автора' }),
         el('span', { class: 'sep' }),
         el('span', { text: `${steps} ${plural(steps, 'шаг', 'шага', 'шагов')}` }),
         charCount ? el('span', { class: 'sep' }) : null,
         charCount ? el('span', { text: `${charCount} ${plural(charCount, 'персонаж', 'персонажа', 'персонажей')}` }) : null,
+        story.readOnly ? el('span', { class: 'story-card-badge', text: 'встроенная' }) : null,
       ),
       story.description ? el('div', { class: 'story-card-desc', text: story.description }) : null,
       progress ? el('div', { class: 'story-card-meta', style: { color: 'var(--accent)', marginTop: '2px' } },
@@ -113,7 +120,18 @@ function openStoryMenu(story) {
         icon: ICONS.copy,
         onSelect: () => { const copy = duplicateStory(story); toast('Копия создана'); renderLibrary(hooks); void copy; },
       },
-      { label: 'Экспорт JSON', icon: ICONS.download, hint: 'файл можно положить в папку stories', onSelect: () => exportStory(story) },
+      {
+        label: 'Экспорт с картинками',
+        icon: ICONS.download,
+        hint: 'один файл, откроется на любом устройстве',
+        onSelect: () => runPortableExport(story),
+      },
+      {
+        label: 'Экспорт JSON',
+        icon: ICONS.download,
+        hint: 'только сценарий, картинки — путями из stories/',
+        onSelect: () => exportStory(story),
+      },
       !story.readOnly ? {
         label: 'Удалить историю',
         icon: ICONS.trash,
@@ -131,6 +149,21 @@ function openStoryMenu(story) {
   void hasProgress;
 }
 
+async function runPortableExport(story) {
+  toast('Собираю картинки…', 8000);
+  try {
+    const result = await exportStoryPortable(story);
+    if (result.skipped) {
+      toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, ${result.images} картинок. ${result.skipped} не удалось вшить.`);
+    } else {
+      toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, картинок: ${result.images}`);
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Не получилось собрать файл');
+  }
+}
+
 export function wireLibrary() {
   $('#btn-new-story').addEventListener('click', () => {
     const story = hooks.onNew();
@@ -144,16 +177,38 @@ export function wireLibrary() {
     fileInput.value = '';
     if (!file) return;
     try {
-      const story = await importStoryFile(file);
-      saveStory(story);
-      toast(`Импортировано: ${story.title}`);
-      renderLibrary(hooks);
+      const imported = await importStoryFile(file);
+      const titles = imported.map((s) => `«${s.title}»`).join(', ');
+      toast(imported.length > 1 ? `Импортировано: ${imported.length} истории` : `Импортировано: ${titles}`, 3200);
     } catch (err) {
-      console.error(err);
-      toast('Не получилось прочитать файл истории');
+      const code = String(err?.message || '');
+      if (code === 'BAD_JSON' || code === 'STORAGE_FULL') console.warn('[vnmy] импорт:', err.message);
+      else console.error(err);
+          if (code === 'STORAGE_FULL') {
+        const partial = err.imported?.length || 0;
+        toast(partial
+          ? `Место кончилось: загружено ${partial} из файла. Удалите лишние истории или загружайте картинки файлами.`
+          : 'В браузере мало места для этой истории. Удалите что-нибудь или держите картинки в папке stories.', 6000);
+      } else if (code === 'BAD_JSON') {
+        toast('Это не файл истории VNMY: внутри не JSON', 4000);
+      } else {
+        toast('Не получилось прочитать файл истории', 4000);
+      }
+    } finally {
+      // одно обновление библиотеки на одну попытку импорта
+      await renderLibrary(hooks);
     }
   });
   $('#btn-import-story').addEventListener('click', () => fileInput.click());
+
+  $('#btn-backup').addEventListener('click', () => {
+    if (!listLocalStoryIds().length) {
+      toast('В браузере пока нет своих историй — бэкапить нечего');
+      return;
+    }
+    const count = exportBackup();
+    toast(`Бэкап: ${count} ${plural(count, 'история', 'истории', 'историй')}`);
+  });
 }
 
 export function markBuiltinWarning(value) {
