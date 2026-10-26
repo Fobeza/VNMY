@@ -1,0 +1,8 @@
+# служебное
+node_modules/
+.DS_Store
+.tools/
+*.log
+
+# необработанные исходники картинок (в репозиторий идут только webp)
+stories/*/assets/raw/

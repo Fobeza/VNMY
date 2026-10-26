@@ -1,0 +1,348 @@
+{
+  "schema": 1,
+  "id": "story_last_train",
+  "title": "Последний поезд",
+  "author": "VNMY demo",
+  "description": "Ночь, дождь, отменённый поезд — и девушка, которая тоже никуда не спешит. Короткая история о случайном разговоре.",
+  "cover": "assets/bg-platform-night.webp",
+  "accent": "#e0b072",
+  "characters": [
+    {
+      "id": "anya",
+      "name": "Аня",
+      "color": "#e8c08a",
+      "sprites": {
+        "neutral": "assets/anya-neutral.webp",
+        "smile": "assets/anya-smile.webp"
+      }
+    },
+    {
+      "id": "mark",
+      "name": "Марк",
+      "color": "#a8c4d8",
+      "sprites": {
+        "neutral": "assets/mark-neutral.webp",
+        "smile": "assets/mark-smile.webp"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sc_platform",
+      "name": "Платформа",
+      "bg": "assets/bg-platform-night.webp",
+      "weather": "rain",
+      "cast": [
+        {
+          "char": "anya",
+          "sprite": "neutral",
+          "pos": "center"
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "02:14. Дождь идёт ровно, как метроном. Последний поезд отменили полчаса назад."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я остался из упрямства. И ещё потому, что девушка под фонарём тоже не уходила."
+        },
+        {
+          "id": "t3",
+          "speaker": "anya",
+          "text": "Вы тоже ждёте поезд, которого не будет?"
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "",
+          "choices": [
+            {
+              "text": "«Вообще-то я просто не хочу домой»",
+              "goto": "sc_platform:t5"
+            },
+            {
+              "text": "«Да. Из принципа»",
+              "goto": "sc_platform:t7"
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "speaker": "anya",
+          "spriteOverride": "smile",
+          "text": "О. Это лучший ответ из всех, что я слышала за сегодня.",
+          "mood": "blush"
+        },
+        {
+          "id": "t6",
+          "speaker": null,
+          "text": "Она улыбнулась так, будто мы уже были знакомы. И кивнула на пустые пути.",
+          "goto": "sc_platform:t9"
+        },
+        {
+          "id": "t7",
+          "speaker": "anya",
+          "text": "Из принципа — это по-нашему."
+        },
+        {
+          "id": "t8",
+          "speaker": null,
+          "text": "Она поправила стакан с кофе и не стала спрашивать больше ничего.",
+          "goto": "sc_platform:t9"
+        },
+        {
+          "id": "t9",
+          "speaker": "anya",
+          "text": "Меня зовут Аня. Если поезда нет, можно хотя бы придумать, куда он ехал."
+        },
+        {
+          "id": "t10",
+          "speaker": null,
+          "text": "",
+          "choices": [
+            {
+              "text": "«В город, где всегда три часа ночи»",
+              "goto": "sc_platform:t11"
+            },
+            {
+              "text": "«К морю, чтобы дождь стал волнами»",
+              "goto": "sc_platform:t13"
+            }
+          ]
+        },
+        {
+          "id": "t11",
+          "speaker": "anya",
+          "spriteOverride": "smile",
+          "text": "Тогда нам точно по пути. У меня там как раз нет ни одной причины оставаться."
+        },
+        {
+          "id": "t12",
+          "speaker": null,
+          "text": "Мы придумали расписание. Оно было лучше настоящего.",
+          "goto": "sc_platform:t14"
+        },
+        {
+          "id": "t13",
+          "speaker": "anya",
+          "spriteOverride": "smile",
+          "text": "Море. Да. Тогда дождь — это просто волны, которые забыли уйти.",
+          "mood": "zoom"
+        },
+        {
+          "id": "t14",
+          "speaker": null,
+          "text": "Где-то далеко загудело. Поезд всё-таки шёл — пустой и тёплый, будто его отправили специально за нами.",
+          "goto": "sc_train:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_train",
+      "name": "Вагон",
+      "bg": "assets/bg-train.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 0.94
+        },
+        {
+          "char": "anya",
+          "sprite": "smile",
+          "pos": "right",
+          "scale": 0.94
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В вагоне было тепло и пусто. Только парень у окна: наушники, стакан чая и вид человека, который едет домой третьи сутки."
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "Предупреждаю сразу: я не проверяю билеты и не хочу знакомиться."
+        },
+        {
+          "id": "t3",
+          "speaker": "anya",
+          "text": "Поздно. Мы уже.",
+          "mood": "shake"
+        },
+        {
+          "id": "t4",
+          "speaker": "mark",
+          "spriteOverride": "smile",
+          "text": "Ладно. Тогда я Марк. И термос я вам всё равно не отдам."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Дождь стучал по стеклу. Аня рисовала на запотевшем окне город, которого не было на картах."
+        },
+        {
+          "id": "t6",
+          "speaker": "anya",
+          "text": "Марк, а ты куда едешь?"
+        },
+        {
+          "id": "t7",
+          "speaker": "mark",
+          "text": "Домой. Уже третью ночь подряд."
+        },
+        {
+          "id": "t8",
+          "speaker": null,
+          "text": "Он сказал это так, что стало ясно: дома его никто не ждёт. Аня не стала уточнять. Просто подвинулась и освободила место у окна.",
+          "pause": 300,
+          "goto": "sc_kitchen:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_kitchen",
+      "name": "Кухня",
+      "bg": "assets/bg-kitchen.webp",
+      "weather": "rain",
+      "cast": [
+        {
+          "char": "anya",
+          "sprite": "smile",
+          "pos": "center",
+          "scale": 0.96
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Через месяц я стоял на её кухне и ждал, когда закипит чайник. За окном шёл тот же дождь — как будто мы его так и не выключили."
+        },
+        {
+          "id": "t2",
+          "speaker": "anya",
+          "text": "Ты помнишь, что мы обещали друг другу в том поезде?"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "",
+          "choices": [
+            {
+              "text": "«Что будем придумывать города»",
+              "goto": "sc_kitchen:t4"
+            },
+            {
+              "text": "«Что больше не будем ждать поездов»",
+              "goto": "sc_kitchen:t6"
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "speaker": "anya",
+          "spriteOverride": "neutral",
+          "text": "Правильно. Так вот: я нашла ещё один. Он называется никак — его ещё не построили."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Она поставила передо мной чашку. На ней не было ничего написано, и это было самое честное, что я держал в руках за год.",
+          "goto": "sc_kitchen:t8"
+        },
+        {
+          "id": "t6",
+          "speaker": "anya",
+          "spriteOverride": "neutral",
+          "text": "Я тоже так думала. Потом поняла: ждать поездов — это и есть наш город."
+        },
+        {
+          "id": "t7",
+          "speaker": null,
+          "text": "Чайник щёлкнул. В окне отражались два человека, которые ещё не решили, кем будут друг другу.",
+          "goto": "sc_kitchen:t8"
+        },
+        {
+          "id": "t8",
+          "speaker": "anya",
+          "spriteOverride": "smile",
+          "text": "Пойдём на платформу? Сегодня обещали дождь до утра.",
+          "goto": "sc_dawn:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dawn",
+      "name": "Рассвет",
+      "bg": "assets/bg-dawn.webp",
+      "weather": "petals",
+      "cast": [
+        {
+          "char": "anya",
+          "sprite": "smile",
+          "pos": "center"
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Рассвет был мокрым и розовым. Поезд пришёл точно по расписанию — впервые за всё время."
+        },
+        {
+          "id": "t2",
+          "speaker": "anya",
+          "text": "Ну вот. И что теперь?"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "",
+          "choices": [
+            {
+              "text": "Взять её за руку",
+              "goto": "sc_dawn:t4"
+            },
+            {
+              "text": "Отпустить и уехать",
+              "goto": "sc_dawn:t6"
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Ладонь у неё была холодная, как поручень в тамбуре. Никто из нас не отпустил.",
+          "mood": "flash"
+        },
+        {
+          "id": "t5",
+          "speaker": "anya",
+          "text": "Значит, едем. В город, которого нет. — И улыбнулась, как тогда, под фонарём.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Тот же поезд"
+        },
+        {
+          "id": "t6",
+          "speaker": null,
+          "text": "Я сел в вагон и смотрел, как она уменьшается в окне. Она не махала — просто стояла, будто знала, что мы ещё встретимся."
+        },
+        {
+          "id": "t7",
+          "speaker": "anya",
+          "text": "До следующего дождя.",
+          "end": true,
+          "endTitle": "КОНЕЦ · До следующего дождя"
+        }
+      ]
+    }
+  ]
+}
