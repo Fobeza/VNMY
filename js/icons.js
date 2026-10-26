@@ -9,5 +9,7 @@ export const ICONS = {
   "back": "<path d=\"m14 6-6 6 6 6\"/>",
   "eye": "<path d=\"M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\"/>",
   "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.6\"/><path d=\"m4 18 5-5 4 4 3-3 4 4\"/>",
+  "journal": "<path d=\"M5 7h14M5 12h14M5 17h9\"/><path d=\"M3 4h18v16H3z\" opacity=\".45\"/>",
+  "save": "<path d=\"M5 4h11l3 3v13H5z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>",
   "dots": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>"
 };

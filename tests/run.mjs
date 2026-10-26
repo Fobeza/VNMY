@@ -397,6 +397,111 @@ await step('битый файл не ломает библиотеку', async (
 });
 
 
+/* ─────────── журнал реплик и сохранения ─────────── */
+
+const journalStory = {
+  title: 'Журнал',
+  characters: [{ id: 'm', name: 'Марк', sprites: {} }],
+  scenes: [{
+    id: 'j', name: 'Платформа', bg: '',
+    steps: [
+      { id: 'a', text: 'первая реплика' },
+      { id: 'b', speaker: 'm', text: 'вторая реплика' },
+      { id: 'c', text: 'третья реплика' },
+      { id: 'd', text: 'четвёртая реплика' },
+    ],
+  }],
+};
+
+await step('журнал реплик помнит прочитанное и имена говорящих', async () => {
+  await importStoryData(journalStory);
+  await advance();
+  assert((await readText()) === 'вторая реплика', 'вторая реплика на экране');
+  await openPlayerMenuSheet();
+  await chooseMenuRow('История реплик');
+  await waitFor(() => document.querySelector('.journal'), { label: 'journal list' });
+  const lines = [...document.querySelectorAll('.journal-line')].map((n) => n.textContent.replace(/\s+/g, ' ').trim());
+  assert(lines.length === 2, 'строк в журнале: ' + lines.length);
+  assert(lines[1].includes('Марк') && lines[1].includes('вторая реплика'), 'имя говорящего: ' + lines[1]);
+  assert(lines[0].includes('первая реплика'), 'первая реплика потерялась: ' + lines[0]);
+  closeSheet();
+  await sleep(380);
+});
+
+await step('сохранение в слот, возврат в него и журнал в снимке', async () => {
+  await openPlayerMenuSheet();
+  await chooseMenuRow('Сохранения');
+  await waitFor(() => document.querySelector('.save-slot'), { label: 'slots' });
+  const slots = [...document.querySelectorAll('.save-slot')];
+  assert(slots.length === 3, 'слотов: ' + slots.length);
+  assert(slots[0].textContent.includes('пусто'), 'первый слот должен быть пустым');
+  click(slots[0].querySelector('.save-slot-main'));
+  await sleep(520);
+
+  const key = saveKeyForTitle(journalStory.title);
+  assert(key, 'история «Журнал» не найдена в библиотеке');
+  const stored = JSON.parse(window.localStorage.getItem(key) || '{}');
+  assert(stored.slots?.length === 1, 'слот не записался');
+  assert(stored.slots[0].stepIndex === 1, 'в слот попал другой шаг: ' + stored.slots[0].stepIndex);
+  assert(stored.slots[0].history?.length === 2, 'журнал не попал в слот: ' + JSON.stringify(stored.slots[0].history));
+  assert(stored.auto?.history?.length >= 2, 'журнал не попал в автосейв');
+
+  closeSheet();
+  await sleep(400);
+  await advance();
+  assert((await readText()) === 'третья реплика', 'третья реплика на экране');
+
+  await openPlayerMenuSheet();
+  await chooseMenuRow('Сохранения');
+  await waitFor(() => document.querySelector('.save-slot.is-filled'), { label: 'filled slot' });
+  const open = [...document.querySelectorAll('.save-slot .pill')].find((b) => b.textContent.includes('Открыть'));
+  assert(open, 'нет кнопки «Открыть»');
+  click(open);
+  await sleep(500);
+  assert((await readText()) === 'вторая реплика', 'слот вернул не туда');
+
+  await openPlayerMenuSheet();
+  const journalValue = [...document.querySelectorAll('#overlay-root .sheet-row')]
+    .find((r) => r.textContent.includes('История реплик'))?.textContent || '';
+  assert(journalValue.includes('2'), 'журнал не восстановился из сохранения: ' + journalValue);
+  await chooseMenuRow('История реплик');
+  await waitFor(() => document.querySelector('.journal-line'), { label: 'journal restored' });
+  const restored = [...document.querySelectorAll('.journal-line')].map((n) => n.textContent.trim());
+  assert(restored.length === 2, 'строк в восстановленном журнале: ' + restored.length);
+  closeSheet();
+  await sleep(380);
+  click(document.querySelector('.stage .topbar-back'));
+  await waitFor(() => visible('screen-library'), { label: 'back from journal story' });
+});
+
+await step('режим «меньше анимации» отключает печать и погоду', async () => {
+  await waitFor(() => [...document.querySelectorAll('.story-card')].some((c) => c.textContent.includes(journalStory.title)), { label: 'card Журнал' });
+  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes(journalStory.title)));
+  await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: 'reduced player' });
+  await sleep(200);
+  assert((await readText()) === 'вторая реплика', 'продолжение с сохранённого места');
+
+  await openPlayerMenuSheet();
+  await chooseMenuRow('Меньше анимации');
+  await sleep(120);
+  assert(document.querySelector('.stage').classList.contains('is-reduced-motion'), 'нет класса «меньше анимации»');
+  const saved = JSON.parse(window.localStorage.getItem('vnmy:settings') || '{}');
+  assert(saved.reduceMotion === true, 'настройка не сохранилась: ' + JSON.stringify(saved));
+
+  click(document.querySelector('.stage .tap-layer'));
+  const instant = document.querySelector('.stage .text').textContent.trim();
+  assert(instant === 'третья реплика', 'текст не появился сразу: ' + JSON.stringify(instant));
+  assert(!document.querySelector('.stage').classList.contains('is-typing'), 'печать всё ещё идёт');
+
+  // возвращаем как было, чтобы не влиять на остальные проверки
+  await openPlayerMenuSheet();
+  await chooseMenuRow('Меньше анимации');
+  await sleep(120);
+  assert(!document.querySelector('.stage').classList.contains('is-reduced-motion'), 'класс не снялся');
+  click(document.querySelector('.stage .topbar-back'));
+  await waitFor(() => visible('screen-library'), { label: 'back from reduced' });
+});
+
 /* ─────────── переменные и условия ─────────── */
 
 async function importStoryData(story) {
@@ -410,14 +515,38 @@ async function importStoryData(story) {
   await sleep(250);
 }
 
-/** id истории «Логика» после импорта (импорт всегда выдаёт новый id) */
-function logicSaveKey() {
+/** Ключ сохранений истории по её названию (импорт каждый раз выдаёт новый id). */
+function saveKeyForTitle(title) {
   const index = JSON.parse(window.localStorage.getItem('vnmy:index') || '[]');
   for (const id of index) {
     const story = JSON.parse(window.localStorage.getItem('vnmy:story:' + id) || '{}');
-    if (story.title === logicStory.title) return `vnmy:saves:${id}`;
+    if (story.title === title) return `vnmy:saves:${id}`;
   }
   return null;
+}
+
+function logicSaveKey() {
+  return saveKeyForTitle(logicStory.title);
+}
+
+/** Открыть меню прохождения и вернуть шторку. */
+async function openPlayerMenuSheet() {
+  click(document.querySelector('.stage .topbar-menu'));
+  await waitFor(() => document.querySelector('#overlay-root .sheet'), { label: 'menu sheet' });
+  await sleep(60);
+  return document.querySelector('#overlay-root .sheet');
+}
+
+function closeSheet() {
+  const buttons = [...document.querySelectorAll('#overlay-root .sheet .ghost-btn')];
+  if (buttons.length) click(buttons[buttons.length - 1]);
+}
+
+async function chooseMenuRow(label) {
+  const row = [...document.querySelectorAll('#overlay-root .sheet-row')].find((r) => r.textContent.includes(label));
+  assert(row, `нет строки меню «${label}»`);
+  click(row);
+  await sleep(80);
 }
 
 async function readText() {

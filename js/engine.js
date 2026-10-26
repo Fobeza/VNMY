@@ -12,6 +12,8 @@ import { evalCondition, interpolate, applyOperation } from './expr.js';
 import { WeatherLayer } from './weather.js';
 
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
+/** Сколько реплик держим в журнале: дальше старые просто уходят. */
+const HISTORY_LIMIT = 150;
 
 export class Stage {
   constructor(host, opts = {}) {
@@ -33,6 +35,8 @@ export class Stage {
     this.awaitingChoices = false;
     this.seen = opts.seen || new Set();
     this.vars = { ...defaultVars(this.story), ...(opts.vars || {}) };
+    // журнал реплик: переживает автосейв, чтобы «история» не пропадала
+    this.history = Array.isArray(opts.history) ? opts.history.slice(-HISTORY_LIMIT) : [];
     this.mounted = false;
     this.spriteNodes = new Map();
     this._timers = new Set();
@@ -62,6 +66,7 @@ export class Stage {
     node.dataset.mode = this.mode;
 
     this.weather = new WeatherLayer($('.weather-layer', node));
+    this.applyMotion();
     this.topTitle.textContent = this.story.title || '';
     this.node.style.setProperty('--accent', this.story.accent || '#e0b072');
     if (this.story.lang) document.documentElement.lang = this.story.lang;
@@ -111,6 +116,15 @@ export class Stage {
   applySettings(patch = {}) {
     this.settings = { ...this.settings, ...patch };
     this.applyFontSize();
+    this.applyMotion();
+  }
+
+  /** «Меньше анимации»: без печати текста, погоды и переходов. */
+  applyMotion() {
+    const reduced = !!this.settings.reduceMotion;
+    this.node?.classList.toggle('is-reduced-motion', reduced);
+    this.weather?.setReduced(reduced);
+    if (reduced && this.isTyping()) this.finishTyping();
   }
 
   applyFontSize() {
@@ -204,6 +218,20 @@ export class Stage {
   resetVars() {
     this.vars = { ...defaultVars(this.story), ...(this.opts.initialVars || {}) };
     this.opts.onVars?.(this.vars);
+  }
+
+  /** Добавляет реплику в журнал (без дублей при перерисовке того же шага). */
+  noteHistory(step, text) {
+    if (this.mode !== 'play' || !step) return;
+    const plain = String(text || '').trim();
+    if (!plain) return;
+    const key = `${this.sceneId}:${bareId(step.id || '')}`;
+    const last = this.history[this.history.length - 1];
+    if (last && last.key === key && last.text === plain) return;
+    const name = step.speaker ? characterById(this.story, step.speaker)?.name || '' : '';
+    this.history.push({ key, name, text: plain });
+    if (this.history.length > HISTORY_LIMIT) this.history.splice(0, this.history.length - HISTORY_LIMIT);
+    this.opts.onHistory?.(this.history);
   }
 
   /** Какие варианты выбора сейчас доступны (с учётом условий). */
@@ -385,7 +413,9 @@ export class Stage {
     this.speakerEl.classList.toggle('is-empty', !char);
     this.node.classList.toggle('is-narration', !char);
 
-    const segments = parseRich(step.text ? interpolate(step.text, this.vars) : '');
+    const fullText = step.text ? interpolate(step.text, this.vars) : '';
+    this.noteHistory(step, fullText);
+    const segments = parseRich(fullText);
     this.textEl.innerHTML = '';
     const holders = [];
     for (const seg of segments) {
@@ -411,7 +441,7 @@ export class Stage {
     this.fitText();
     if (!instant) for (const h of holders) h.node.textContent = '';
 
-    if (instant) {
+    if (instant || this.settings.reduceMotion) {
       for (const h of holders) h.node.textContent = h.text;
       this.finishTyping(step);
       return;
@@ -544,6 +574,12 @@ export class Stage {
     if (!target) {
       this.opts.onBrokenLink?.(choice.goto);
       return;
+    }
+    const picked = String(choice.text || '').trim();
+    if (picked) {
+      this.history.push({ key: `choice:${this.sceneId}:${this.index}`, name: '', text: `→ ${picked}`, choice: true });
+      if (this.history.length > HISTORY_LIMIT) this.history.splice(0, this.history.length - HISTORY_LIMIT);
+      this.opts.onHistory?.(this.history);
     }
     this.goTo(target.sceneId, target.stepIndex);
   }
@@ -685,6 +721,8 @@ export class Stage {
   restart() {
     this.hideEnding();
     this.ended = false;
+    this.history = [];
+    this.opts.onHistory?.(this.history);
     this.resetVars();
     this.bgUrl = null;
     this.bgLayer = 0;

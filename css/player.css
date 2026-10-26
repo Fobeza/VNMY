@@ -391,3 +391,15 @@
   .stage.fx-shake { animation: none; }
   .chapter-card { animation-duration: 2s; }
 }
+
+/* ─────────────── «меньше анимации» ─────────────── */
+
+.stage.is-reduced-motion *,
+.stage.is-reduced-motion *::before,
+.stage.is-reduced-motion *::after {
+  transition-duration: .01ms !important;
+  animation-duration: .01ms !important;
+  animation-delay: 0ms !important;
+}
+.stage.is-reduced-motion .weather-layer,
+.weather-layer.is-reduced { display: none; }
