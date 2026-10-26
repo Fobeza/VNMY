@@ -11,5 +11,6 @@ export const ICONS = {
   "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.6\"/><path d=\"m4 18 5-5 4 4 3-3 4 4\"/>",
   "journal": "<path d=\"M5 7h14M5 12h14M5 17h9\"/><path d=\"M3 4h18v16H3z\" opacity=\".45\"/>",
   "save": "<path d=\"M5 4h11l3 3v13H5z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>",
+  "book": "<path d=\"M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\"/><path d=\"M17 7a3 3 0 0 1 3 3v10h-9\"/>",
   "dots": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>"
 };

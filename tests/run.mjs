@@ -95,6 +95,58 @@ function setInput(node, value) {
   node.dispatchEvent(new window.Event('input', { bubbles: true }));
 }
 
+/* ───────── навигация по вселенным (вселенная → новеллы → игра) ───────── */
+
+const UNIVERSE_DEMO = 'Тихие пути';
+
+function universeCards() {
+  return [...document.querySelectorAll('#universe-list .universe-card')];
+}
+
+function storyCards() {
+  return [...document.querySelectorAll('#screen-universe .story-card')];
+}
+
+/** С любого экрана — к списку вселенных. */
+async function openUniverses() {
+  if (visible('screen-player')) {
+    click(document.querySelector('.stage .topbar-back'));
+    await sleep(250);
+  }
+  if (visible('screen-editor')) {
+    click(document.getElementById('ed-close'));
+    await sleep(320);
+    const leave = [...document.querySelectorAll('#overlay-root .sheet .ghost-btn')].find((b) => b.textContent.includes('Выйти'));
+    if (leave) click(leave);
+    await sleep(250);
+  }
+  if (visible('screen-universe')) {
+    click(document.getElementById('uni-back'));
+    await sleep(200);
+  }
+  await waitFor(() => visible('screen-library'), { label: 'эран вселенных' });
+  await waitFor(() => universeCards().length >= 1, { label: 'карточки вселенных' });
+}
+
+/** Открыть вселенную по названию. */
+async function openUniverse(title = UNIVERSE_DEMO) {
+  await openUniverses();
+  const card = universeCards().find((c) => c.textContent.includes(title));
+  assert(card, `нет вселенной «${title}»: ` + universeCards().map((c) => c.textContent.trim()).join(' | '));
+  click(card);
+  await waitFor(() => visible('screen-universe'), { label: `вселенная «${title}»` });
+  await sleep(120);
+  return card;
+}
+
+/** Скрытый input импорта на экране новелл: импорт попадает в текущую вселенную. */
+function picker() {
+  const input = document.querySelector('input.js-import-novel') || document.querySelector('input[type=file]');
+  assert(input, 'нет поля импорта');
+  return input;
+}
+
+
 const results = [];
 async function step(name, fn) {
   try {
@@ -109,13 +161,21 @@ async function step(name, fn) {
 
 /* ───────── тесты ───────── */
 
-await step('библиотека загружает встроенную историю', async () => {
-  await waitFor(() => document.querySelectorAll('#story-list .story-card').length >= 1, { label: 'story cards' });
-  const titles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
-  assert(titles.includes('Последний поезд'), 'есть демо: ' + titles.join(','));
-  assert(visible('screen-library'), 'виден экран библиотеки');
+await step('библиотека показывает вселенные, внутри — новеллы', async () => {
+  await waitFor(() => universeCards().length >= 1, { label: 'universe cards' });
+  const titles = [...document.querySelectorAll('.universe-card-title')].map((n) => n.textContent);
+  assert(titles.includes(UNIVERSE_DEMO), 'есть вселенная демо: ' + titles.join(','));
+  assert(visible('screen-library'), 'виден экран вселенных');
   const note = document.querySelector('#library-note').textContent;
   assert(/VNMY \d+\.\d+/.test(note), 'в подписи нет версии: ' + note.slice(-40));
+  assert(!document.querySelector('#screen-library .story-card'), 'новеллы не должны быть на экране вселенных');
+  const demoCard = universeCards().find((c) => c.textContent.includes(UNIVERSE_DEMO));
+  assert(/1 новелла/.test(demoCard.textContent), 'счётчик новелл: ' + demoCard.textContent.trim());
+
+  await openUniverse(UNIVERSE_DEMO);
+  const novelTitles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
+  assert(novelTitles.includes('Последний поезд'), 'демо внутри вселенной: ' + novelTitles.join(','));
+  assert(document.getElementById('uni-title').textContent === UNIVERSE_DEMO, 'название вселенной в шапке');
 });
 
 await step('запуск истории и печать текста', async () => {
@@ -184,9 +244,9 @@ await step('прогресс сохраняется в localStorage', async () =
   assert(save.auto.percent === 1, 'процент 100');
 });
 
-await step('выход в библиотеку', async () => {
+await step('выход к новеллам вселенной', async () => {
   click(document.querySelector('.ending-layer .ghost-btn'));
-  await waitFor(() => visible('screen-library'), { label: 'library back' });
+  await waitFor(() => visible('screen-universe'), { label: 'universe back' });
   await waitFor(() => [...document.querySelectorAll('.story-card-meta')].some((n) => n.textContent.includes('прочитано')), { label: 'progress label' });
 });
 
@@ -273,8 +333,8 @@ await step('выход из редактора и наличие истории 
   await sleep(300);
   const confirmBtn = [...document.querySelectorAll('#overlay-root .sheet .ghost-btn')].find((b) => b.textContent.includes('Выйти'));
   if (confirmBtn) click(confirmBtn);
-  await waitFor(() => visible('screen-library'), { label: 'back to library' });
-  await waitFor(() => document.querySelectorAll('.story-card').length >= 2, { label: 'two stories' });
+  await waitFor(() => visible('screen-universe'), { label: 'back to universe' });
+  await waitFor(() => storyCards().length >= 2, { label: 'two stories' });
   const titles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
   assert(titles.length >= 2, 'две истории');
   assert(resultTitlesInclude(titles, 'Моя история') || true, 'titles: ' + titles.join('|'));
@@ -299,7 +359,7 @@ await step('тап по тексту реплики перелистывает',
   await sleep(300);
   assert(text() !== before, 'реплика не сменилась от тапа по тексту');
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back' });
+  await waitFor(() => visible('screen-universe'), { label: 'back' });
 });
 
 await step('после финала история открывается с начала', async () => {
@@ -316,7 +376,7 @@ await step('после финала история открывается с н�
   const firstLine = document.querySelector('.stage .text').textContent;
   assert(firstLine.includes('02:14') || firstLine.includes('Дождь'), 'история не началась сначала: ' + firstLine.slice(0, 40));
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back to library' });
+  await waitFor(() => visible('screen-universe'), { label: 'back to universe' });
 });
 
 await step('undo не теряет загруженные картинки', async () => {
@@ -325,7 +385,7 @@ await step('undo не теряет загруженные картинки', asy
   await sleep(300);
   const stageNode = document.querySelector('.ed-preview .stage');
   // добавляем картинку в историю так, как это делает загрузка файла
-  const saved = JSON.parse(window.localStorage.getItem(Object.keys(window.localStorage).find((k) => k.startsWith('vnmy:story:') && JSON.parse(window.localStorage.getItem(k)).title === 'Новая история')));
+  const saved = JSON.parse(window.localStorage.getItem(Object.keys(window.localStorage).find((k) => k.startsWith('vnmy:story:') && JSON.parse(window.localStorage.getItem(k)).title === 'Новая новелла')));
   saved.media = [{ id: 'm1', name: 'тест', url: 'data:image/webp;base64,AAAA', kind: 'image' }];
   window.localStorage.setItem(`vnmy:story:${saved.id}`, JSON.stringify(saved));
 
@@ -339,7 +399,7 @@ await step('undo не теряет загруженные картинки', asy
   await sleep(300);
 
   assert(document.querySelector('.ed-preview .stage') === stageNode, 'превью пересоздано (мигание)');
-  assert(document.getElementById('ed-story-title').textContent === 'Новая история', 'undo не применился к заголовку');
+  assert(document.getElementById('ed-story-title').textContent === 'Новая новелла', 'undo не применился к заголовку');
 });
 
 await step('пауза перед репликой работает', async () => {
@@ -353,9 +413,9 @@ await step('пауза перед репликой работает', async () =
   };
   // используем публичный API приложения: импорт истории и открытие плеера
   const file = new window.File([JSON.stringify(story)], 'pause.json', { type: 'application/json' });
-  const picker = document.querySelector('input[type=file]');
-  Object.defineProperty(picker, 'files', { value: [file], configurable: true });
-  picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const input = picker();
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
   await waitFor(() => [...document.querySelectorAll('.story-card-title')].some((n) => n.textContent === 'Пауза'), { label: 'pause story imported' });
   click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes('Пауза')));
   await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: 'pause player' });
@@ -370,7 +430,7 @@ await step('пауза перед репликой работает', async () =
   assert(!early, 'текст появился раньше паузы: ' + JSON.stringify(early));
   assert(late.length > 0, 'текст так и не появился после паузы');
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back from pause' });
+  await waitFor(() => visible('screen-universe'), { label: 'back from pause' });
 });
 
 await step('импорт файла со списком историй', async () => {
@@ -379,9 +439,9 @@ await step('импорт файла со списком историй', async (
     { title: 'Бэкап 2', scenes: [{ id: 'y', name: 'С', bg: '', steps: [{ id: 'a', text: 'два' }] }] },
   ] };
   const file = new window.File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
-  const picker = document.querySelector('input[type=file]');
-  Object.defineProperty(picker, 'files', { value: [file], configurable: true });
-  picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const input = picker();
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
   await waitFor(() => {
     const titles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
     return titles.includes('Бэкап 1') && titles.includes('Бэкап 2');
@@ -390,9 +450,9 @@ await step('импорт файла со списком историй', async (
 
 await step('битый файл не ломает библиотеку', async () => {
   const file = new window.File(['это не json'], 'bad.json', { type: 'application/json' });
-  const picker = document.querySelector('input[type=file]');
-  Object.defineProperty(picker, 'files', { value: [file], configurable: true });
-  picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const input = picker();
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
   await sleep(400);
   const toast = document.getElementById('toast');
   assert(toast.textContent.includes('не файл истории'), 'нет понятной ошибки: ' + toast.textContent);
@@ -474,7 +534,7 @@ await step('сохранение в слот, возврат в него и жу
   closeSheet();
   await sleep(380);
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back from journal story' });
+  await waitFor(() => visible('screen-universe'), { label: 'back from journal story' });
 });
 
 await step('режим «меньше анимации» отключает печать и погоду', async () => {
@@ -502,16 +562,16 @@ await step('режим «меньше анимации» отключает пе
   await sleep(120);
   assert(!document.querySelector('.stage').classList.contains('is-reduced-motion'), 'класс не снялся');
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back from reduced' });
+  await waitFor(() => visible('screen-universe'), { label: 'back from reduced' });
 });
 
 /* ─────────── переменные и условия ─────────── */
 
 async function importStoryData(story) {
   const file = new window.File([JSON.stringify(story)], 'story.json', { type: 'application/json' });
-  const picker = document.querySelector('input[type=file]');
-  Object.defineProperty(picker, 'files', { value: [file], configurable: true });
-  picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const input = picker();
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
   await waitFor(() => [...document.querySelectorAll('.story-card-title')].some((n) => n.textContent === story.title), { label: `import ${story.title}` });
   click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes(story.title)));
   await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: `open ${story.title}` });
@@ -634,7 +694,7 @@ await step('переменные: подстановка в финале и со
   const vars = auto.vars;
   assert(vars && vars.sympathy === 1, 'переменные не попали в сохранение: ' + JSON.stringify(vars));
   click(document.querySelector('.ending-layer .ghost-btn'));
-  await waitFor(() => visible('screen-library'), { label: 'back' });
+  await waitFor(() => visible('screen-universe'), { label: 'back' });
 });
 
 await step('переменные: продолжение восстанавливает значения', async () => {
@@ -652,7 +712,7 @@ await step('переменные: продолжение восстанавли�
   const text = await readText();
   assert(text === 'секрет', 'условие не увидело сохранённую переменную: ' + text);
   click(document.querySelector('.stage .topbar-back'));
-  await waitFor(() => visible('screen-library'), { label: 'back again' });
+  await waitFor(() => visible('screen-universe'), { label: 'back again' });
 });
 
 await step('переменные: демо содержит флаги и не имеет ошибок проверки', async () => {
@@ -664,8 +724,8 @@ await step('переменные: демо содержит флаги и не �
     logLevel: 'silent',
   });
   const mod = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
-  const raw = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/demo/story.json'), 'utf8'));
-  raw.baseUrl = 'stories/demo/';
+  const raw = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/silent-rails/novels/last-train/story.json'), 'utf8'));
+  raw.baseUrl = 'stories/silent-rails/novels/last-train/';
   const story = mod.normalizeStory(raw);
   assert(story.vars.length >= 2, 'в демо нет переменных');
   const issues = mod.lintStory(story).filter((i) => i.level === 'error');
@@ -699,17 +759,85 @@ await step('выражения: операторы и ошибки разбор�
   assert(ex.interpolate('{a} и {b}', { a: 1, b: true }) === '1 и да', 'подстановка значений');
 });
 
+await step('своя вселенная: создать, добавить новеллу, перенести', async () => {
+  await openUniverses();
+  click(document.getElementById('btn-new-universe'));
+  await waitFor(() => document.querySelector('.uni-form input.input'), { label: 'universe form' });
+  setInput(document.querySelector('.uni-form input.input'), 'Тестовая вселенная');
+  const createBtn = [...document.querySelectorAll('#overlay-root .sheet .ghost-btn')].find((b) => b.textContent.includes('Создать вселенную'));
+  assert(createBtn, 'нет кнопки создания вселенной');
+  click(createBtn);
+  await waitFor(() => visible('screen-universe'), { label: 'new universe opened' });
+  await sleep(150);
+  assert(document.getElementById('uni-title').textContent === 'Тестовая вселенная', 'новая вселенная не открылась');
+
+  const ownUniverses = JSON.parse(window.localStorage.getItem('vnmy:universes') || '[]');
+  const mine = ownUniverses.find((u) => u.title === 'Тестовая вселенная');
+  assert(mine, 'вселенная не сохранилась в браузере: ' + JSON.stringify(ownUniverses));
+  assert(mine.id && mine.id !== 'silent-rails', 'id вселенной: ' + mine.id);
+
+  // новая новелла внутри вселенной
+  click(document.getElementById('btn-new-story'));
+  await waitFor(() => visible('screen-editor'), { label: 'editor for novel' });
+  await sleep(300);
+  click(document.getElementById('ed-close'));
+  await sleep(320);
+  const leave = [...document.querySelectorAll('#overlay-root .sheet .ghost-btn')].find((b) => b.textContent.includes('Выйти'));
+  if (leave) click(leave);
+  await waitFor(() => visible('screen-universe'), { label: 'back to own universe' });
+  await waitFor(() => storyCards().some((c) => c.textContent.includes('Новая новелла')), { label: 'novel card in universe' });
+
+  const index = JSON.parse(window.localStorage.getItem('vnmy:index') || '[]');
+  const stories = index.map((id) => JSON.parse(window.localStorage.getItem('vnmy:story:' + id) || '{}'));
+  const created = stories.find((st) => st.title === 'Новая новелла');
+  assert(created, 'новелла не сохранилась');
+  assert(created.universe === mine.id, 'новелла не попала во вселенную: ' + created.universe);
+
+  // перенос новеллы в другую вселенную через меню карточки
+  const card = storyCards().find((c) => c.textContent.includes('Новая новелла'));
+  click(card.querySelector('.story-card-menu'));
+  await waitFor(() => document.querySelector('#overlay-root .sheet-row'), { label: 'story menu' });
+  await chooseMenuRow('Перенести в другую вселенную');
+  await sleep(420); // старая шторка закрывается, новая открывается
+  const toDemo = [...document.querySelectorAll('#overlay-root .sheet')]
+    .flatMap((sheet) => [...sheet.querySelectorAll('.sheet-row')])
+    .find((row) => row.querySelector('.sheet-label')?.textContent === UNIVERSE_DEMO);
+  assert(toDemo, 'нет строки переноса в демо-вселенную');
+  click(toDemo);
+  await sleep(350);
+  const moved = JSON.parse(window.localStorage.getItem('vnmy:story:' + created.id) || '{}');
+  assert(moved.universe === 'silent-rails', 'перенос не сохранился: ' + moved.universe);
+
+  // возвращаемся в демо-вселенную — перенесённая новелла здесь
+  await openUniverse(UNIVERSE_DEMO);
+  await waitFor(() => storyCards().some((c) => c.textContent.includes('Новая новелла')), { label: 'moved novel visible' });
+});
+
 await step('файлы для двойного щелчка собраны и свежие', async () => {
-  const { buildBundle, buildBuiltinStories, buildStandalone } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest } = await import(path.join(ROOT, 'tools/build.mjs'));
   const bundle = await buildBundle();
   const builtin = await buildBuiltinStories();
   const standalone = await buildStandalone();
+  const manifest = await buildManifest();
   const savedBundle = await fs.readFile(path.join(ROOT, 'bundle.js'), 'utf8');
   const savedBuiltin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
   const savedStandalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
+  const savedManifest = await fs.readFile(path.join(ROOT, 'stories/index.json'), 'utf8');
   assert(savedBundle === bundle, 'bundle.js устарел — запустите npm run build');
   assert(savedBuiltin === builtin, 'stories/builtin.js устарел — запустите npm run build');
   assert(savedStandalone === standalone, 'vnmy.html устарел — запустите npm run build');
+  assert(savedManifest === manifest, 'stories/index.json устарел — запустите npm run build');
+  const parsedManifest = JSON.parse(savedManifest);
+  assert(parsedManifest.schema === 2 && parsedManifest.universes.length >= 1, 'манифест без вселенных');
+  const demoUniverse = parsedManifest.universes.find((u) => u.id === 'silent-rails');
+  assert(demoUniverse && demoUniverse.novels.some((n) => n.dir === 'last-train'), 'в манифесте нет демо-новеллы');
+  // структура папок: stories/<вселенная>/universe.json + novels/<новелла>/story.json
+  for (const universe of parsedManifest.universes) {
+    await fs.access(path.join(ROOT, 'stories', universe.dir, 'universe.json'));
+    for (const novel of universe.novels) {
+      await fs.access(path.join(ROOT, 'stories', universe.dir, 'novels', novel.dir, 'story.json'));
+    }
+  }
   // один файл не должен тянуть ничего снаружи
   assert(!/\ssrc="(?!data:)/.test(savedStandalone), 'в vnmy.html есть внешний src');
   assert(!/\shref="(?!data:|#)/.test(savedStandalone), 'в vnmy.html есть внешний href');
@@ -768,7 +896,12 @@ await step('с диска (file://) открывается и играет бе�
     throw new Error('timeout: ' + label);
   };
 
-  await until(() => fdoc.querySelectorAll('#story-list .story-card').length >= 1, 'карточка встроенной истории');
+  await until(() => fdoc.querySelectorAll('#universe-list .universe-card').length >= 1, 'карточка встроенной вселенной');
+  const uniTitles = [...fdoc.querySelectorAll('.universe-card-title')].map((n) => n.textContent);
+  assert(uniTitles.includes('Тихие пути'), 'вселенная не подхватилась с диска: ' + uniTitles.join(','));
+
+  fdoc.querySelector('#universe-list .universe-card').dispatchEvent(new fwindow.MouseEvent('click', { bubbles: true }));
+  await until(() => fdoc.querySelectorAll('#story-list .story-card').length >= 1, 'карточка встроенной новеллы');
   const titles = [...fdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
   assert(titles.includes('Последний поезд'), 'демо не подхватилось с диска: ' + titles.join(','));
 
@@ -819,12 +952,21 @@ await step('один файл vnmy.html играется без соседних
   const sdoc = soloDom.window.document;
   const started = Date.now();
   while (Date.now() - started < 15000) {
+    if (sdoc.querySelectorAll('#universe-list .universe-card').length) break;
+    await sleep(50);
+  }
+  const uniTitles = [...sdoc.querySelectorAll('.universe-card-title')].map((n) => n.textContent);
+  assert(uniTitles.includes('Тихие пути'), 'вселенная не подхватилась из одного файла: ' + uniTitles.join(','));
+  assert(fetchCalls === 0, 'один файл всё-таки ходил в сеть: ' + fetchCalls);
+
+  sdoc.querySelector('#universe-list .universe-card').dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
+  const novelStart = Date.now();
+  while (Date.now() - novelStart < 8000) {
     if (sdoc.querySelectorAll('#story-list .story-card').length) break;
     await sleep(50);
   }
   const titles = [...sdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
   assert(titles.includes('Последний поезд'), 'демо не подхватилось из одного файла: ' + titles.join(','));
-  assert(fetchCalls === 0, 'один файл всё-таки ходил в сеть: ' + fetchCalls);
 
   sdoc.querySelector('#story-list .story-card').dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
   const playStart = Date.now();
@@ -834,12 +976,15 @@ await step('один файл vnmy.html играется без соседних
   }
   const text = sdoc.querySelector('.stage .text').textContent;
   assert(text.includes('02:14') || text.includes('Дождь'), 'реплика не появилась: ' + JSON.stringify(text));
-  const embedded = soloDom.window.__VNMY_BUILTIN_STORIES__ || [];
-  assert(embedded.length >= 1, 'истории не вшиты в файл');
-  const scene = embedded[0].scenes[0];
-  const sprite = Object.values(embedded[0].characters?.[0]?.sprites || {})[0] || '';
+  const library = soloDom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
+  const universe = library.universes[0];
+  assert(universe && universe.novels?.length >= 1, 'новеллы не вшиты в файл');
+  const novel = universe.novels[0];
+  const scene = novel.scenes[0];
+  const sprite = Object.values(novel.characters?.[0]?.sprites || {})[0] || '';
   assert(String(scene.bg).startsWith('data:image/'), 'фон не вшит: ' + String(scene.bg).slice(0, 40));
   assert(String(sprite).startsWith('data:image/'), 'спрайты не вшиты: ' + String(sprite).slice(0, 40));
+  assert(String(universe.cover).startsWith('data:image/'), 'обложка вселенной не вшита');
   assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки в одном файле: ' + fileErrors.join(' | '));
   soloDom.window.close();
 });

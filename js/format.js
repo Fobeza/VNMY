@@ -3,6 +3,7 @@
  * История (story.json)
  * {
  *   id, title, author, description, cover, accent,
+ *   universe,                       // id вселенной (js/universe.js) или ''
  *   baseUrl,                        // откуда грузить относительные пути к картинкам
  *   vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
  *   characters: [{ id, name, color, sprites: { neutral: 'assets/anya-neutral.webp' } }],
@@ -106,6 +107,7 @@ export function createStory(overrides = {}) {
     description: '',
     cover: '',
     accent: ACCENTS[0],
+    universe: '',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     characters: [],
@@ -124,6 +126,7 @@ export function normalizeStory(input) {
   story.description = String(story.description || '');
   story.cover = typeof story.cover === 'string' ? story.cover : '';
   story.accent = story.accent || ACCENTS[0];
+  story.universe = typeof story.universe === 'string' ? story.universe.trim() : '';
   story.lang = typeof story.lang === 'string' && story.lang ? story.lang : 'ru';
   story.baseUrl = story.baseUrl || '';
   story.createdAt = story.createdAt || Date.now();

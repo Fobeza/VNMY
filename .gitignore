@@ -5,7 +5,7 @@ node_modules/
 *.log
 
 # необработанные исходники картинок (в репозиторий идут только webp)
-stories/*/assets/raw/
+stories/**/assets/raw/
 
 # временные файлы тестов
 tests/.tmp/

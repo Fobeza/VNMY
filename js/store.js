@@ -1,11 +1,13 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
 import { normalizeStory, createStory, findScene, bareId, globalId } from './format.js';
+import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
 import { uid, download, readFileAsText, deepClone, prefersReducedMotion } from './util.js';
 
 const K = {
   index: 'vnmy:index',
   story: (id) => `vnmy:story:${id}`,
   saves: (id) => `vnmy:saves:${id}`,
+  universes: 'vnmy:universes',
   settings: 'vnmy:settings',
   seen: (id) => `vnmy:seen:${id}`,
 };
@@ -34,81 +36,135 @@ function lsJSON(key, fallback) {
   try { return JSON.parse(raw); } catch { return fallback; }
 }
 
-/* ─────────────────────────── builtin истории ─────────────────────────── */
+/* ─────────────────── встроенные вселенные и новеллы ─────────────────── */
 
 const builtinCache = new Map();
 
 /**
- * Встроенные истории из папки /stories:
- * stories/index.json → stories/<name>/story.json.
- * Требуется http(s) — поэтому index.html открывают через сервер или хостинг.
+ * Встроенная библиотека — то, что едет вместе с движком:
+ *  - при обычном запуске: stories/index.json (манифест, его пишет npm run build)
+ *    → stories/<вселенная>/universe.json → stories/<вселенная>/novels/<новелла>/story.json;
+ *  - при открытии с диска и в vnmy.html: window.__VNMY_BUILTIN_LIBRARY__ из сборки.
  */
-/** Истории, вшитые в stories/builtin.js — нужны при открытии с диска (file://). */
-function embeddedBuiltins() {
-  const list = Array.isArray(window.__VNMY_BUILTIN_STORIES__) ? window.__VNMY_BUILTIN_STORIES__ : null;
-  if (!list?.length) return null;
-  const stories = [];
-  for (const raw of list) {
-    const name = raw._builtin || 'builtin';
-    if (builtinCache.has(name)) { stories.push(builtinCache.get(name)); continue; }
-    const copy = deepClone(raw);
-    copy.baseUrl = copy.baseUrl || `stories/${name}/`;
-    const story = normalizeStory(copy);
-    story.readOnly = true;
-    builtinCache.set(name, story);
-    stories.push(story);
+function embeddedLibrary() {
+  const lib = window.__VNMY_BUILTIN_LIBRARY__;
+  if (lib && Array.isArray(lib.universes) && lib.universes.length) return lib;
+  const stories = Array.isArray(window.__VNMY_BUILTIN_STORIES__) ? window.__VNMY_BUILTIN_STORIES__ : null;
+  if (!stories?.length) return null;
+  // старая сборка без вселенных: раскладываем новеллы по их полю universe
+  const groups = new Map();
+  for (const raw of stories) {
+    const id = String(raw.universe || '');
+    if (!groups.has(id)) groups.set(id, { id, title: id || NO_UNIVERSE_TITLE, novels: [] });
+    groups.get(id).novels.push(raw);
   }
-  return stories;
+  return { schema: 2, universes: [...groups.values()] };
 }
 
-export async function loadBuiltinStories() {
-  // с file:// читать файлы нельзя: берём истории из stories/builtin.js (npm run build)
+function normalizeBuiltinStory(raw, { baseUrl, universeId }) {
+  const key = raw._builtin || `${universeId || 'none'}/${raw.id || 'story'}`;
+  if (builtinCache.has(key)) return builtinCache.get(key);
+  const copy = deepClone(raw);
+  copy.baseUrl = copy.baseUrl || baseUrl || '';
+  copy.universe = universeId;
+  const story = normalizeStory(copy);
+  story.readOnly = true;
+  story.universe = universeId;
+  builtinCache.set(key, story);
+  return story;
+}
+
+function builtinFromEmbedded(lib) {
+  const universes = [];
+  for (const raw of lib.universes) {
+    const universe = normalizeUniverse({ ...raw, baseUrl: '', builtin: true, readOnly: true });
+    universe.novels = (raw.novels || []).map((novel) =>
+      normalizeBuiltinStory(novel, { baseUrl: '', universeId: universe.id }));
+    universes.push(universe);
+  }
+  return universes;
+}
+
+async function fetchJSON(url) {
+  const res = await fetch(url, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`${url}: ${res.status}`);
+  return res.json();
+}
+
+/** Вселенные, которые едут вместе с движком. */
+export async function loadBuiltinUniverses() {
+  const embedded = embeddedLibrary();
   if (location.protocol === 'file:') {
-    const embedded = embeddedBuiltins();
-    if (embedded) return embedded;
-    console.warn('[vnmy] stories/builtin.js не найден — соберите файлы командой npm run build');
+    // с диска сети нет: только вшитая сборка
+    if (embedded) return builtinFromEmbedded(embedded);
+    console.warn('[vnmy] нет встроенной библиотеки — соберите файлы командой npm run build');
     return [];
   }
 
-  let names = [];
+  let manifest = null;
   try {
-    const res = await fetch('stories/index.json', { cache: 'no-cache' });
-    if (res.ok) {
-      const data = await res.json();
-      names = Array.isArray(data) ? data : data.stories || [];
-    }
+    manifest = await fetchJSON('stories/index.json');
   } catch (err) {
     console.warn('[vnmy] не удалось прочитать stories/index.json', err);
   }
-  if (!names.length) {
-    // папки stories/ может не быть рядом (сборка «один файл») — берём вшитые истории
-    const fallback = embeddedBuiltins();
-    if (fallback) return fallback;
-    names = ['demo'];
+
+  const entries = Array.isArray(manifest) ? null : manifest?.universes;
+  if (!Array.isArray(entries)) {
+    // сборка «один файл» (папки stories рядом нет) или старый манифест-список
+    if (embedded) return builtinFromEmbedded(embedded);
+    if (Array.isArray(manifest)) return legacyUniverses(manifest);
+    return [];
   }
 
-  const stories = [];
+  const universes = [];
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue;
+    const dir = String(entry.dir || entry.id || '').replace(/^\/+|\/+$/g, '');
+    if (!dir) continue;
+    const universe = normalizeUniverse({ ...entry, id: entry.id || dir });
+    universe.baseUrl = `stories/${dir}/`;
+    universe.builtin = true;
+    universe.readOnly = true;
+    universe.novels = [];
+    for (const novel of entry.novels || []) {
+      const novelDir = String(novel?.dir || novel?.id || '');
+      if (!novelDir) continue;
+      try {
+        const raw = await fetchJSON(`stories/${dir}/novels/${novelDir}/story.json`);
+        raw._builtin = `${dir}/novels/${novelDir}`;
+        universe.novels.push(normalizeBuiltinStory(raw, {
+          baseUrl: `stories/${dir}/novels/${novelDir}/`,
+          universeId: universe.id,
+        }));
+      } catch (err) {
+        console.warn(`[vnmy] не удалось загрузить новеллу «${dir}/${novelDir}»`, err);
+      }
+    }
+    universes.push(universe);
+  }
+  if (!universes.length && embedded) return builtinFromEmbedded(embedded);
+  return universes;
+}
+
+/** Старый манифест: просто список папок с историями (до появления вселенных). */
+async function legacyUniverses(names) {
+  const novels = [];
   for (const name of names) {
-    if (builtinCache.has(name)) { stories.push(builtinCache.get(name)); continue; }
     try {
-      const res = await fetch(`stories/${name}/story.json`, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(String(res.status));
-      const raw = await res.json();
-      raw.baseUrl = `stories/${name}/`;
+      const raw = await fetchJSON(`stories/${name}/story.json`);
       raw._builtin = name;
-      const story = normalizeStory(raw);
-      story.readOnly = true;
-      builtinCache.set(name, story);
-      stories.push(story);
+      novels.push(normalizeBuiltinStory(raw, { baseUrl: `stories/${name}/`, universeId: '' }));
     } catch (err) {
       console.warn(`[vnmy] не удалось загрузить историю «${name}»`, err);
     }
   }
-  if (!stories.length) {
-    const fallback = embeddedBuiltins();
-    if (fallback) return fallback;
-  }
-  return stories;
+  return novels.length ? [looseUniverse(novels)] : [];
+}
+
+/** Плоский список встроенных новелл (совместимость и тесты). */
+export async function loadBuiltinStories() {
+  const universes = await loadBuiltinUniverses();
+  return universes.flatMap((u) => u.novels);
 }
 
 export function hasBuiltin(name) {
@@ -224,31 +280,27 @@ async function toDataUrl(url) {
   }
 }
 
-/**
- * Портируемый экспорт: все картинки вшиваются в JSON как data URL,
- * поэтому файл открывается на любом устройстве без папки stories.
- * limitMb ограничивает суммарный размер картинок (по умолчанию 24 МБ).
- */
-export async function exportStoryPortable(story, { limitMb = 24 } = {}) {
+/** История со вшитыми картинками: файл открывается без папки stories. */
+async function portableStory(story, { limitMb = 24, used = 0 } = {}) {
   const data = deepClone(story);
   delete data.readOnly;
   const map = new Map();
   const budget = limitMb * 1024 * 1024;
-  let used = 0;
+  let spent = used;
   let skipped = 0;
 
   for (const url of storyAssets(data)) {
-    if (/^data:/i.test(url)) { used += url.length; continue; }
+    if (/^data:/i.test(url)) { spent += url.length; continue; }
     if (url.startsWith('http') && !data.baseUrl) {
       // внешние ссылки оставляем как есть
       continue;
     }
     const absolute = /^https?:|^\//.test(url) ? url : (data.baseUrl || '') + url;
-    if (used > budget) { skipped++; continue; }
+    if (spent > budget) { skipped++; continue; }
     const dataUrl = await toDataUrl(absolute);
     if (dataUrl) {
       map.set(url, dataUrl);
-      used += dataUrl.length;
+      spent += dataUrl.length;
     } else {
       skipped++;
     }
@@ -258,10 +310,46 @@ export async function exportStoryPortable(story, { limitMb = 24 } = {}) {
   data.baseUrl = '';
   data.exportedAt = Date.now();
   data.portable = true;
+  return { data, images: map.size, skipped, spent };
+}
+
+/**
+ * Портируемый экспорт одной новеллы: все картинки вшиваются в JSON как data URL.
+ * limitMb ограничивает суммарный размер картинок (по умолчанию 24 МБ).
+ */
+export async function exportStoryPortable(story, { limitMb = 24 } = {}) {
+  const { data, images, skipped } = await portableStory(story, { limitMb });
   const json = JSON.stringify(data, null, 2);
   const slug = slugify(story.title) || 'story';
   download(`${slug}.json`, json);
-  return { bytes: json.length, images: map.size, skipped };
+  return { bytes: json.length, images, skipped };
+}
+
+/**
+ * Экспорт вселенной вместе со всеми её новеллами:
+ * один JSON, картинки внутри, импортируется на другом устройстве целиком.
+ */
+export async function exportUniversePortable(universe, novels, { limitMb = 64 } = {}) {
+  const payload = {
+    format: 'vnmy-universe',
+    version: 1,
+    exportedAt: Date.now(),
+    universe: universeData(universe),
+    novels: [],
+  };
+  let images = 0;
+  let skipped = 0;
+  let spent = 0;
+  for (const story of novels) {
+    const result = await portableStory(story, { limitMb, used: spent });
+    spent = result.spent;
+    images += result.images;
+    skipped += result.skipped;
+    payload.novels.push({ ...result.data, universe: universe.id });
+  }
+  const json = JSON.stringify(payload, null, 2);
+  download(`${slugify(universe.title) || 'universe'}-universe.json`, json);
+  return { bytes: json.length, images, skipped, novels: payload.novels.length };
 }
 
 /** Экспорт всех локальных историй одним файлом — бэкап браузера. */
@@ -273,8 +361,9 @@ export function exportBackup() {
   });
   const payload = {
     format: 'vnmy-backup',
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
+    universes: listLocalUniverses(),
     stories,
   };
   const stamp = new Date().toISOString().slice(0, 10);
@@ -282,19 +371,12 @@ export function exportBackup() {
   return stories.length;
 }
 
-/** Импорт файла: одна история, портируемая история или бэкап со списком. */
-export async function importStoryFile(file) {
-  const text = await readFileAsText(file);
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error('BAD_JSON');
-  }
-  const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.stories) ? parsed.stories : [parsed];
+/** Импорт набора новелл с защитой от переполнения места. */
+function importStoryList(rawList, { universeId = null } = {}) {
   const imported = [];
-  for (const raw of list) {
+  for (const raw of rawList) {
     const story = importStoryJSON(raw);
+    if (universeId != null) story.universe = universeId;
     try {
       saveStory(story);
       imported.push(story);
@@ -308,6 +390,57 @@ export async function importStoryFile(file) {
     }
   }
   return imported;
+}
+
+/**
+ * Импорт вселенной: universe + его новеллы.
+ * Если такая вселенная уже есть (например, встроенная) — новеллы просто добавятся в неё.
+ */
+export function importUniverseBundle(parsed) {
+  const rawUniverse = parsed?.universe || {};
+  const known = universeCatalog().find((u) => u.id === rawUniverse.id);
+  let universe;
+  if (known && (known.builtin || known.readOnly)) {
+    universe = known;
+  } else if (known) {
+    universe = saveUniverse({ ...known, ...universeData(normalizeUniverse(rawUniverse)), createdAt: known.createdAt });
+  } else {
+    universe = saveUniverse(createUniverse({ ...universeData(normalizeUniverse(rawUniverse)), id: uniqueUniverseId(rawUniverse.id) }));
+  }
+  const novels = importStoryList(parsed?.novels || [], { universeId: universe.id });
+  libraryCache = null;
+  return { universe, novels };
+}
+
+/**
+ * Импорт файла: одна новелла, портируемая новелла, вселенная целиком
+ * или бэкап браузера со списком.
+ */
+export async function importStoryFile(file) {
+  const text = await readFileAsText(file);
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('BAD_JSON');
+  }
+
+  if (parsed?.format === 'vnmy-universe') {
+    const { universe, novels } = importUniverseBundle(parsed);
+    // у массива есть .universe — библиотеке нужно имя, чтобы показать тост
+    return Object.assign(novels, { universe });
+  }
+
+  if (parsed?.format === 'vnmy-backup') {
+    for (const raw of parsed.universes || []) {
+      try { saveUniverse(createUniverse(raw)); } catch { /* бэкап важнее вселенной */ }
+    }
+    libraryCache = null;
+    return importStoryList(parsed.stories || parsed.novels || []);
+  }
+
+  const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.stories) ? parsed.stories : [parsed];
+  return importStoryList(list);
 }
 
 export function exportStory(story) {
@@ -334,6 +467,110 @@ export function storageUsage() {
     }
   } catch { /* ignore */ }
   return { used, limit: 5 * 1024 * 1024 };
+}
+
+/* ─────────────────────── свои вселенные и вся библиотека ─────────────────────── */
+
+/** Вселенные, созданные в браузере (лежат рядом со своими новеллами). */
+export function listLocalUniverses() {
+  return lsJSON(K.universes, []).filter(Boolean).map((u) => normalizeUniverse(u));
+}
+
+export function loadLocalUniverse(id) {
+  return listLocalUniverses().find((u) => u.id === id) || null;
+}
+
+export function saveUniverse(universe, { touch = true } = {}) {
+  const next = normalizeUniverse(universe);
+  if (touch) next.updatedAt = Date.now();
+  const list = listLocalUniverses().filter((u) => u.id !== next.id);
+  list.push(universeData(next));
+  lsSet(K.universes, JSON.stringify(list));
+  libraryCache = null;
+  return next;
+}
+
+/** Свободный id: не занят ни файлами, ни своими вселенными. */
+export function uniqueUniverseId(base) {
+  const taken = new Set([...universeCatalog().map((u) => u.id), ...listLocalUniverses().map((u) => u.id)]);
+  let id = base || 'world';
+  let n = 2;
+  while (taken.has(id)) id = `${base}-${n++}`;
+  return id;
+}
+
+/**
+ * Удаление вселенной: новеллы остаются, но становятся «без вселенной».
+ * Сами новеллы удаляются только вместе с историями (см. deleteStory).
+ */
+export function deleteUniverse(id) {
+  lsSet(K.universes, JSON.stringify(listLocalUniverses().filter((u) => u.id !== id)));
+  for (const story of listLocalStories()) {
+    if (story.universe !== id) continue;
+    story.universe = '';
+    saveStory(story, { touch: false });
+  }
+  libraryCache = null;
+}
+
+/** Перенести новеллу в другую вселенную ('' — без вселенной). */
+export function moveStoryToUniverse(story, universeId) {
+  story.universe = universeId || '';
+  saveStory(story, { touch: false });
+  libraryCache = null;
+  return story;
+}
+
+let libraryCache = null;
+
+/** Синхронный доступ к последней загруженной библиотеке (для редактора). */
+export function universeCatalog() {
+  return libraryCache?.universes || [];
+}
+
+export function findUniverse(id) {
+  return universeCatalog().find((u) => u.id === id) || null;
+}
+
+/** Варианты для выпадающего списка в редакторе: «Без вселенной» + все известные. */
+export function universeOptions(currentId = '') {
+  const options = [{ value: '', label: NO_UNIVERSE_TITLE }];
+  for (const universe of universeCatalog()) options.push({ value: universe.id, label: universe.title });
+  if (currentId && !options.some((o) => o.value === currentId)) options.push({ value: currentId, label: currentId });
+  return options;
+}
+
+/**
+ * Библиотека целиком — вселенные с новеллами:
+ * встроенные (файлы/сборка) + свои (localStorage) + «Без вселенной».
+ */
+export async function loadLibrary() {
+  const [builtin, localUniverses, localStories] = [
+    await loadBuiltinUniverses(),
+    listLocalUniverses(),
+    listLocalStories().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)),
+  ];
+
+  const universes = builtin.map((u) => ({ ...u, novels: [...u.novels] }));
+  const byId = new Map(universes.map((u) => [u.id, u]));
+
+  for (const own of localUniverses) {
+    if (byId.has(own.id)) continue; // вселенная из файлов: свои новеллы просто добавятся
+    universes.push({ ...own, novels: [] });
+    byId.set(own.id, universes[universes.length - 1]);
+  }
+
+  const loose = [];
+  for (const story of localStories) {
+    const target = story.universe ? byId.get(story.universe) : null;
+    if (target) target.novels.push(story);
+    else loose.push(story);
+  }
+  if (loose.length) universes.push(looseUniverse(loose));
+
+  universes.sort((a, b) => (a.order - b.order) || a.title.localeCompare(b.title, 'ru'));
+  libraryCache = { universes };
+  return libraryCache;
 }
 
 /* ─────────────────────────── сохранения прохождения ─────────────────────────── */

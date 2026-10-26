@@ -1,13 +1,19 @@
-/* VNMY — точка входа и переключение экранов */
+/* VNMY — точка входа и переключение экранов.
+ *
+ * Экраны: вселенные → новеллы вселенной → игра / редактор.
+ * currentUniverseId: null — открыт список вселенных; '' — «Без вселенной».
+ */
 import { renderLibrary, wireLibrary, markBuiltinWarning } from './library.js';
+import { renderUniverse, wireUniverse } from './novels.js';
 import { openPlayer, closePlayer } from './player.js';
 import { openEditor, closeEditor } from './editor.js';
 import { createStory, saveStory, loadBuiltinStories } from './store.js';
 import { $ } from './util.js';
 import { toast } from './ui.js';
 
-const SCREENS = ['library', 'player', 'editor'];
+const SCREENS = ['library', 'universe', 'player', 'editor'];
 let current = 'library';
+let currentUniverseId = null;
 let storyForPlayer = null;
 let guardInstalled = false;
 
@@ -23,10 +29,28 @@ function show(name) {
 
 async function backToLibrary() {
   closePlayer();
-  closeEditor();
+  closeEditor({ silent: true });
+  currentUniverseId = null;
   document.documentElement.lang = 'ru';
+  document.documentElement.style.removeProperty('--accent');
   show('library');
   await renderLibrary(hooks);
+}
+
+async function openUniverseScreen(universeId) {
+  closePlayer();
+  closeEditor({ silent: true });
+  currentUniverseId = universeId;
+  show('universe');
+  await renderUniverse(universeId, hooks);
+  pushScreen('universe');
+}
+
+/** Назад: игра/редактор → вселенная, вселенная → список вселенных. */
+async function goBack() {
+  if (current === 'universe') return backToLibrary();
+  if (currentUniverseId !== null) return openUniverseScreen(currentUniverseId);
+  return backToLibrary();
 }
 
 function playStory(story, opts = {}) {
@@ -35,7 +59,7 @@ function playStory(story, opts = {}) {
   show('player');
   openPlayer(story, {
     ...opts,
-    onExit: () => { backToLibrary(); },
+    onExit: () => { goBack(); },
     onEdit: (target) => editStory(target),
   });
   pushScreen('player');
@@ -46,7 +70,7 @@ function editStory(story, opts = {}) {
   show('editor');
   openEditor(story, {
     ...opts,
-    onExit: () => backToLibrary(),
+    onExit: () => goBack(),
     onPlay: (target) => {
       saveStory(target);
       playStory(target, { fresh: true });
@@ -58,8 +82,10 @@ function editStory(story, opts = {}) {
 const hooks = {
   onPlay: (story, opts) => playStory(story, opts),
   onEdit: (story, opts) => editStory(story, opts),
-  onNew: () => {
-    const story = createStory({ title: 'Новая история' });
+  onOpenUniverse: (universeId) => openUniverseScreen(universeId),
+  onBack: () => goBack(),
+  onNew: (universeId = '') => {
+    const story = createStory({ title: 'Новая новелла', universe: universeId || '' });
     saveStory(story);
     editStory(story, { isNew: true });
     return story;
@@ -77,10 +103,7 @@ function installHistoryGuard() {
   guardInstalled = true;
   window.addEventListener('popstate', async () => {
     if (current === 'library') return;
-    closePlayer();
-    closeEditor({ silent: true });
-    show('library');
-    await renderLibrary(hooks);
+    await goBack();
   });
 }
 
@@ -99,6 +122,7 @@ async function boot() {
   clearTimeout(window.__vnmyBoot);
   registerServiceWorker();
   wireLibrary();
+  wireUniverse();
   installHistoryGuard();
   show('library');
   try {
@@ -107,7 +131,7 @@ async function boot() {
     console.error(err);
     toast('Не удалось загрузить библиотеку');
   }
-  // проверяем, что встроенные истории вообще доступны (например, при открытии с диска)
+  // проверяем, что встроенные вселенные вообще доступны (например, при открытии с диска)
   try {
     const builtin = await loadBuiltinStories();
     markBuiltinWarning(!builtin.length);
