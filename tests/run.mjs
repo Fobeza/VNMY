@@ -1041,11 +1041,11 @@ await step('спрайты сохраняют пропорции картинк�
 });
 
 await step('новая новелла: имя спрашивают в начале и подставляют в текст', async () => {
-  await openUniverse('Тюмень');
+  await openUniverse('Пересылка');
   const cards = storyCards();
-  assert(cards.length >= 1, 'во вселенной «Тюмень» есть новелла');
-  assert(cards.some((c) => c.textContent.includes('Пересылка')), 'новелла «Пересылка»: ' + cards.map((c) => c.textContent.trim()).join(' | '));
-  click(cards.find((c) => c.textContent.includes('Пересылка')));
+  assert(cards.length >= 1, 'во вселенной «Пересылка» есть новелла');
+  assert(cards.some((c) => c.textContent.includes('Кто-то останется')), 'новелла «Кто-то останется»: ' + cards.map((c) => c.textContent.trim()).join(' | '));
+  click(cards.find((c) => c.textContent.includes('Кто-то останется')));
   await waitFor(() => visible('screen-player') && document.querySelector('.stage'), { label: 'player peresylka' });
 
   const name = 'Артём';
@@ -1073,23 +1073,47 @@ await step('новая новелла: имя спрашивают в начал
 });
 
 await step('новая новелла: пороги, финал и выбор остаётся', async () => {
+  const choose = (list, want) => {
+    const found = list.find((el) => want.includes(el.textContent.trim()));
+    click(found || list[0]);
+  };
   let guard = 0;
+  let hubs = 0;
   while (guard++ < 900) {
     if (document.querySelector('.ending-layer.is-visible')) break;
+    const ask = document.querySelector('.stage .ask-layer:not([hidden])');
+    if (ask) {
+      setInput(ask.querySelector('.ask-input'), 'Артём');
+      click(ask.querySelector('.ask-submit'));
+      await sleep(60);
+      continue;
+    }
     const choices = [...document.querySelectorAll('.choice-layer .choice')];
-    if (choices.length) click(choices[0]);
-    else click(document.querySelector('.stage .tap-layer'));
+    if (choices.length) {
+      const labels = choices.map((el) => el.textContent.trim());
+      if (labels.some((l) => /^Мост|^Стена|^Лёд|^Костёр|^Кузня|^Крыши/.test(l))) hubs++;
+      choose(choices, ['Останься. Пожалуйста.', 'Взять Микасу за руку.']);
+      await sleep(40);
+      continue;
+    }
+    click(document.querySelector('.stage .tap-layer'));
     await sleep(12);
   }
+  assert(hubs >= 6, 'шесть порогов пройдены, а не ' + hubs);
   assert(document.querySelector('.ending-layer.is-visible'), 'финал наступил за ' + guard + ' шагов');
   const ending = document.querySelector('.ending-title')?.textContent || '';
-  assert(/МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
-  const keys = Object.keys(window.localStorage).filter((k) => k.startsWith('vnmy:saves:'));
-  const saves = keys.map((k) => JSON.parse(window.localStorage.getItem(k)));
-  const done = saves.find((s) => s.auto && s.auto.ended && s.auto.vars && 'близость_микаса' in s.auto.vars);
-  assert(done, 'сохранение финала новой новеллы');
-  assert(done.auto.vars['близость_микаса'] >= 2, 'близость накопилась: ' + JSON.stringify(done.auto.vars['близость_микаса']));
-  assert(done.auto.vars['вахта'] === 6, 'пройдены все шесть порогов, а не ' + done.auto.vars['вахта']);
+  assert(/ВАХТА/.test(ending) && /МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
+  const epilogue = document.querySelector('.ending-text')?.textContent || '';
+  assert(epilogue.length > 30, 'на экране финала есть эпилог: ' + epilogue);
+  const raw = window.localStorage.getItem('vnmy:saves:story_kto_to_ostanetsya');
+  assert(raw, 'сохранение новой новеллы');
+  const auto = JSON.parse(raw).auto;
+  assert(auto && auto.ended && auto.vars, 'сохранение финала новой новеллы');
+  const vars = auto.vars;
+  assert(vars['порог_микаса'] === 2, 'порог Микасы открыт: ' + vars['порог_микаса']);
+  const passed = ['гвен', 'фелиция', 'микаса', 'энни', 'сакура', 'тентен'].filter((n) => vars['порог_' + n] > 0);
+  assert(passed.length === 6, 'пройдены все шесть порогов, а не ' + passed.length);
+  assert(vars['имя'] === 'Артём', 'имя в сохранении: ' + vars['имя']);
 });
 
 await sleep(200);
