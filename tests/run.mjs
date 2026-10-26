@@ -1079,7 +1079,8 @@ await step('новая новелла: пороги, финал и выбор о
   };
   let guard = 0;
   let hubs = 0;
-  while (guard++ < 900) {
+  let adapts = 0;
+  while (guard++ < 2600) {
     if (document.querySelector('.ending-layer.is-visible')) break;
     const ask = document.querySelector('.stage .ask-layer:not([hidden])');
     if (ask) {
@@ -1092,6 +1093,7 @@ await step('новая новелла: пороги, финал и выбор о
     if (choices.length) {
       const labels = choices.map((el) => el.textContent.trim());
       if (labels.some((l) => /^Мост|^Стена|^Лёд|^Костёр|^Кузня|^Крыши/.test(l))) hubs++;
+      if (labels.some((l) => /^Гвен:|^Микаса:|^Сакура:|^Энни:|^Фелиция:|^Тентен:/.test(l))) adapts++;
       choose(choices, ['Останься. Пожалуйста.', 'Взять Микасу за руку.']);
       await sleep(40);
       continue;
@@ -1100,6 +1102,7 @@ await step('новая новелла: пороги, финал и выбор о
     await sleep(12);
   }
   assert(hubs >= 6, 'шесть порогов пройдены, а не ' + hubs);
+  assert(adapts >= 6, 'шесть адаптаций пройдены, а не ' + adapts);
   assert(document.querySelector('.ending-layer.is-visible'), 'финал наступил за ' + guard + ' шагов');
   const ending = document.querySelector('.ending-title')?.textContent || '';
   assert(/ВАХТА/.test(ending) && /МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
@@ -1114,6 +1117,9 @@ await step('новая новелла: пороги, финал и выбор о
   const passed = ['гвен', 'фелиция', 'микаса', 'энни', 'сакура', 'тентен'].filter((n) => vars['порог_' + n] > 0);
   assert(passed.length === 6, 'пройдены все шесть порогов, а не ' + passed.length);
   assert(vars['имя'] === 'Артём', 'имя в сохранении: ' + vars['имя']);
+  const byt = ['гвен', 'микаса', 'сакура', 'энни', 'фелиция', 'тентен'].filter((n) => vars['быт_' + n] >= 1);
+  assert(byt.length === 6, 'все шесть адаптаций закрыты, а не ' + byt.length);
+  assert(vars['порядок'] === 6, 'комендант собрал все шесть галочек: ' + vars['порядок']);
 });
 
 await sleep(200);
