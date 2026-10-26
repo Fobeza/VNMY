@@ -51,7 +51,7 @@ VNMY/
 │       ├── universe.json
 │       ├── cover.webp
 │       └── novels/kto-to-ostanetsya/  ← новелла «Кто-то останется»
-│           ├── story.json     13 сцен, 253 кадра, переменные «порог_*»
+│           ├── story.json     15 сцен, 313 кадров, переменные «порог_*»
 │           └── assets/        фоны сцен (webp, 1080×1920)
 │
 ├── tools/build.mjs            сборка: манифест, bundle.js, builtin.js, vnmy.html
