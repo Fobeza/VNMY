@@ -481,3 +481,12 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* версия приложения в подписи библиотеки */
+.lib-version {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  opacity: .7;
+}
