@@ -192,7 +192,7 @@ stories/nochnoy-gorod/novels/perekrestok/
 ```bash
 npm install        # один раз
 npm run build      # stories/index.json, bundle.js, stories/builtin.js, vnmy.html
-npm test           # 37 проверок: библиотека, игра, редактор, вселенные, file://, один файл
+npm test           # 39 проверок: библиотека, игра, редактор, вселенные, file://, один файл
 ```
 
 Что делает `npm run build` (см. `tools/build.mjs`):
@@ -256,7 +256,7 @@ python3 -m http.server 8000     # затем http://localhost:8000
 ## Чеклист перед коммитом
 
 1. `npm run build` — без предупреждений о пропущенных папках.
-2. `npm test` — все шаги зелёные (сейчас 37).
+2. `npm test` — все шаги зелёные (сейчас 39).
 3. `vnmy.html` изменился, если менялся контент/код/стили.
 4. Если добавляли вселенную/новеллу — проверьте `stories/index.json`: там новые
    `universes[].dir` и `novels[].dir`.

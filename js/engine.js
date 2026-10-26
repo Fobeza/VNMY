@@ -33,6 +33,7 @@ export class Stage {
     this.ended = false;
     this.typing = null;
     this.awaitingChoices = false;
+    this.asking = false;
     this.seen = opts.seen || new Set();
     this.vars = { ...defaultVars(this.story), ...(opts.vars || {}) };
     // журнал реплик: переживает автосейв, чтобы «история» не пропадала
@@ -63,6 +64,13 @@ export class Stage {
     this.topTitle = $('.topbar-title', node);
     this.tapLayer = $('.tap-layer', node);
     this.endingLayer = $('.ending-layer', node);
+    this.askLayer = $('.ask-layer', node);
+    this.askLabel = $('.ask-label', node);
+    this.askInput = $('.ask-input', node);
+    $('.ask-submit', node)?.addEventListener('click', () => this.submitAsk());
+    this.askInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); this.submitAsk(); }
+    });
     node.dataset.mode = this.mode;
 
     this.weather = new WeatherLayer($('.weather-layer', node));
@@ -228,7 +236,7 @@ export class Stage {
     const key = `${this.sceneId}:${bareId(step.id || '')}`;
     const last = this.history[this.history.length - 1];
     if (last && last.key === key && last.text === plain) return;
-    const name = step.speaker ? characterById(this.story, step.speaker)?.name || '' : '';
+    const name = step.speaker ? interpolate(characterById(this.story, step.speaker)?.name || '', this.vars) : '';
     this.history.push({ key, name, text: plain });
     if (this.history.length > HISTORY_LIMIT) this.history.splice(0, this.history.length - HISTORY_LIMIT);
     this.opts.onHistory?.(this.history);
@@ -280,9 +288,9 @@ export class Stage {
     this.opts.onPosition?.(this.position, step);
 
     // если текста нет — сразу выборы или финал
-    if (!step.text) {
-      if (step.choices?.length) this.showChoices(step);
-      else if (step.end) this.showEnding(step);
+    if (!step.text || step.end) {
+      if (step.end) this.showEnding(step);
+      else if (step.choices?.length) this.showChoices(step);
     }
   }
 
@@ -405,10 +413,12 @@ export class Stage {
 
   renderDialogue(step, { instant = false } = {}) {
     this.cancelTyping();
-    const hasText = !!step.text;
+    this.renderAsk(step);
+    // у финального шага текст показывается на самом экране финала
+    const hasText = !!step.text && !step.end;
     this.dialogueLayer.classList.toggle('is-hidden', !hasText);
     const char = step.speaker ? characterById(this.story, step.speaker) : null;
-    this.speakerEl.textContent = char?.name || '';
+    this.speakerEl.textContent = char ? interpolate(char.name || '', this.vars) : '';
     this.speakerEl.style.color = char?.color || 'var(--accent)';
     this.speakerEl.classList.toggle('is-empty', !char);
     this.node.classList.toggle('is-narration', !char);
@@ -535,11 +545,48 @@ export class Stage {
     return !this.typing && !this.awaitingChoices && !this.ended;
   }
 
+  /* ─────────────────────────── знакомство (ask) ─────────────────────────── */
+
+  /**
+   * Шаг с полем ask спрашивает значение один раз: пока переменная пустая,
+   * поверх сцены висит карточка с полем ввода. Ответ уходит в переменную
+   * и подставляется в текст ({имя}), а также в имя персонажа-героя.
+   */
+  renderAsk(step) {
+    const ask = step?.ask;
+    const open = !!(ask && ask.var && this.mode !== 'edit' && !this.vars[ask.var]);
+    this.asking = open;
+    if (!this.askLayer) return;
+    this.askLayer.hidden = !open;
+    this.node?.classList.toggle('is-asking', open);
+    if (!open) return;
+    this.askLabel.textContent = ask.label || 'Как тебя зовут?';
+    if (this.askInput) {
+      this.askInput.value = '';
+      this.askInput.placeholder = ask.placeholder || '';
+      this.later(() => { if (this.asking) this.askInput.focus({ preventScroll: true }); }, 80);
+    }
+  }
+
+  submitAsk() {
+    const ask = this.step?.ask;
+    if (!ask || !this.asking) return;
+    const value = String(this.askInput?.value || '').trim().slice(0, 24) || String(ask.value || '').trim() || 'Гость';
+    this.setVar(ask.var, value);
+    this.asking = false;
+    if (this.askLayer) this.askLayer.hidden = true;
+    this.node?.classList.remove('is-asking');
+    if (this.step.text) this.finishTyping();
+    else this.advance();
+  }
+
   /* ─────────────────────────── выборы ─────────────────────────── */
 
   showChoices(step) {
     const choices = this.visibleChoices(step);
     if (!choices.length) return;
+    // карточка сцены не должна висеть поверх вариантов
+    $('.chapter-card', this.node)?.remove();
     this.awaitingChoices = true;
     this.hintEl.classList.remove('is-visible');
     this.choiceLayer.innerHTML = '';
@@ -587,7 +634,7 @@ export class Stage {
   /* ─────────────────────────── навигация ─────────────────────────── */
 
   handleTap() {
-    if (this.ended) return;
+    if (this.ended || this.asking) return;
     this.opts.onTap?.();
     if (this.awaitingChoices) return;
     if (this.isTyping()) {
@@ -677,7 +724,7 @@ export class Stage {
   }
 
   showChapterCard(scene) {
-    if (this.mode !== 'play') return;
+    if (this.mode !== 'play' || scene.card === false) return;
     const old = $('.chapter-card', this.node);
     old?.remove();
     const card = el('div', { class: 'chapter-card' },
@@ -702,6 +749,7 @@ export class Stage {
       el('div', { class: 'ending-card' },
         el('div', { class: 'ending-kicker', text: 'конец' }),
         el('h2', { class: 'ending-title', text: interpolate(step.endTitle || 'КОНЕЦ', this.vars) }),
+        step.text ? el('p', { class: 'ending-text', text: interpolate(step.text, this.vars) }) : null,
         el('div', { class: 'ending-actions' },
           el('button', { class: 'solid-btn', type: 'button', onclick: () => this.restart() }, 'Начать заново'),
           el('button', { class: 'ghost-btn', type: 'button', onclick: () => this.opts.onExit?.() }, 'В библиотеку'),
