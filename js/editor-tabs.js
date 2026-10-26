@@ -38,6 +38,14 @@ export function renderSceneTab(ctx) {
       value: scene.weather,
       onChange: (value) => { ctx.pushUndo(); scene.weather = value; ctx.commit({ panel: false }); },
     })),
+    field('Акт', textInput({
+      value: scene.act || '',
+      placeholder: 'Акт II · Одежда и улица',
+      onInput: (value) => {
+        if (value) scene.act = value; else delete scene.act;
+        ctx.patch(() => {}, { preview: false });
+      },
+    }), 'Необязательная строка над названием сцены: на каком этапе истории мы.'),
     switchControl({
       label: 'Название сцены при входе',
       hint: 'карточка по центру на пару секунд',

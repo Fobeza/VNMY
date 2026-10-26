@@ -313,6 +313,12 @@
   pointer-events: none;
   animation: chapter-in 1.6s var(--ease) forwards;
 }
+.chapter-act {
+  font-size: clamp(10px, 2.9cqw, 13px);
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+}
 .chapter-name {
   font-family: var(--font-display);
   font-size: clamp(17px, 5cqw, 26px);
