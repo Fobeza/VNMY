@@ -1,3 +1,24 @@
 {
-  "stories": ["demo"]
+  "schema": 2,
+  "generated": "npm run build",
+  "note": "Создаётся автоматически по папкам stories/. Руками не правим.",
+  "universes": [
+    {
+      "id": "silent-rails",
+      "dir": "silent-rails",
+      "title": "Тихие пути",
+      "author": "VNMY demo",
+      "description": "Ночные платформы, поздние поезда и разговоры, которые случаются, когда все уже дома.",
+      "cover": "cover.webp",
+      "accent": "#8fb8d8",
+      "order": 1,
+      "novels": [
+        {
+          "id": "story_last_train",
+          "dir": "last-train",
+          "title": "Последний поезд"
+        }
+      ]
+    }
+  ]
 }

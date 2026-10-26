@@ -6,6 +6,7 @@
   "description": "Ночь, дождь, отменённый поезд — и девушка, которая тоже никуда не спешит. Короткая история о случайном разговоре.",
   "cover": "assets/bg-platform-night.webp",
   "accent": "#e0b072",
+  "universe": "silent-rails",
   "characters": [
     {
       "id": "anya",

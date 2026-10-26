@@ -6,6 +6,7 @@
   "description": "Заготовка: скопируйте папку, замените картинки в assets/ и правьте story.json",
   "cover": "",
   "accent": "#e0b072",
+  "universe": "my-universe",
   "vars": [
     {
       "name": "sympathy",

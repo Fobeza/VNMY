@@ -29,30 +29,31 @@
       </header>
 
       <div class="lib-actions">
-        <button class="ghost-btn is-primary" id="btn-new-story" type="button">
+        <button class="ghost-btn is-primary" id="btn-new-universe" type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Новая история
+          Новая вселенная
         </button>
         <div class="lib-actions-row">
           <button class="ghost-btn" id="btn-import-story" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
             Импорт
           </button>
-          <button class="ghost-btn" id="btn-backup" type="button" title="Скачать все свои истории одним файлом">
+          <button class="ghost-btn" id="btn-backup" type="button" title="Скачать все свои новеллы одним файлом">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
             Бэкап
           </button>
         </div>
       </div>
 
-      <div id="story-list" class="story-list"></div>
+      <div id="universe-list" class="universe-grid"></div>
       <div id="boot-fallback" class="boot-fallback" hidden>
         <h3>Не хватает собранных файлов</h3>
         <p>С телефона проще всего открыть <code>vnmy.html</code> — это тот же движок
         одним файлом: движок, стили, истории и картинки внутри. Рядом ничего не нужно,
         собирать ничего не надо.</p>
         <p>Если открываете <code>index.html</code>, движку нужны <code>bundle.js</code>
-        и <code>stories/builtin.js</code> — браузер не грузит ES-модули с <code>file://</code>.</p>
+        и <code>stories/builtin.js</code> — браузер не грузит ES-модули с <code>file://</code>.
+        Вселенные лежат в <code>stories/&lt;вселенная&gt;/</code>.</p>
         <p>Соберите их один раз:</p>
         <pre><code>npm run build</code></pre>
         <p>Или откройте папку через сервер: <code>python3 -m http.server 8000</code> →
@@ -60,6 +61,41 @@
         свежую версию из репозитория: там собранные файлы уже лежат.</p>
       </div>
       <p id="library-note" class="lib-note"></p>
+    </div>
+  </section>
+
+  <!-- ─────────────────── ВСЕЛЕННАЯ: её новеллы ─────────────────── -->
+  <section id="screen-universe" class="screen" data-screen="universe" hidden>
+    <div class="lib-scroll">
+      <header class="uni-head">
+        <button class="icon-btn" id="uni-back" type="button" aria-label="Все вселенные">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+        </button>
+        <div class="uni-head-text">
+          <p class="lib-sub">вселенная</p>
+          <h1 class="uni-title" id="uni-title">Вселенная</h1>
+        </div>
+        <button class="icon-btn" id="uni-menu" type="button" aria-label="Меню вселенной">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+        </button>
+      </header>
+      <p class="uni-desc" id="uni-desc"></p>
+
+      <div class="lib-actions">
+        <button class="ghost-btn is-primary" id="btn-new-story" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Новая новелла
+        </button>
+        <div class="lib-actions-row">
+          <button class="ghost-btn" id="btn-import-novel" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+            Импорт
+          </button>
+        </div>
+      </div>
+
+      <div id="story-list" class="story-list"></div>
+      <p id="novels-note" class="lib-note"></p>
     </div>
   </section>
 
