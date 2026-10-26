@@ -80,7 +80,12 @@ export async function loadBuiltinStories() {
   } catch (err) {
     console.warn('[vnmy] не удалось прочитать stories/index.json', err);
   }
-  if (!names.length) names = ['demo'];
+  if (!names.length) {
+    // папки stories/ может не быть рядом (сборка «один файл») — берём вшитые истории
+    const fallback = embeddedBuiltins();
+    if (fallback) return fallback;
+    names = ['demo'];
+  }
 
   const stories = [];
   for (const name of names) {
@@ -98,6 +103,10 @@ export async function loadBuiltinStories() {
     } catch (err) {
       console.warn(`[vnmy] не удалось загрузить историю «${name}»`, err);
     }
+  }
+  if (!stories.length) {
+    const fallback = embeddedBuiltins();
+    if (fallback) return fallback;
   }
   return stories;
 }
