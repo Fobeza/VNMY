@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "./start.sh",
+    "build": "node tools/build.mjs",
     "test": "node tests/run.mjs"
   },
   "devDependencies": {
