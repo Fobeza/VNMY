@@ -26,4 +26,5 @@ stories/
 Подробно: [../docs/ai-guide.md](../docs/ai-guide.md) и [../docs/format.md](../docs/format.md).
 
 Пример: `silent-rails/` (вселенная «Тихие пути») и
-`silent-rails/novels/last-train/` (новелла «Последний поезд»).
+`silent-rails/novels/last-train/` (новелла «Последний поезд»);
+`tyumen/` (вселенная «Тюмень») и `tyumen/novels/peresylka/` (новелла «Пересылка»).

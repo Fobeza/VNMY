@@ -796,6 +796,61 @@ function renderLogicEditor(ctx, step) {
     },
   }), 'Если условие ложно, шаг пропускается — как будто его нет.'));
 
+  /* знакомство: спросить значение у игрока */
+  const askBox = el('div', { class: 'field-col' });
+  if (step.ask) {
+    const textVars = story.vars.filter((v) => v.type === 'text');
+    askBox.append(
+      selectControl({
+        value: step.ask.var,
+        compact: true,
+        options: [{ value: '', label: '— переменная —' },
+          ...(textVars.length ? textVars : story.vars).map((v) => ({ value: v.name, label: `${v.name} · ${VAR_TYPE_LABELS[v.type]}` }))],
+        onChange: (value) => { ctx.pushUndo(); step.ask.var = value; ctx.commit({ panel: true, preview: false }); },
+      }),
+      textInput({
+        value: step.ask.label || '',
+        placeholder: 'Как тебя зовут?',
+        onFocus: () => ctx.pushUndo(),
+        onInput: (value) => { step.ask.label = value; ctx.patch(() => {}, { preview: false }); },
+      }),
+      textInput({
+        value: step.ask.placeholder || '',
+        placeholder: 'подсказка в поле (необязательно)',
+        onFocus: () => ctx.pushUndo(),
+        onInput: (value) => { step.ask.placeholder = value; ctx.patch(() => {}, { preview: false }); },
+      }),
+      el('div', { class: 'inline-row' },
+        textInput({
+          value: step.ask.value || '',
+          placeholder: 'если игрок промолчит',
+          onFocus: () => ctx.pushUndo(),
+          onInput: (value) => { step.ask.value = value; ctx.patch(() => {}, { preview: false }); },
+        }),
+      ),
+    );
+  }
+  box.append(field('Спросить у игрока',
+    el('div', { class: 'field-col' },
+      switchControl({
+        label: step.ask ? 'вопрос включён' : 'спросить значение',
+        hint: 'поле ввода поверх сцены, ответ уходит в переменную',
+        checked: !!step.ask,
+        onChange: (on) => {
+          ctx.pushUndo();
+          if (!on) delete step.ask;
+          else {
+            const target = story.vars.find((v) => v.type === 'text') || story.vars[0];
+            step.ask = { var: target?.name || '', label: 'Как тебя зовут?', placeholder: '', value: '' };
+          }
+          ctx.commit({ panel: true, preview: false });
+        },
+      }),
+      askBox,
+    ),
+    'Игра покажет карточку с полем ввода и не пустит дальше, пока игрок не ответит. Подставляйте ответ в текст как {имя}.',
+  ));
+
   /* изменения переменных */
   const setList = el('div', { class: 'op-list' });
   if (!story.vars.length) {
