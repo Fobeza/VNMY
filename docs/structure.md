@@ -43,7 +43,8 @@ VNMY/
 │   ├── _template/             заготовки: copy-paste для новой вселенной/новеллы
 │   │   ├── universe.json
 │   │   └── novels/novel-example/{story.json, assets/README.md}
-│   └── silent-rails/          ← вселенная «Тихие пути» (демо)
+│   ├── silent-rails/          ← вселенная «Тихие пути» (демо)
+│   └── tyumen/                ← вселенная «Тюмень» (текстовая новелла «Пересылка»)
 │       ├── universe.json      название, описание, обложка, акцент, порядок
 │       ├── cover.webp         обложка вселенной (4:5 или 9:14)
 │       └── novels/
