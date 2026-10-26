@@ -10,6 +10,7 @@ import {
   iconButton, ICONS, imageControl, pickMedia, collectAssets,
 } from './editor-ui.js';
 import { stepSnippet, promptNewCharacter, targetOptions } from './editor.js';
+import { universeOptions } from './store.js';
 
 export const POSITION_SHORT = { left: 'слева', center: 'центр', right: 'справа' };
 
@@ -244,6 +245,15 @@ export function renderStoryTab(ctx) {
         ctx.commit({ panel: false, preview: false });
       },
     }), 'Влияет на переносы, кавычки и озвучку экранным диктором.'),
+    field('Вселенная', selectControl({
+      value: story.universe || '',
+      options: universeOptions(story.universe || ''),
+      onChange: (value) => {
+        ctx.pushUndo();
+        story.universe = value || '';
+        ctx.commit({ preview: false });
+      },
+    }), 'Мир, в котором живёт новелла. Выбор вселенной — на главном экране.'),
     field('Обложка', imageControl({
       story,
       value: story.cover,
