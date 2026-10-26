@@ -44,13 +44,15 @@ VNMY/
 │   │   ├── universe.json
 │   │   └── novels/novel-example/{story.json, assets/README.md}
 │   ├── silent-rails/          ← вселенная «Тихие пути» (демо)
-│   └── tyumen/                ← вселенная «Тюмень» (текстовая новелла «Пересылка»)
-│       ├── universe.json      название, описание, обложка, акцент, порядок
-│       ├── cover.webp         обложка вселенной (4:5 или 9:14)
-│       └── novels/
-│           └── last-train/    ← новелла «Последний поезд» (демо)
-│               ├── story.json
-│               └── assets/    фоны, спрайты, обложка новеллы
+│   │   ├── universe.json      название, описание, обложка, акцент, порядок
+│   │   ├── cover.webp         обложка вселенной (4:5 или 9:14)
+│   │   └── novels/last-train/ ← новелла «Последний поезд» (демо)
+│   └── peresylka/             ← вселенная «Пересылка» (Тюмень, где застревают чужие)
+│       ├── universe.json
+│       ├── cover.webp
+│       └── novels/kto-to-ostanetsya/  ← новелла «Кто-то останется»
+│           ├── story.json     13 сцен, 253 кадра, переменные «порог_*»
+│           └── assets/        фоны сцен (webp, 1080×1920)
 │
 ├── tools/build.mjs            сборка: манифест, bundle.js, builtin.js, vnmy.html
 ├── tests/run.mjs              интеграционные проверки (jsdom + esbuild)
