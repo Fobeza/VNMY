@@ -31,7 +31,7 @@ stories/<вселенная>/novels/<новелла>/assets/*.webp ← её ка
 npm install                     # один раз: esbuild + jsdom
 npm run build                   # пересобирает stories/index.json, bundle.js,
                                 # stories/builtin.js и vnmy.html
-npm test                        # 36 интеграционных проверок (jsdom)
+npm test                        # 37 интеграционных проверок (jsdom)
 ```
 
 `npm run build` обязателен после **любой** правки в `stories/`, `js/` или `css/`:
