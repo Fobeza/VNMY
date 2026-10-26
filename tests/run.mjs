@@ -813,6 +813,38 @@ await step('своя вселенная: создать, добавить нов
   await waitFor(() => storyCards().some((c) => c.textContent.includes('Новая новелла')), { label: 'moved novel visible' });
 });
 
+await step('импорт вселенной одним файлом', async () => {
+  await openUniverses();
+  const bundle = {
+    format: 'vnmy-universe',
+    version: 1,
+    universe: { id: 'imported-world', title: 'Импортированный мир', description: 'приехал файлом' },
+    novels: [{
+      title: 'Завозная новелла',
+      scenes: [{ id: 's', name: 'Сцена', bg: '', steps: [{ id: 'a', text: 'привет' }] }],
+    }],
+  };
+  const file = new window.File([JSON.stringify(bundle)], 'world.json', { type: 'application/json' });
+  const input = document.querySelector('input.js-import-library');
+  assert(input, 'нет поля импорта на экране вселенных');
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+  await waitFor(() => universeCards().some((c) => c.textContent.includes('Импортированный мир')), { label: 'импортированная вселенная' });
+  const ownUniverses = JSON.parse(window.localStorage.getItem('vnmy:universes') || '[]');
+  const world = ownUniverses.find((u) => u.title === 'Импортированный мир');
+  assert(world, 'вселенная не сохранилась: ' + JSON.stringify(ownUniverses.map((u) => u.title)));
+
+  const stories = JSON.parse(window.localStorage.getItem('vnmy:index') || '[]')
+    .map((id) => JSON.parse(window.localStorage.getItem('vnmy:story:' + id) || '{}'));
+  const imported = stories.find((st) => st.title === 'Завозная новелла');
+  assert(imported, 'новелла не импортировалась');
+  assert(imported.universe === world.id, 'новелла не привязалась к вселенной: ' + imported.universe);
+
+  await openUniverse('Импортированный мир');
+  assert(storyCards().some((c) => c.textContent.includes('Завозная новелла')), 'новеллы нет на экране вселенной');
+});
+
 await step('файлы для двойного щелчка собраны и свежие', async () => {
   const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest } = await import(path.join(ROOT, 'tools/build.mjs'));
   const bundle = await buildBundle();
