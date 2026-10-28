@@ -287,10 +287,10 @@ export class Stage {
     this.seen.add(`${scene.id}:${bareId(step.id)}`);
     this.opts.onPosition?.(this.position, step);
 
-    // если текста нет — сразу выборы или финал
+    // если текста нет — сразу доступные выборы или финал; выборы имеют приоритет
     if (!step.text || step.end) {
-      if (step.end) this.showEnding(step);
-      else if (step.choices?.length) this.showChoices(step);
+      if (this.visibleChoices(step).length) this.showChoices(step);
+      else if (step.end) this.showEnding(step);
     }
   }
 
