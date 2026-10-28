@@ -7,14 +7,13 @@ import { renderLibrary, wireLibrary, markBuiltinWarning } from './library.js';
 import { renderUniverse, wireUniverse } from './novels.js';
 import { openPlayer, closePlayer } from './player.js';
 import { openEditor, closeEditor } from './editor.js';
-import { createStory, saveStory, loadBuiltinStories } from './store.js';
+import { createStory, saveStory, loadBuiltinUniverses } from './store.js';
 import { $ } from './util.js';
 import { toast } from './ui.js';
 
 const SCREENS = ['library', 'universe', 'player', 'editor'];
 let current = 'library';
 let currentUniverseId = null;
-let storyForPlayer = null;
 let guardInstalled = false;
 
 function show(name) {
@@ -54,7 +53,6 @@ async function goBack() {
 }
 
 function playStory(story, opts = {}) {
-  storyForPlayer = story;
   closeEditor({ silent: true });
   show('player');
   openPlayer(story, {
@@ -131,15 +129,14 @@ async function boot() {
     console.error(err);
     toast('Не удалось загрузить библиотеку');
   }
-  // проверяем, что встроенные вселенные вообще доступны (например, при открытии с диска)
+  // проверяем, что встроенные вселенные вообще доступны (пустые вселенные — нормальное состояние)
   try {
-    const builtin = await loadBuiltinStories();
+    const builtin = await loadBuiltinUniverses();
     markBuiltinWarning(!builtin.length);
     if (!builtin.length) await renderLibrary(hooks);
   } catch { /* ignore */ }
 
   if (!navigator.onLine) toast('Офлайн-режим: работает и без сети');
-  void storyForPlayer;
 }
 
 boot();

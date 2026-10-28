@@ -161,16 +161,6 @@ async function legacyUniverses(names) {
   return novels.length ? [looseUniverse(novels)] : [];
 }
 
-/** Плоский список встроенных новелл (совместимость и тесты). */
-export async function loadBuiltinStories() {
-  const universes = await loadBuiltinUniverses();
-  return universes.flatMap((u) => u.novels);
-}
-
-export function hasBuiltin(name) {
-  return builtinCache.has(name);
-}
-
 /* ─────────────────────────── локальные истории ─────────────────────────── */
 
 export function listLocalStoryIds() {
@@ -666,4 +656,3 @@ export function makeSavePoint(story, sceneId, stepIndex, extra = {}) {
 }
 
 export { createStory, normalizeStory, bareId, globalId };
-export const storageKeys = K;

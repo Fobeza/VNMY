@@ -1,4 +1,4 @@
-/* VNMY — версия приложения в одном месте.
- * Меняем здесь, package.json и CHANGELOG.md — и всё. */
-export const APP_VERSION = '1.4';
-export const APP_RELEASED = '2026-10-26';
+/* VNMY — версия приложения.
+ * Синхронизировать с package.json, package-lock.json, sw.js и CHANGELOG.md. */
+export const APP_VERSION = '2.0';
+export const APP_RELEASED = '2026-10-29';

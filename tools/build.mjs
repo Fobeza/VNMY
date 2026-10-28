@@ -66,7 +66,8 @@ export async function scanStories() {
     const dir = entry.name;
     let universe;
     try {
-      universe = await readJSON(path.join(STORIES, dir, 'universe.json'));
+      const file = await resolveContainedFile(`stories/${dir}`, 'universe.json', 'Universe');
+      universe = await readJSON(file);
     } catch {
       console.warn(`[vnmy] пропускаю «stories/${dir}»: нет universe.json`);
       continue;
@@ -86,7 +87,8 @@ export async function scanStories() {
     }
     for (const novelDir of novelDirs) {
       try {
-        const story = await readJSON(path.join(STORIES, dir, 'novels', novelDir, 'story.json'));
+        const file = await resolveContainedFile(`stories/${dir}/novels/${novelDir}`, 'story.json', 'Story');
+        const story = await readJSON(file);
         novels.push({ dir: novelDir, story });
       } catch (err) {
         console.warn(`[vnmy] пропускаю «stories/${dir}/novels/${novelDir}»: ${err.message}`);
@@ -145,7 +147,7 @@ export async function buildBuiltinStories(scan) {
   return `/* VNMY — встроенные вселенные и новеллы для открытия с диска (file://).
  * Не правим руками: npm run build
  */
-window.__VNMY_BUILTIN_LIBRARY__ = ${JSON.stringify({ schema: 2, universes })};
+window.__VNMY_BUILTIN_LIBRARY__ = ${jsonForInlineScript({ schema: 2, universes })};
 `;
 }
 
@@ -154,13 +156,55 @@ const MIME = {
   gif: 'image/gif', svg: 'image/svg+xml', avif: 'image/avif',
 };
 
+function isWithinDirectory(directory, candidate) {
+  const relative = path.relative(directory, candidate);
+  return relative === '' || (!path.isAbsolute(relative)
+    && relative !== '..'
+    && !relative.startsWith(`..${path.sep}`));
+}
+
+async function resolveContainedFile(base, value, kind = 'Asset') {
+  const sourceDirectory = path.resolve(ROOT, base);
+  const file = path.resolve(sourceDirectory, value);
+  if (!isWithinDirectory(sourceDirectory, file)) {
+    throw new Error(`${kind} path escapes its source directory: ${value}`);
+  }
+
+  // Lexical containment is not enough if a file or directory is a symlink.
+  const realRoot = await fs.realpath(ROOT);
+  const expectedDirectory = path.resolve(realRoot, base);
+  const [realDirectory, realFile] = await Promise.all([
+    fs.realpath(sourceDirectory),
+    fs.realpath(file),
+  ]);
+  if (realDirectory !== expectedDirectory || !isWithinDirectory(realDirectory, realFile)) {
+    throw new Error(`${kind} symlink escapes its source directory: ${value}`);
+  }
+  return realFile;
+}
+
+function inlineScript(source) {
+  // The HTML tokenizer closes a script even if `</script>` appears in a JS string.
+  return source.replace(/<\/script/gi, '<\\/script');
+}
+
+function jsonForInlineScript(value) {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (char) => ({
+    '<': '\\u003c',
+    '>': '\\u003e',
+    '&': '\\u0026',
+    '\u2028': '\\u2028',
+    '\u2029': '\\u2029',
+  })[char]);
+}
+
 /** Картинки истории → data:image/…, чтобы файл был совсем один. */
 async function inlineAssets(story, base) {
   const cache = new Map();
   const inline = async (value) => {
     if (!value || typeof value !== 'string') return value;
     if (/^(data:|https?:|\/)/.test(value)) return value;
-    const file = path.join(ROOT, base, value);
+    const file = await resolveContainedFile(base, value);
     if (!cache.has(file)) {
       const buffer = await fs.readFile(file);
       const ext = path.extname(file).slice(1).toLowerCase();
@@ -219,7 +263,7 @@ export async function buildStandalone(scan) {
   if (fallback) fallback.hidden = false;
 }, 1500);`;
 
-  const builtin = `window.__VNMY_BUILTIN_LIBRARY__ = ${JSON.stringify({ schema: 2, universes })};`;
+  const builtin = `window.__VNMY_BUILTIN_LIBRARY__ = ${jsonForInlineScript({ schema: 2, universes })};`;
 
   return html
     .replace(/\n\s*<link rel="preload"[^>]*>/, '')
@@ -227,8 +271,8 @@ export async function buildStandalone(scan) {
     .replace(/\n\s*<link rel="stylesheet"[^>]*>/g, '')
     .replace('</head>', () => `<style>\n${css}\n</style>\n</head>`)
     .replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, () =>
-      `<script>${watchdog}</script>\n<script>${builtin}</script>\n<script>${bundle}</script>`)
-    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 1.1 — один файл: движок, стили, вселенные и картинки внутри. Сборка: npm run build -->');
+      `<script>${inlineScript(watchdog)}</script>\n<script>${inlineScript(builtin)}</script>\n<script>${inlineScript(bundle)}</script>`)
+    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 2.0 — один файл: движок, стили, вселенные и картинки внутри. Сборка: npm run build -->');
 }
 
 async function main() {

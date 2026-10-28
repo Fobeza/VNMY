@@ -3,8 +3,10 @@
  */
 import { JSDOM, VirtualConsole } from 'jsdom';
 import * as esbuild from 'esbuild';
+import { rejects as assertRejects } from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { integrationStory as INTEGRATION_STORY } from './fixtures/integration-story.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -36,6 +38,8 @@ const dom = new JSDOM(html, {
   pretendToBeVisual: true,
   virtualConsole: vc,
   beforeParse(window) {
+    window.localStorage.setItem('vnmy:index', JSON.stringify([INTEGRATION_STORY.id]));
+    window.localStorage.setItem(`vnmy:story:${INTEGRATION_STORY.id}`, JSON.stringify(INTEGRATION_STORY));
     window.scrollTo = () => {};
     window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} });
     window.fetch = async (url) => {
@@ -97,6 +101,7 @@ function setInput(node, value) {
 
 /* ───────── навигация по вселенным (вселенная → новеллы → игра) ───────── */
 
+const UNIVERSE_ID = 'silent-rails';
 const UNIVERSE_DEMO = 'Тихие пути';
 
 function universeCards() {
@@ -168,13 +173,14 @@ await step('библиотека показывает вселенные, вну
   assert(visible('screen-library'), 'виден экран вселенных');
   const note = document.querySelector('#library-note').textContent;
   assert(/VNMY \d+\.\d+/.test(note), 'в подписи нет версии: ' + note.slice(-40));
+  assert(!note.includes('Встроенные вселенные не открылись'), 'пустой каталог ошибочно принят за ошибку загрузки');
   assert(!document.querySelector('#screen-library .story-card'), 'новеллы не должны быть на экране вселенных');
   const demoCard = universeCards().find((c) => c.textContent.includes(UNIVERSE_DEMO));
-  assert(/1 новелла/.test(demoCard.textContent), 'счётчик новелл: ' + demoCard.textContent.trim());
+  assert(/1 новелла/.test(demoCard.textContent), 'тестовая новелла в своей вселенной: ' + demoCard.textContent.trim());
 
   await openUniverse(UNIVERSE_DEMO);
   const novelTitles = [...document.querySelectorAll('.story-card-title')].map((n) => n.textContent);
-  assert(novelTitles.includes('Последний поезд'), 'демо внутри вселенной: ' + novelTitles.join(','));
+  assert(novelTitles.includes(INTEGRATION_STORY.title), 'тестовая новелла внутри вселенной: ' + novelTitles.join(','));
   assert(document.getElementById('uni-title').textContent === UNIVERSE_DEMO, 'название вселенной в шапке');
 });
 
@@ -183,7 +189,7 @@ await step('запуск истории и печать текста', async () 
   await waitFor(() => visible('screen-player') && document.querySelector('.stage'), { label: 'player' });
   await waitFor(() => document.querySelector('.stage .text').textContent.length > 5, { label: 'typing' });
   const text = document.querySelector('.stage .text').textContent;
-  assert(text.includes('02:14') || text.includes('Дождь'), 'первая реплика: ' + text);
+  assert(text.includes('02:14') || text.includes('Дождь'), 'первая реплика тестовой новеллы: ' + text);
 });
 
 await step('прохождение до выбора', async () => {
@@ -219,7 +225,7 @@ await step('сцена меняется и спрайты добавляются
   }
   assert(document.querySelectorAll('.stage .sprite').length >= 2, 'на сцене вагона два спрайта');
   const title = document.querySelector('.topbar-title').textContent;
-  assert(title.includes('Последний поезд'), 'название в шапке');
+  assert(title.includes(INTEGRATION_STORY.title), 'название в шапке');
 });
 
 await step('история доходит до финала', async () => {
@@ -237,9 +243,9 @@ await step('история доходит до финала', async () => {
 });
 
 await step('прогресс сохраняется в localStorage', async () => {
-  const keys = Object.keys(window.localStorage).filter((k) => k.startsWith('vnmy:saves:'));
-  assert(keys.length >= 1, 'есть сохранение');
-  const save = JSON.parse(window.localStorage.getItem(keys[0]));
+  const key = `vnmy:saves:${INTEGRATION_STORY.id}`;
+  assert(window.localStorage.getItem(key), 'есть сохранение тестовой новеллы');
+  const save = JSON.parse(window.localStorage.getItem(key));
   assert(save.auto && save.auto.ended === true, 'сохранение финала');
   assert(save.auto.percent === 1, 'процент 100');
 });
@@ -265,9 +271,10 @@ await step('правка названия и текста реплики', async
   assert(inputs.length >= 1, 'есть поля');
   setInput(inputs[0], 'Моя история');
   await sleep(700);
-  const ids = Object.keys(window.localStorage).filter((k) => k.startsWith('vnmy:story:'));
-  assert(ids.length >= 1, 'история сохранена');
-  const saved = JSON.parse(window.localStorage.getItem(ids[0]));
+  const savedKey = Object.keys(window.localStorage).find((k) => k.startsWith('vnmy:story:')
+    && JSON.parse(window.localStorage.getItem(k) || '{}').title === 'Моя история');
+  assert(savedKey, 'история сохранена');
+  const saved = JSON.parse(window.localStorage.getItem(savedKey));
   assert(saved.title === 'Моя история', 'название сохранилось: ' + saved.title);
   assert(window.localStorage.getItem('vnmy:index'), 'id в индексе');
   await waitFor(() => document.getElementById('ed-save-state').textContent.includes('сохранено'), { label: 'save state' });
@@ -347,7 +354,7 @@ function resultTitlesInclude(titles, t) {
 /* ─────────── исправления: сохранность данных и UX ─────────── */
 
 await step('тап по тексту реплики перелистывает', async () => {
-  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes('Последний поезд')));
+  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes(INTEGRATION_STORY.title)));
   await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: 'player again' });
   await sleep(600);
   const text = () => document.querySelector('.stage .text').textContent;
@@ -364,13 +371,13 @@ await step('тап по тексту реплики перелистывает',
 
 await step('после финала история открывается с начала', async () => {
   // ставим сохранение в состояние «финал пройден»
-  const key = Object.keys(window.localStorage).find((k) => k.startsWith('vnmy:saves:'));
+  const key = `vnmy:saves:${INTEGRATION_STORY.id}`;
   const saves = JSON.parse(window.localStorage.getItem(key));
-  saves.auto = { ...(saves.auto || {}), sceneId: 'sc_dawn', stepIndex: 4, ended: true, percent: 1 };
+  saves.auto = { ...(saves.auto || {}), sceneId: 'sc_start', stepIndex: 1, ended: true, percent: 1 };
   window.localStorage.setItem(key, JSON.stringify(saves));
 
-  await waitFor(() => [...document.querySelectorAll('.story-card')].some((c) => c.textContent.includes('Последний поезд')), { label: 'demo card back' });
-  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes('Последний поезд')));
+  await waitFor(() => [...document.querySelectorAll('.story-card')].some((c) => c.textContent.includes(INTEGRATION_STORY.title)), { label: 'test story card back' });
+  click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes(INTEGRATION_STORY.title)));
   await waitFor(() => visible('screen-player') && document.querySelector('.stage .text'), { label: 'reopen demo' });
   await sleep(300);
   const firstLine = document.querySelector('.stage .text').textContent;
@@ -715,7 +722,7 @@ await step('переменные: продолжение восстанавли�
   await waitFor(() => visible('screen-universe'), { label: 'back again' });
 });
 
-await step('переменные: демо содержит флаги и не имеет ошибок проверки', async () => {
+await step('переменные и линтер работают на независимой истории', async () => {
   const built = await esbuild.build({
     entryPoints: [path.join(ROOT, 'js/format.js')],
     bundle: true,
@@ -724,12 +731,17 @@ await step('переменные: демо содержит флаги и не �
     logLevel: 'silent',
   });
   const mod = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
-  const raw = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/silent-rails/novels/last-train/story.json'), 'utf8'));
-  raw.baseUrl = 'stories/silent-rails/novels/last-train/';
-  const story = mod.normalizeStory(raw);
-  assert(story.vars.length >= 2, 'в демо нет переменных');
+  const story = mod.normalizeStory({
+    title: 'Линтер',
+    vars: [{ name: 'met', type: 'bool', initial: false }, { name: 'score', type: 'number', initial: 0 }],
+    scenes: [{ id: 's', name: 'Сцена', bg: '', steps: [
+      { id: 'a', text: 'Начало {score}.' },
+      { id: 'b', text: 'Финал', if: 'met == false', end: true },
+    ] }],
+  });
+  assert(story.vars.some((v) => v.type === 'bool'), 'флаг не нормализован');
   const issues = mod.lintStory(story).filter((i) => i.level === 'error');
-  assert(!issues.length, 'ошибки в демо: ' + issues.map((i) => i.text).join('; '));
+  assert(!issues.length, 'ошибки в тестовой истории: ' + issues.map((i) => i.text).join('; '));
 });
 
 await step('выражения: операторы и ошибки разбора', async () => {
@@ -861,18 +873,44 @@ await step('файлы для двойного щелчка собраны и с
   assert(savedManifest === manifest, 'stories/index.json устарел — запустите npm run build');
   const parsedManifest = JSON.parse(savedManifest);
   assert(parsedManifest.schema === 2 && parsedManifest.universes.length >= 1, 'манифест без вселенных');
-  const demoUniverse = parsedManifest.universes.find((u) => u.id === 'silent-rails');
-  assert(demoUniverse && demoUniverse.novels.some((n) => n.dir === 'last-train'), 'в манифесте нет демо-новеллы');
-  // структура папок: stories/<вселенная>/universe.json + novels/<новелла>/story.json
+  assert(parsedManifest.universes.every((u) => u.novels.length === 0), 'встроенная библиотека должна быть без новелл');
+  // шаблон не попадает в манифест, а вселенные остаются как примеры структуры
+  assert(!parsedManifest.universes.some((u) => u.id === '_template'), 'шаблон попал в манифест');
   for (const universe of parsedManifest.universes) {
     await fs.access(path.join(ROOT, 'stories', universe.dir, 'universe.json'));
-    for (const novel of universe.novels) {
-      await fs.access(path.join(ROOT, 'stories', universe.dir, 'novels', novel.dir, 'story.json'));
-    }
   }
-  // один файл не должен тянуть ничего снаружи
+  // Один файл не должен тянуть ничего снаружи.
   assert(!/\ssrc="(?!data:)/.test(savedStandalone), 'в vnmy.html есть внешний src');
   assert(!/\shref="(?!data:|#)/.test(savedStandalone), 'в vnmy.html есть внешний href');
+
+  // Данные истории — недоверенный текст внутри inline-script.
+  const injection = '</script><script>window.__VNMY_INJECTED__ = true;</script>';
+  const attackStory = { ...INTEGRATION_STORY, title: injection };
+  const attackHtml = await buildStandalone([{
+    dir: 'silent-rails',
+    universe: { id: 'silent-rails', title: 'Тихие пути', cover: '' },
+    novels: [{ dir: 'test-fixture', story: attackStory }],
+  }]);
+  assert(!attackHtml.includes(injection), 'текст истории может закрыть inline-script');
+  assert(attackHtml.includes('\\u003c/script\\u003e'), 'JSON для inline-script не HTML-экранирован');
+  const assignmentStart = attackHtml.indexOf('window.__VNMY_BUILTIN_LIBRARY__ =');
+  const assignmentEnd = attackHtml.indexOf('</script>', assignmentStart);
+  assert(assignmentStart >= 0 && assignmentEnd > assignmentStart, 'не найден скрипт встроенной библиотеки');
+  const libraryJson = attackHtml.slice(assignmentStart, assignmentEnd)
+    .match(/^window\.__VNMY_BUILTIN_LIBRARY__ = (.*);$/s)?.[1];
+  assert(libraryJson, 'JSON встроенной библиотеки оборван или некорректен');
+  const isolatedLibrary = JSON.parse(libraryJson);
+  assert(isolatedLibrary.universes[0].novels[0].title === injection, 'экранированный текст не восстановился');
+
+  const traversalStory = {
+    id: 'story_test_traversal', title: 'Path traversal', cover: '', media: [], characters: [],
+    scenes: [{ id: 'scene', bg: '../../../../README.md', steps: [] }],
+  };
+  await assertRejects(buildStandalone([{
+    dir: 'silent-rails',
+    universe: { id: 'silent-rails', title: 'Тихие пути', cover: '' },
+    novels: [{ dir: 'test-fixture', story: traversalStory }],
+  }]), /Asset path escapes its source directory/);
 });
 
 await step('с диска (file://) открывается и играет без сервера', async () => {
@@ -915,6 +953,10 @@ await step('с диска (file://) открывается и играет бе�
     fileDom.window.document.body.append(node);
   };
   inject(builtin);
+  const fileLibrary = fileDom.window.__VNMY_BUILTIN_LIBRARY__;
+  const fileUniverse = fileLibrary?.universes?.find((u) => u.id === UNIVERSE_ID);
+  assert(fileUniverse, 'в файле нет тестовой вселенной');
+  fileUniverse.novels.push(INTEGRATION_STORY);
   inject(bundle);
 
   const fdoc = fileDom.window.document;
@@ -933,9 +975,9 @@ await step('с диска (file://) открывается и играет бе�
   assert(uniTitles.includes('Тихие пути'), 'вселенная не подхватилась с диска: ' + uniTitles.join(','));
 
   fdoc.querySelector('#universe-list .universe-card').dispatchEvent(new fwindow.MouseEvent('click', { bubbles: true }));
-  await until(() => fdoc.querySelectorAll('#story-list .story-card').length >= 1, 'карточка встроенной новеллы');
+  await until(() => fdoc.querySelectorAll('#story-list .story-card').length >= 1, 'тестовая новелла из встроенного JS');
   const titles = [...fdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
-  assert(titles.includes('Последний поезд'), 'демо не подхватилось с диска: ' + titles.join(','));
+  assert(titles.includes(INTEGRATION_STORY.title), 'тестовая новелла не подхватилась с диска: ' + titles.join(','));
 
   [...fdoc.querySelectorAll('#story-list .story-card')][0].dispatchEvent(new fwindow.MouseEvent('click', { bubbles: true }));
   await until(() => fdoc.querySelector('.stage .text')?.textContent.length > 5, 'первая реплика с диска');
@@ -948,10 +990,10 @@ await step('с диска (file://) открывается и играет бе�
   fileDom.window.close();
 });
 
-await step('один файл vnmy.html играется без соседних файлов', async () => {
+await step('один файл vnmy.html открывает пустую библиотеку офлайн', async () => {
   const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
   let fetchCalls = 0;
-  let fileErrors = [];
+  const fileErrors = [];
   const consoleOut = new VirtualConsole();
   consoleOut.on('jsdomError', (e) => fileErrors.push('jsdomError: ' + e.message));
   consoleOut.on('error', (...a) => fileErrors.push('console.error: ' + a.map(String).join(' ')));
@@ -964,7 +1006,6 @@ await step('один файл vnmy.html играется без соседних
     beforeParse(window) {
       window.scrollTo = () => {};
       window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
-      // с диска сети нет вовсе: любой запрос — ошибка
       window.fetch = async () => { fetchCalls++; throw new TypeError('Failed to fetch'); };
       window.HTMLCanvasElement.prototype.getContext = function () {
         const noop = () => {};
@@ -983,40 +1024,17 @@ await step('один файл vnmy.html играется без соседних
 
   const sdoc = soloDom.window.document;
   const started = Date.now();
-  while (Date.now() - started < 15000) {
-    if (sdoc.querySelectorAll('#universe-list .universe-card').length) break;
-    await sleep(50);
-  }
-  const uniTitles = [...sdoc.querySelectorAll('.universe-card-title')].map((n) => n.textContent);
-  assert(uniTitles.includes('Тихие пути'), 'вселенная не подхватилась из одного файла: ' + uniTitles.join(','));
-  assert(fetchCalls === 0, 'один файл всё-таки ходил в сеть: ' + fetchCalls);
+  while (Date.now() - started < 8000 && !sdoc.querySelectorAll('#universe-list .universe-card').length) await sleep(50);
+  assert(sdoc.querySelectorAll('#universe-list .universe-card').length >= 1, 'вселенная не загрузилась из автономного файла');
+  assert(fetchCalls === 0, 'автономный файл ходил в сеть: ' + fetchCalls);
+  const library = soloDom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
+  assert(library.universes.length > 0, 'в автономный файл не попали вселенные');
+  assert(library.universes.every((u) => (u.novels || []).length === 0), 'в автономном файле остались новеллы');
+  assert(String(library.universes[0].cover).startsWith('data:image/'), 'обложка вселенной не вшита');
 
   sdoc.querySelector('#universe-list .universe-card').dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
-  const novelStart = Date.now();
-  while (Date.now() - novelStart < 8000) {
-    if (sdoc.querySelectorAll('#story-list .story-card').length) break;
-    await sleep(50);
-  }
-  const titles = [...sdoc.querySelectorAll('.story-card-title')].map((n) => n.textContent);
-  assert(titles.includes('Последний поезд'), 'демо не подхватилось из одного файла: ' + titles.join(','));
-
-  sdoc.querySelector('#story-list .story-card').dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
-  const playStart = Date.now();
-  while (Date.now() - playStart < 8000) {
-    if (sdoc.querySelector('.stage .text')?.textContent.length > 5) break;
-    await sleep(50);
-  }
-  const text = sdoc.querySelector('.stage .text').textContent;
-  assert(text.includes('02:14') || text.includes('Дождь'), 'реплика не появилась: ' + JSON.stringify(text));
-  const library = soloDom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
-  const universe = library.universes[0];
-  assert(universe && universe.novels?.length >= 1, 'новеллы не вшиты в файл');
-  const novel = universe.novels[0];
-  const scene = novel.scenes[0];
-  const sprite = Object.values(novel.characters?.[0]?.sprites || {})[0] || '';
-  assert(String(scene.bg).startsWith('data:image/'), 'фон не вшит: ' + String(scene.bg).slice(0, 40));
-  assert(String(sprite).startsWith('data:image/'), 'спрайты не вшиты: ' + String(sprite).slice(0, 40));
-  assert(String(universe.cover).startsWith('data:image/'), 'обложка вселенной не вшита');
+  await sleep(100);
+  assert(sdoc.querySelectorAll('#story-list .story-card').length === 0, 'пустая вселенная показывает новеллы');
   assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки в одном файле: ' + fileErrors.join(' | '));
   soloDom.window.close();
 });
@@ -1040,128 +1058,82 @@ await step('спрайты сохраняют пропорции картинк�
   assert(/\.sprite img\s*\{[^}]*max-width:\s*none/.test(standalone), 'в vnmy.html нет исправления спрайтов');
 });
 
-await step('новая новелла: имя спрашивают в начале и подставляют в текст', async () => {
-  await openUniverse('Пересылка');
-  const cards = storyCards();
-  assert(cards.length >= 1, 'во вселенной «Пересылка» есть новелла');
-  assert(cards.some((c) => c.textContent.includes('Кто-то останется')), 'новелла «Кто-то останется»: ' + cards.map((c) => c.textContent.trim()).join(' | '));
-  click(cards.find((c) => c.textContent.includes('Кто-то останется')));
-  await waitFor(() => visible('screen-player') && document.querySelector('.stage'), { label: 'player peresylka' });
-
-  const name = 'Артём';
-  let asked = false;
-  let speaker = '';
-  for (let i = 0; i < 40 && !asked; i++) {
-    const ask = document.querySelector('.stage .ask-layer:not([hidden])');
-    if (ask) {
-      asked = true;
-      assert(ask.querySelector('.ask-label').textContent.includes('зовут'), 'вопрос про имя: ' + ask.textContent.trim());
-      const input = ask.querySelector('.ask-input');
-      setInput(input, name);
-      click(ask.querySelector('.ask-submit'));
-      break;
-    }
-    click(document.querySelector('.stage .tap-layer'));
-    await sleep(30);
-  }
-  assert(asked, 'игра спросила имя');
-  await waitFor(() => document.querySelector('.stage .ask-layer')?.hidden !== false, { label: 'ask hidden' });
-  await sleep(60);
-  speaker = document.querySelector('.stage .speaker').textContent.trim();
-  assert(speaker === name, 'имя героя в подписи: «' + speaker + '»');
-  await waitFor(() => document.querySelector('.stage .text').textContent.includes(name), { label: 'имя в тексте' });
-});
-
-await step('новая новелла: пороги, финал и выбор остаётся', async () => {
-  const choose = (list, want) => {
-    const found = list.find((el) => want.includes(el.textContent.trim()));
-    click(found || list[0]);
+await step('ask: имя спрашивают и подставляют в текст и имя героя', async () => {
+  const askStory = {
+    title: 'Тест ask',
+    vars: [{ name: 'имя', type: 'text', initial: '' }],
+    characters: [{ id: 'hero', name: '{имя}', sprites: {} }],
+    scenes: [{ id: 'ask-scene', name: 'Знакомство', bg: '', steps: [
+      { id: 'ask', text: '', ask: { var: 'имя', label: 'Как тебя зовут?', value: 'Гость' } },
+      { id: 'hello', speaker: 'hero', text: 'Рад встрече, {имя}!' },
+      { id: 'end', text: 'До встречи.', end: true, endTitle: 'Конец' },
+    ] }],
   };
-  let guard = 0;
-  let hubs = 0;
-  let adapts = 0;
-  let cases = 0;
-  while (guard++ < 6000) {
-    if (document.querySelector('.ending-layer.is-visible')) break;
-    const ask = document.querySelector('.stage .ask-layer:not([hidden])');
-    if (ask) {
-      setInput(ask.querySelector('.ask-input'), 'Артём');
-      click(ask.querySelector('.ask-submit'));
-      await sleep(60);
-      continue;
-    }
-    const choices = [...document.querySelectorAll('.choice-layer .choice')];
-    if (choices.length) {
-      const labels = choices.map((el) => el.textContent.trim());
-      if (labels.some((l) => /^Мост|^Стена|^Лёд|^Костёр|^Кузня|^Крыши/.test(l))) hubs++;
-      if (labels.some((l) => /^Гвен:|^Микаса:|^Сакура:|^Энни:|^Фелиция:|^Тентен:/.test(l))) adapts++;
-      if (labels.some((l) => /^Утечка газа|^Звонки|^Пять подъездов|^Восьмая бумажка/.test(l))) cases++;
-      choose(choices, ['Останься. Пожалуйста.', 'Взять Микасу за руку.']);
-      await sleep(40);
-      continue;
-    }
-    click(document.querySelector('.stage .tap-layer'));
-    await sleep(12);
-  }
-  assert(hubs >= 6, 'шесть порогов пройдены, а не ' + hubs);
-  assert(adapts >= 6, 'шесть адаптаций пройдены, а не ' + adapts);
-  assert(cases >= 4, 'четыре гипотезы проверены, а не ' + cases);
-  assert(document.querySelector('.ending-layer.is-visible'), 'финал наступил за ' + guard + ' шагов');
-  const ending = document.querySelector('.ending-title')?.textContent || '';
-  assert(/ВАХТА/.test(ending) && /МИКАСА/.test(ending), 'финал с Микасой: ' + ending);
-  const epilogue = document.querySelector('.ending-text')?.textContent || '';
-  assert(epilogue.length > 30, 'на экране финала есть эпилог: ' + epilogue);
-  const raw = window.localStorage.getItem('vnmy:saves:story_kto_to_ostanetsya');
-  assert(raw, 'сохранение новой новеллы');
-  const auto = JSON.parse(raw).auto;
-  assert(auto && auto.ended && auto.vars, 'сохранение финала новой новеллы');
-  const vars = auto.vars;
-  assert(vars['порог_микаса'] === 2, 'порог Микасы открыт: ' + vars['порог_микаса']);
-  const passed = ['гвен', 'фелиция', 'микаса', 'энни', 'сакура', 'тентен'].filter((n) => vars['порог_' + n] > 0);
-  assert(passed.length === 6, 'пройдены все шесть порогов, а не ' + passed.length);
-  assert(vars['имя'] === 'Артём', 'имя в сохранении: ' + vars['имя']);
-  const byt = ['гвен', 'микаса', 'сакура', 'энни', 'фелиция', 'тентен'].filter((n) => vars['быт_' + n] >= 1);
-  assert(byt.length === 6, 'все шесть адаптаций закрыты, а не ' + byt.length);
-  assert(vars['порядок'] === 6, 'комендант собрал все шесть галочек: ' + vars['порядок']);
-  assert(vars['улики'] >= 6, 'собрано не меньше шести улик: ' + vars['улики']);
-  assert(vars['проверки'] === 4, 'все четыре гипотезы закрыты: ' + vars['проверки']);
+  await openUniverses();
+  await openUniverse(UNIVERSE_DEMO);
+  await importStoryData(askStory);
+  const ask = document.querySelector('.stage .ask-layer:not([hidden])');
+  assert(ask, 'игра не показала вопрос');
+  assert(ask.querySelector('.ask-label').textContent.includes('зовут'), 'не тот вопрос: ' + ask.textContent.trim());
+  setInput(ask.querySelector('.ask-input'), 'Артём');
+  click(ask.querySelector('.ask-submit'));
+  await waitFor(() => document.querySelector('.stage .speaker').textContent.trim() === 'Артём', { label: 'speaker interpolation' });
+  await waitFor(() => document.querySelector('.stage .text').textContent.includes('Артём'), { label: 'text interpolation' });
 });
 
-await step('новелла разбита на акты: структура сцены и стыки', async () => {
-  const raw = await fs.readFile(path.join(ROOT, 'stories/peresylka/novels/kto-to-ostanetsya/story.json'), 'utf8');
-  const story = JSON.parse(raw);
-  const acts = story.scenes.map((s) => s.act);
-  assert(acts.every(Boolean), 'у каждой сцены есть акт');
-  assert(new Set(acts).size === 7, 'актов ровно 7, а не ' + new Set(acts).size);
-  const order = [...new Set(acts)];
-  assert(order.join('|') === 'Акт I|Акт II|Акт III|Акт IV|Акт V|Акт VI|Акт VII', 'акты идут по порядку: ' + order.join(' → '));
-  for (const act of order) {
-    const inAct = story.scenes.filter((sc) => sc.act === act);
-    assert(inAct.length >= 3 && inAct.length <= 10, `в «${act}» ${inAct.length} сцен — должно быть от 3 до 10`);
-    const steps = inAct.reduce((n, sc) => n + sc.steps.length, 0);
-    assert(steps >= 60, `в «${act}» только ${steps} кадров — акт получился слишком тонким`);
-  }
-  for (let i = 0; i < story.scenes.length; i++) {
-    const sc = story.scenes[i];
-    const last = sc.steps[sc.steps.length - 1];
-    const linked = last.end || last.goto || last.choices?.length || last.gotoIf?.length;
-    const flowsIntoNext = i + 1 < story.scenes.length;
-    assert(linked || flowsIntoNext, `сцена «${sc.name}» обрывается: ни перехода, ни конца`);
-  }
-  const steps = story.scenes.reduce((n, s) => n + s.steps.length, 0);
-  const chars = story.scenes.reduce((n, s) => n + s.steps.reduce((m, t) => m + (t.text || '').length, 0), 0);
-  assert(steps >= 900, `в новелле ${steps} кадров — на два часа нужно не меньше 900`);
-  assert(chars >= 70000, `объём текста ${chars} символов, нужно от 70 000`);
-  const isHub = (st) => (st.choices || []).length >= 4 && st.choices.every((c) => c.if) && st.gotoIf?.length;
-  const engine = await fs.readFile(path.join(ROOT, 'js/engine.js'), 'utf8');
-  const css = await fs.readFile(path.join(ROOT, 'css/player.css'), 'utf8');
-  assert(/chapter-act/.test(engine), 'карточка сцены не выводит акт');
-  assert(/\.chapter-act\s*\{/.test(css), 'в стилях нет правила для строки акта');
-  const hubSteps = story.scenes.flatMap((sc) => sc.steps.filter(isHub).map((st) => ({ sc, st })));
-  assert(hubSteps.length === 3, 'три хаба: гипотезы, адаптация, пороги — а не ' + hubSteps.length);
-  for (const { sc } of hubSteps) {
-    assert(sc.card === false, 'хаб «' + sc.name + '» показывает карточку сцены при каждом возврате');
-  }
+await step('акты сохраняются в формате, линтер проверяет переходы', async () => {
+  const built = await esbuild.build({
+    entryPoints: [path.join(ROOT, 'js/format.js')],
+    bundle: true,
+    format: 'esm',
+    write: false,
+    logLevel: 'silent',
+  });
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
+  const story = mod.normalizeStory({
+    title: 'Тест актов',
+    scenes: [
+      { id: 'opening', name: 'Начало', act: 'Акт I', bg: '', steps: [{ id: 'a', text: 'Начало', goto: 'ending:b' }] },
+      { id: 'ending', name: 'Финал', act: 'Акт II', bg: '', steps: [{ id: 'b', text: 'Финал', end: true }] },
+    ],
+  });
+  assert(story.scenes.map((scene) => scene.act).join('|') === 'Акт I|Акт II', 'метки актов потерялись');
+  assert(mod.resolveTarget(story, 'ending:b', 'opening')?.sceneId === 'ending', 'межсценовый переход не разрешился');
+  const issues = mod.lintStory(story).filter((issue) => issue.level === 'error');
+  assert(!issues.length, 'ошибки в тестовой истории: ' + issues.map((issue) => issue.text).join('; '));
+});
+
+await step('поставляемые вселенные пусты, шаблон новеллы сохранён', async () => {
+  const { scanStories } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const catalog = await scanStories();
+  assert(catalog.length > 0, 'вселенные проекта удалены вместе с новеллами');
+  assert(catalog.every((universe) => universe.novels.length === 0), 'встроенная новелла осталась в stories/');
+  const template = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/_template/novels/novel-example/story.json'), 'utf8'));
+  assert(template.title, 'шаблон для создания новых историй удалён или пуст');
+});
+
+await step('доступные выборы на шаге-конце имеют приоритет', async () => {
+  const story = {
+    title: 'Тест выбора перед концом',
+    scenes: [{
+      id: 'scene', name: 'Развилка', bg: '', steps: [
+        {
+          id: 'choice', text: 'Выбери финал.', end: true, endTitle: 'Не должно показаться',
+          choices: [{ text: 'Продолжить', goto: 'scene:final' }],
+        },
+        { id: 'final', text: 'Выбор принят.', end: true, endTitle: 'Финал выбран' },
+      ],
+    }],
+  };
+  await openUniverse(UNIVERSE_DEMO);
+  await importStoryData(story);
+  assert(document.querySelector('.choice-layer.is-visible'), 'варианты выбора не показались');
+  assert(!document.querySelector('.ending-layer.is-visible'), 'появился финал до выбора');
+  click(document.querySelector('.choice-layer .choice'));
+  await waitFor(() => document.querySelector('.ending-layer.is-visible'), { label: 'selected ending' });
+  assert(document.querySelector('.ending-title').textContent === 'Финал выбран', 'переход после выбора неверен');
+  click(document.querySelector('.ending-layer .ghost-btn'));
+  await waitFor(() => visible('screen-universe'), { label: 'back after choice test' });
 });
 
 await sleep(200);

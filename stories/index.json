@@ -12,13 +12,7 @@
       "cover": "cover.webp",
       "accent": "#8fb8d8",
       "order": 1,
-      "novels": [
-        {
-          "id": "story_last_train",
-          "dir": "last-train",
-          "title": "Последний поезд"
-        }
-      ]
+      "novels": []
     },
     {
       "id": "peresylka",
@@ -29,13 +23,7 @@
       "cover": "cover.webp",
       "accent": "#8fb8d8",
       "order": 3,
-      "novels": [
-        {
-          "id": "story_kto_to_ostanetsya",
-          "dir": "kto-to-ostanetsya",
-          "title": "Кто-то останется"
-        }
-      ]
+      "novels": []
     }
   ]
 }
