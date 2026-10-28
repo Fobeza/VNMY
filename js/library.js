@@ -72,7 +72,6 @@ function novelCount(n) {
 function universeCard(universe) {
   const novels = universe.novels || [];
   const cover = universe.cover ? resolveUrl(universe, universe.cover) : '';
-  const local = !universe.builtin && !universe.loose;
 
   const card = el('div', {
     class: `universe-card${universe.builtin ? ' is-builtin' : ''}${universe.loose ? ' is-loose' : ''}`,
@@ -103,7 +102,6 @@ function universeCard(universe) {
   card.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
-  void local;
   return card;
 }
 
