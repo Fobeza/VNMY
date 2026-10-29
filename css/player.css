@@ -475,3 +475,35 @@
   width: 100%;
   margin-top: 10px;
 }
+
+/* Typography follows the reader's setting without shrinking long dialogue. */
+.dialogue-layer { padding-top: 6cqh; max-height: 80cqh; overflow-y: auto; scrollbar-width: thin; background: linear-gradient(to top, rgba(4,5,8,var(--dialogue-opacity, .9)) 0%, rgba(4,5,8,var(--dialogue-opacity, .9)) 65%, transparent 100%); }
+.text { font-size: calc(clamp(16px, 4.45cqw, 25px) * var(--text-scale)); max-height: 38cqh; }
+.speaker { font-size: clamp(12px, 2.9cqw, 14px); letter-spacing: .1em; }
+.choice { font-size: calc(clamp(16px, 3.9cqw, 21px) * var(--text-scale)); min-height: 44px; }
+.text.is-scrollable { scrollbar-width: thin; overscroll-behavior: contain; }
+.text.is-scrollable::-webkit-scrollbar { display: block; width: 3px; }
+.text.is-scrollable::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+.quick-actions { position: absolute; top: 9cqh; right: 4cqw; z-index: 8; display: flex; gap: 6px; }
+.quick-actions .pill { background: rgba(8,9,12,.7); color: var(--ink); font-size: 12px; min-height: 40px; }
+.stage[data-mode="edit"] .quick-actions { display: none; }
+.stage.ui-hidden .dialogue-layer, .stage.ui-hidden .topbar, .stage.ui-hidden .quick-actions { opacity: 0; pointer-events: none; }
+.stage.ui-hidden .dialogue-layer * { pointer-events: none; }
+.chapter-name { white-space: normal; text-align: center; padding-inline: 20px; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .player-host { padding: var(--safe-t) var(--safe-b); }
+  .stage { width: 100%; height: 100%; border-radius: 0; }
+  .dialogue-layer { left: 50%; max-height: 78cqh; padding: 8px 24px 14px; }
+  .text { font-size: calc(18px * var(--text-scale)); max-height: 43cqh; }
+  .choice { padding: 10px 16px; font-size: calc(16px * var(--text-scale)); }
+  .sprite-layer { right: 45%; }
+  .sprite { height: 85cqh; }
+  .quick-actions { top: 15px; right: 65px; }
+  .topbar { padding: 10px 14px; }
+  .topbar-title { max-width: 42%; text-align: left; }
+  .topbar-menu { margin-left: auto; }
+  .speaker { margin-bottom: 8px; }
+}
+.stage[data-mode="edit"] .text { font-size: calc(4.45cqw * var(--text-scale)); }
+.stage[data-mode="edit"] .speaker { font-size: 2.9cqw; }
+.stage[data-mode="edit"] .choice { font-size: calc(3.9cqw * var(--text-scale)); min-height: 0; }

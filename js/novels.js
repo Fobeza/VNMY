@@ -7,7 +7,7 @@
 import {
   loadLibrary, duplicateStory, deleteStory, exportStory, progressOf, getSaves,
   importStoryFile, clearSaves, exportStoryPortable, universeCatalog,
-  deleteUniverse, exportUniversePortable, moveStoryToUniverse,
+  deleteUniverse, exportUniversePortable, moveStoryToUniverse, getSettings,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
@@ -82,14 +82,14 @@ function storyCard(story) {
       el('div', { class: 'story-card-meta' },
         el('span', { text: story.author || 'без автора' }),
         el('span', { class: 'sep' }),
-        el('span', { text: `${steps} ${plural(steps, 'шаг', 'шага', 'шагов')}` }),
+        el('span', { text: `${Math.max(1, Math.round(countWords(story).words / 180))} мин · все ветки` }),
         charCount ? el('span', { class: 'sep' }) : null,
         charCount ? el('span', { text: `${charCount} ${plural(charCount, 'персонаж', 'персонажа', 'персонажей')}` }) : null,
         story.readOnly ? el('span', { class: 'story-card-badge', text: 'встроенная' }) : null,
       ),
       story.description ? el('div', { class: 'story-card-desc', text: story.description }) : null,
       progress ? el('div', { class: 'story-card-meta', style: { color: 'var(--accent)', marginTop: '2px' } },
-        el('span', { text: progress.ended ? 'прочитано · можно перечитать' : `продолжить · ${Math.round((progress.percent || 0) * 100)}%` }),
+        el('span', { text: progress.ended ? 'прочитано · можно перечитать' : `продолжить · ${progress.sceneName || 'начало'}` }),
       ) : null,
     ),
     el('button', {
@@ -98,13 +98,13 @@ function storyCard(story) {
       'aria-label': 'Действия с историей',
       onclick: (e) => { e.stopPropagation(); openStoryMenu(story); },
     }, el('span', { html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>' })),
-    progress && !progress.ended ? el('div', { class: 'story-card-progress', style: { transform: `scaleX(${Math.min(1, Math.max(.02, progress.percent || 0))})` } }) : null,
+
   );
 
   const open = () => hooks.onPlay(story);
   card.addEventListener('click', open);
   card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); }
   });
   return card;
 }
@@ -131,7 +131,7 @@ function openStoryMenu(story) {
         },
       } : null,
       {
-        label: story.readOnly ? 'Редактировать копию' : 'Редактировать',
+        authorOnly: true, label: story.readOnly ? 'Редактировать копию' : 'Редактировать',
         icon: ICONS.edit,
         hint: story.readOnly ? 'оригинал останется в папке stories' : 'изменения сохранятся в браузере',
         onSelect: async () => {
@@ -141,24 +141,24 @@ function openStoryMenu(story) {
         },
       },
       universes.length ? {
-        label: 'Перенести в другую вселенную',
+        authorOnly: true, label: 'Перенести в другую вселенную',
         icon: ICONS.book,
         hint: universes.map((u) => u.title).join(', ').slice(0, 60),
         onSelect: () => pickUniverseFor(story),
       } : null,
       {
-        label: 'Дублировать',
+        authorOnly: true, label: 'Дублировать',
         icon: ICONS.copy,
         onSelect: () => { duplicateStory(story); toast('Копия создана'); renderUniverse(current?.id ?? '', hooks); },
       },
       {
-        label: 'Экспорт с картинками',
+        authorOnly: true, label: 'Экспорт с картинками',
         icon: ICONS.download,
         hint: 'один файл, откроется на любом устройстве',
         onSelect: () => runPortableExport(story),
       },
       {
-        label: 'Экспорт JSON',
+        authorOnly: true, label: 'Экспорт JSON',
         icon: ICONS.download,
         hint: 'только сценарий, картинки — путями из stories/',
         onSelect: () => exportStory(story),

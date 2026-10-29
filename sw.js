@@ -6,7 +6,7 @@
  *  - картинки, иконки, манифест — cache-first (они неизменяемые);
  *  - stories/index.json и story.json — network-first: новые истории видны сразу.
  */
-const VERSION = 'vnmy-2.0';
+const VERSION = 'vnmy-2.1.0';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
@@ -18,6 +18,9 @@ const SHELL_FILES = [
   './css/editor.css',
   './js/app.js',
   './js/engine.js',
+  './js/session.js',
+  './js/persistence.js',
+  './js/navigation.js',
   './js/format.js',
   './js/expr.js',
   './js/store.js',
@@ -41,10 +44,8 @@ const SHELL_FILES = [
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL);
-    // кэшируем по одному: один недоступный файл не должен ломать установку
-    await Promise.all(SHELL_FILES.map(async (file) => {
-      try { await cache.add(new Request(file, { cache: 'reload' })); } catch { /* не критично */ }
-    }));
+    // Commit the complete shell atomically; a failed update keeps the old worker.
+    await cache.addAll(SHELL_FILES.map(file => new Request(file, { cache: 'reload' })));
     self.skipWaiting();
   })());
 });
@@ -52,7 +53,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k.startsWith('vnmy-') && !k.startsWith(VERSION)).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -98,6 +99,8 @@ self.addEventListener('fetch', (event) => {
     } catch (err) {
       const hit = await cache.match(request, { ignoreSearch: isData(url) });
       if (hit) return hit;
+      const downloaded = await caches.match(request, { ignoreSearch: isData(url) });
+      if (downloaded) return downloaded;
       if (request.mode === 'navigate') {
         const shell = await cache.match('./index.html');
         if (shell) return shell;

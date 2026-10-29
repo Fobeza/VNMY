@@ -11,7 +11,7 @@
  */
 import {
   loadLibrary, saveUniverse, deleteUniverse, uniqueUniverseId, universeCatalog,
-  importStoryFile, exportBackup, listLocalStoryIds, storageUsage, exportUniversePortable,
+  importStoryFile, exportBackup, listLocalStoryIds, storageUsage, exportUniversePortable, progressOf, getSettings, saveSettings,
 } from './store.js';
 import { createUniverse, universeData, slugId } from './universe.js';
 import { resolveUrl } from './format.js';
@@ -33,6 +33,26 @@ export async function renderLibrary(nextHooks) {
 
   const lib = await loadLibrary();
   universes = lib.universes;
+  const author = !!getSettings().authorMode;
+  document.body.classList.toggle('author-mode', author);
+  for (const [id, selected] of [['mode-read', !author], ['mode-author', author]]) {
+    const button = document.getElementById(id);
+    button?.classList.toggle('is-active', selected);
+    button?.setAttribute('aria-pressed', String(selected));
+  }
+  const resumeHost = document.getElementById('continue-reading');
+  resumeHost?.replaceChildren();
+  const latest = universes.flatMap(u => u.novels || []).map(story => ({ story, save: progressOf(story.id) }))
+    .filter(item => item.save && !item.save.ended).sort((a, b) => (b.save.at || 0) - (a.save.at || 0))[0];
+  if (latest && resumeHost) {
+    const { story, save } = latest;
+    const cover = resolveUrl(story, story.cover);
+    resumeHost.append(el('article', { class: 'continue-card' },
+      cover ? el('img', { src: cover, alt: '', class: 'continue-cover' }) : null,
+      el('div', {}, el('p', { class: 'continue-kicker', text: 'Продолжить чтение' }), el('h2', { text: story.title }),
+        el('p', { class: 'field-hint', text: save.sceneName || 'Вернуться к истории' }),
+        el('button', { class: 'solid-btn', type: 'button', onclick: () => hooks.onPlay?.(story) }, 'Продолжить'))));
+  }
 
   if (!universes.length) {
     list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной вселенной. Создайте свою кнопкой выше — или положите папку в stories/ (см. docs/ai-guide.md) и соберите проект.' }));
@@ -42,9 +62,7 @@ export async function renderLibrary(nextHooks) {
   const note = $('#library-note');
   note.innerHTML = '';
   note.append(
-    el('span', { text: 'Вселенная — это мир, в котором живёт несколько новелл. Свои вселенные и правки хранятся в этом браузере, файловые — в папке ' }),
-    el('code', { text: 'stories/' }),
-    el('span', { text: '.' }),
+    el('span', { text: author ? 'Свои истории и изменения хранятся на этом устройстве. Скачайте бэкап, чтобы перенести их вместе с прогрессом.' : 'Выберите вселенную и откройте историю. Ваше место сохраняется автоматически.' }),
   );
   if (location.protocol === 'file:') {
     note.append(el('br'), el('br'), el('span', {
@@ -57,7 +75,7 @@ export async function renderLibrary(nextHooks) {
   const usedMb = usage.used / 1024 / 1024;
   if (usedMb > 0.2) {
     note.append(el('br'), el('br'), el('span', {
-      text: `Занято в браузере: ${usedMb.toFixed(1)} МБ из ~5 МБ (${Math.round((usage.used / usage.limit) * 100)}%). Бэкап — кнопка «Бэкап» вверху.`,
+      text: `На устройстве: ${usedMb.toFixed(1)} МБ${usage.limit ? ' из примерно 5 МБ' : ''}. Полная копия — кнопка «Бэкап» в режиме создания.`,
     }));
   }
   if (builtinWarning) {
@@ -248,6 +266,9 @@ export function wireLibrary() {
   if (wired) return;
   wired = true;
 
+  for (const [id, value] of [['mode-read', false], ['mode-author', true]]) {
+    document.getElementById(id)?.addEventListener('click', () => { saveSettings({ authorMode: value }); renderLibrary(hooks); });
+  }
   $('#btn-new-universe')?.addEventListener('click', () => {
     promptUniverse({ onSave: (universe) => hooks.onOpenUniverse?.(universe.id) });
   });
@@ -289,13 +310,15 @@ export function wireLibrary() {
   });
   $('#btn-import-story')?.addEventListener('click', () => fileInput.click());
 
-  $('#btn-backup')?.addEventListener('click', () => {
-    if (!listLocalStoryIds().length) {
-      toast('В браузере пока нет своих новелл — бэкапить нечего');
-      return;
+  $('#btn-backup')?.addEventListener('click', async () => {
+    try {
+      toast('Собираю полную копию…', 8000);
+      const count = await exportBackup();
+      toast(`Бэкап: ${count} ${plural(count, 'новелла', 'новеллы', 'новелл')}, сохранения и настройки`);
+    } catch (err) {
+      console.error(err);
+      toast('Не удалось включить все картинки. Откройте исходную папку с изображениями и повторите бэкап.', 6000);
     }
-    const count = exportBackup();
-    toast(`Бэкап: ${count} ${plural(count, 'новелла', 'новеллы', 'новелл')}`);
   });
 }
 

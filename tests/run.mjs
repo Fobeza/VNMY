@@ -524,8 +524,8 @@ await step('сохранение в слот, возврат в него и жу
   await openPlayerMenuSheet();
   await chooseMenuRow('Сохранения');
   await waitFor(() => document.querySelector('.save-slot.is-filled'), { label: 'filled slot' });
-  const open = [...document.querySelectorAll('.save-slot .pill')].find((b) => b.textContent.includes('Открыть'));
-  assert(open, 'нет кнопки «Открыть»');
+  const open = [...document.querySelectorAll('.save-slot .pill')].find((b) => b.textContent.includes('Загрузить'));
+  assert(open, 'нет кнопки «Загрузить»');
   click(open);
   await sleep(500);
   assert((await readText()) === 'вторая реплика', 'слот вернул не туда');
@@ -558,6 +558,8 @@ await step('режим «меньше анимации» отключает пе
   const saved = JSON.parse(window.localStorage.getItem('vnmy:settings') || '{}');
   assert(saved.reduceMotion === true, 'настройка не сохранилась: ' + JSON.stringify(saved));
 
+  closeSheet();
+  await sleep(380);
   click(document.querySelector('.stage .tap-layer'));
   const instant = document.querySelector('.stage .text').textContent.trim();
   assert(instant === 'третья реплика', 'текст не появился сразу: ' + JSON.stringify(instant));
@@ -568,6 +570,8 @@ await step('режим «меньше анимации» отключает пе
   await chooseMenuRow('Меньше анимации');
   await sleep(120);
   assert(!document.querySelector('.stage').classList.contains('is-reduced-motion'), 'класс не снялся');
+  closeSheet();
+  await sleep(380);
   click(document.querySelector('.stage .topbar-back'));
   await waitFor(() => visible('screen-universe'), { label: 'back from reduced' });
 });
@@ -710,7 +714,7 @@ await step('переменные: продолжение восстанавли�
   assert(key, 'история «Логика» не найдена в библиотеке');
   const saves = JSON.parse(window.localStorage.getItem(key) || '{}');
   assert(saves.auto, 'сохранение истории «Логика» не найдено');
-  saves.auto = { ...saves.auto, sceneId: 's', stepIndex: 2, ended: false, vars: { sympathy: 5 } };
+  saves.auto = { ...saves.auto, sceneId: 's', stepIndex: 2, stepId: 's:v3', ended: false, vars: { sympathy: 5 } };
   window.localStorage.setItem(key, JSON.stringify(saves));
   await waitFor(() => [...document.querySelectorAll('.story-card')].some((c) => c.textContent.includes('Логика')), { label: 'card Логика' });
   click([...document.querySelectorAll('.story-card')].find((c) => c.textContent.includes('Логика')));
@@ -718,6 +722,9 @@ await step('переменные: продолжение восстанавли�
   await sleep(300);
   const text = await readText();
   assert(text === 'секрет', 'условие не увидело сохранённую переменную: ' + text);
+  await advance();
+  const resumedChoices = [...document.querySelectorAll('.choice-layer .choice')];
+  assert(resumedChoices.some(c => c.textContent === 'секретный'), 'сохранённая переменная потерялась: секретный выбор недоступен');
   click(document.querySelector('.stage .topbar-back'));
   await waitFor(() => visible('screen-universe'), { label: 'back again' });
 });

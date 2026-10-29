@@ -8,25 +8,22 @@ import {
   findScene, resolveTarget, stateAt, spriteUrl, characterById, resolveUrl, bareId, WEATHERS,
   defaultVars, varByName,
 } from './format.js';
-import { evalCondition, interpolate, applyOperation } from './expr.js';
+import { evalCondition, interpolate } from './expr.js';
+import { NarrativeState } from './session.js';
 import { WeatherLayer } from './weather.js';
 
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
 /** Сколько реплик держим в журнале: дальше старые просто уходят. */
 const HISTORY_LIMIT = 150;
 
-export class Stage {
+export class Stage extends NarrativeState {
   constructor(host, opts = {}) {
+    super(opts);
     this.host = host;
     this.story = opts.story;
     this.mode = opts.mode || 'play';
     this.opts = opts;
     this.settings = { ...DEFAULTS, ...(opts.settings || {}) };
-    const startScene = opts.start?.sceneId && findScene(this.story, opts.start.sceneId)
-      ? opts.start.sceneId
-      : this.story.scenes[0].id;
-    this.sceneId = startScene;
-    this.index = clamp(opts.start?.stepIndex ?? 0, 0, findScene(this.story, startScene).steps.length - 1);
     this.cast = [];
     this.bgUrl = null;
     this.bgLayer = 0;
@@ -34,14 +31,12 @@ export class Stage {
     this.typing = null;
     this.awaitingChoices = false;
     this.asking = false;
-    this.seen = opts.seen || new Set();
-    this.vars = { ...defaultVars(this.story), ...(opts.vars || {}) };
-    // журнал реплик: переживает автосейв, чтобы «история» не пропадала
-    this.history = Array.isArray(opts.history) ? opts.history.slice(-HISTORY_LIMIT) : [];
     this.mounted = false;
     this.spriteNodes = new Map();
     this._timers = new Set();
     this._pauseToken = 0;
+    this._renderToken = 0;
+    this.paused = false;
   }
 
   /* ─────────────────────────── жизненный цикл ─────────────────────────── */
@@ -76,6 +71,9 @@ export class Stage {
     this.weather = new WeatherLayer($('.weather-layer', node));
     this.applyMotion();
     this.topTitle.textContent = this.story.title || '';
+    $('.quick-journal', node)?.addEventListener('click', () => this.opts.onJournal?.());
+    $('.quick-save', node)?.addEventListener('click', () => this.opts.onSaves?.());
+    $('.quick-hide', node)?.addEventListener('click', () => node.classList.toggle('ui-hidden'));
     this.node.style.setProperty('--accent', this.story.accent || '#e0b072');
     if (this.story.lang) document.documentElement.lang = this.story.lang;
     this.applyFontSize();
@@ -91,6 +89,7 @@ export class Stage {
     this.tapLayer.addEventListener('keydown', (e) => {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
         e.preventDefault();
+        e.stopPropagation();
         this.handleTap();
       }
     });
@@ -100,11 +99,13 @@ export class Stage {
     menuBtn.addEventListener('click', (e) => { e.stopPropagation(); this.opts.onMenu?.(); });
 
     this.mounted = true;
-    this.renderInstance(this.index, { instant: this.opts.instantFirst !== false });
+    if (this.opts.resuming) this.renderInstance(this.index, { instant: true });
+    else this.enter(this.sceneId, this.index, { instant: this.opts.instantFirst !== false });
     return this;
   }
 
   destroy() {
+    this.invalidateRender();
     this.cancelTyping();
     for (const t of this._timers) clearTimeout(t);
     this._timers.clear();
@@ -138,23 +139,11 @@ export class Stage {
   applyFontSize() {
     if (!this.node) return;
     this.node.style.setProperty('--text-scale', String(this.settings.fontSize || 1));
+    this.node.style.setProperty('--dialogue-opacity', String(this.settings.dialogueOpacity ?? 0.9));
+    if (this._holders?.length) this.fitText();
   }
 
   /* ─────────────────────────── состояние ─────────────────────────── */
-
-  get scene() { return findScene(this.story, this.sceneId); }
-  get step() { return this.scene?.steps[this.index] || null; }
-
-  get position() {
-    return {
-      sceneId: this.sceneId,
-      sceneIndex: this.story.scenes.findIndex((s) => s.id === this.sceneId),
-      stepIndex: this.index,
-      totalSteps: this.story.scenes.reduce((n, s) => n + s.steps.length, 0),
-      ended: this.ended,
-      vars: { ...this.vars },
-    };
-  }
 
   /** Полный переход к шагу; instant — без анимаций и печати текста. */
   goTo(sceneId, stepIndex, { instant = false, effects = true, force = false } = {}) {
@@ -173,18 +162,16 @@ export class Stage {
     // тот шаг, который выбрал, даже если его условие сейчас ложно
     const forced = force || (this.opts.forceStart && !this._entered);
     this._entered = true;
-    let guard = 0;
     while (!forced && index < scene.steps.length
       && scene.steps[index].if
-      && !evalCondition(scene.steps[index].if, this.vars)
-      && guard++ < 500) {
+      && !evalCondition(scene.steps[index].if, this.vars)) {
       index++;
     }
     if (index >= scene.steps.length) return this.leaveScene(scene);
 
     const sceneChanged = sceneId !== this.sceneId;
-    this.sceneId = sceneId;
-    this.index = index;
+    this.invalidateRender();
+    this.moveTo(sceneId, index);
     this.ended = false;
     this.hideEnding();
     if (sceneChanged) this.showChapterCard(scene);
@@ -206,26 +193,6 @@ export class Stage {
     }
     this.showEnding({ endTitle: 'КОНЕЦ' });
     return false;
-  }
-
-  /** Применяет step.set к переменным (один раз, при входе в шаг). */
-  applySet(step) {
-    if (!step?.set?.length) return;
-    for (const op of step.set) {
-      const type = varByName(this.story, op.var)?.type || 'number';
-      this.vars[op.var] = applyOperation(this.vars[op.var] ?? (type === 'bool' ? false : type === 'text' ? '' : 0), op.op, op.value, type);
-    }
-    this.opts.onVars?.(this.vars);
-  }
-
-  setVar(name, value) {
-    this.vars[name] = value;
-    this.opts.onVars?.(this.vars);
-  }
-
-  resetVars() {
-    this.vars = { ...defaultVars(this.story), ...(this.opts.initialVars || {}) };
-    this.opts.onVars?.(this.vars);
   }
 
   /** Добавляет реплику в журнал (без дублей при перерисовке того же шага). */
@@ -253,32 +220,35 @@ export class Stage {
     const step = scene.steps[index];
     if (!step) return;
 
-    const state = stateAt(this.story, scene.id, index);
+    const state = this.mode === 'edit' ? stateAt(this.story, scene.id, index, this.vars) : this.visual;
     let cast = state.cast.map((c) => ({ ...c }));
     if (step.speaker && step.spriteOverride) {
       cast = cast.map((c) => (c.char === step.speaker ? { ...c, sprite: step.spriteOverride } : c));
     }
 
+    this.hideChoices();
     this.applyBackground(state.bg, { instant });
     this.applyWeather(state.weather, { instant });
     this.applyCast(cast, { instant, speaker: step.speaker });
 
+    const renderToken = this._renderToken;
     const pause = instant ? 0 : Math.min(4000, Math.max(0, Number(step.pause) || 0));
     if (pause && step.text) {
       const token = ++this._pauseToken;
+      this.waitingPause = true;
       this.dialogueLayer.classList.add('is-hidden');
       this.cancelTyping();
       // не оставляем в разметке текст прошлой реплики
       this.textEl.textContent = '';
       this.speakerEl.textContent = '';
       this.later(() => {
-        if (token !== this._pauseToken) return;
+        if (token !== this._pauseToken || renderToken !== this._renderToken) return;
+        this.waitingPause = false;
         this.renderDialogue(step, { instant: false });
       }, pause);
     } else {
       this.renderDialogue(step, { instant });
     }
-    this.hideChoices();
 
     if (!this.mode || this.mode === 'play') {
       if (step.mood) this.playMood(step.mood);
@@ -303,7 +273,9 @@ export class Stage {
     if (resolved === this.bgUrl) return;
     this.bgUrl = resolved;
 
+    const token = this._renderToken;
     const show = () => {
+      if (!this.mounted || token !== this._renderToken || resolved !== this.bgUrl) return;
       if (!resolved) {
         node.style.backgroundImage = 'none';
         node.style.background = 'radial-gradient(120% 90% at 50% 20%, #1b1f2a, #07080b 70%)';
@@ -320,6 +292,7 @@ export class Stage {
         other.classList.remove('is-active');
         node.classList.add('is-active');
       }
+      this._paintedBgUrl = resolved;
       this.bgLayer++;
     };
 
@@ -335,12 +308,7 @@ export class Stage {
 
   applyWeather(kind, { instant = false } = {}) {
     const next = WEATHERS.includes(kind) ? kind : 'none';
-    if (instant) {
-      this.weather.kind = next; // без анимации — просто пересоздать
-      this.weather.setKind(next);
-    } else {
-      this.weather.setKind(next);
-    }
+    this.weather.setKind(next);
   }
 
   /* ─────────────────────────── спрайты ─────────────────────────── */
@@ -383,7 +351,9 @@ export class Stage {
       const img = node.querySelector('img');
       if (img.dataset.src !== src) {
         img.dataset.src = src;
+        const token = this._renderToken;
         const swap = () => {
+          if (token !== this._renderToken || img.dataset.src !== src) return;
           img.src = src;
           img.classList.remove('is-swapping');
           requestAnimationFrame(() => img.classList.add('is-ready'));
@@ -490,22 +460,30 @@ export class Stage {
     this._typingRaf = requestAnimationFrame(tick);
   }
 
-  /** Уменьшает шрифт реплики, чтобы текст целиком влез в кадр. */
+  /** Keep the reader's chosen size; long lines scroll instead of shrinking. */
   fitText() {
     const node = this.textEl;
     if (!node) return;
     node.style.fontSize = '';
-    const max = node.clientHeight;
-    if (!max) return;
-    let size = parseFloat(getComputedStyle(node).fontSize) || 18;
-    const min = Math.max(11, size * 0.68);
-    let guard = 0;
-    while (node.scrollHeight > max + 1 && size > min && guard++ < 16) {
-      size -= 1;
-      node.style.fontSize = `${size}px`;
-    }
-    // если даже минимальный размер не помог — разрешаем прокрутку, чтобы текст не терялся
-    if (node.scrollHeight > max + 1) node.classList.add('is-scrollable');
+    node.classList.toggle('is-scrollable', node.scrollHeight > node.clientHeight + 1);
+  }
+
+  invalidateRender() {
+    this._renderToken++;
+    this._pauseToken++;
+    this.waitingPause = false;
+    for (const timer of this._timers) clearTimeout(timer);
+    this._timers.clear();
+    this.bgUrl = this._paintedBgUrl ?? null;
+    for (const img of this.spriteLayer?.querySelectorAll('img') || []) delete img.dataset.src;
+    this.node?.querySelectorAll('.sprite.is-leaving, .chapter-card').forEach(n => n.remove());
+    this.node?.classList.remove('fx-shake', 'fx-flash', 'fx-zoom', 'fx-blush', 'fx-dim');
+  }
+
+  setPaused(value) {
+    this.paused = value;
+    if (value) { this.invalidateRender(); this.cancelTyping(); }
+    else if (this.mounted && !this.ended) this.renderInstance(this.index, { instant: true });
   }
 
   finishTyping(step = this.step) {
@@ -535,14 +513,14 @@ export class Stage {
 
   /** Автопропуск уже прочитанных реплик при включённой настройке. */
   maybeAutoAdvance(step) {
-    if (!this.settings.skipSeen || this.mode !== 'play') return;
+    if (this.paused || !this.settings.skipSeen || this.mode !== 'play') return;
     const key = `${this.sceneId}:${bareId(step.id)}`;
     const wasSeen = this.opts.seenBefore?.has(key);
     if (wasSeen) this.later(() => { if (this.isIdle()) this.advance(); }, 90);
   }
 
   isIdle() {
-    return !this.typing && !this.awaitingChoices && !this.ended;
+    return !this.paused && !this.asking && !this.waitingPause && !this.typing && !this.awaitingChoices && !this.ended;
   }
 
   /* ─────────────────────────── знакомство (ask) ─────────────────────────── */
@@ -576,7 +554,7 @@ export class Stage {
     this.asking = false;
     if (this.askLayer) this.askLayer.hidden = true;
     this.node?.classList.remove('is-asking');
-    if (this.step.text) this.finishTyping();
+    if (this.step.text) this.renderDialogue(this.step, { instant: true });
     else this.advance();
   }
 
@@ -612,7 +590,7 @@ export class Stage {
   }
 
   choose(choice) {
-    this.hideChoices();
+    if (this.paused) return;
     if (this.mode === 'edit') {
       this.opts.onChoice?.(choice);
       return;
@@ -622,6 +600,7 @@ export class Stage {
       this.opts.onBrokenLink?.(choice.goto);
       return;
     }
+    this.hideChoices();
     const picked = String(choice.text || '').trim();
     if (picked) {
       this.history.push({ key: `choice:${this.sceneId}:${this.index}`, name: '', text: `→ ${picked}`, choice: true });
@@ -634,7 +613,8 @@ export class Stage {
   /* ─────────────────────────── навигация ─────────────────────────── */
 
   handleTap() {
-    if (this.ended || this.asking) return;
+    if (this.paused || this.ended || this.asking) return;
+    if (this.node.classList.contains('ui-hidden')) { this.node.classList.remove('ui-hidden'); return; }
     this.opts.onTap?.();
     if (this.awaitingChoices) return;
     if (this.isTyping()) {
@@ -768,18 +748,23 @@ export class Stage {
   }
 
   restart() {
+    this.invalidateRender();
+    this.cancelTyping();
     this.hideEnding();
     this.ended = false;
+    this.opts.onRestart?.();
     this.history = [];
     this.opts.onHistory?.(this.history);
     this.resetVars();
     this.bgUrl = null;
     this.bgLayer = 0;
+    this._paintedBgUrl = null;
     this.sceneId = this.story.scenes[0].id;
     this.index = 0;
     this.spriteLayer.innerHTML = '';
     this.spriteNodes.clear();
-    this.renderInstance(0, { instant: false });
+    this.visual = stateAt(this.story, this.sceneId, -1, this.vars);
+    this.enter(this.sceneId, 0, { instant: false });
   }
 }
 
