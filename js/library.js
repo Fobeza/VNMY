@@ -24,14 +24,18 @@ import { APP_VERSION } from './version.js';
 let hooks = {};
 let universes = [];
 let builtinWarning = false;
+let renderSequence = 0;
 
 export async function renderLibrary(nextHooks) {
+  const request = ++renderSequence;
   hooks = nextHooks || hooks;
   const list = $('#universe-list');
   if (!list) return;
   list.innerHTML = '';
 
   const lib = await loadLibrary();
+  if (request !== renderSequence) return;
+  list.replaceChildren();
   universes = lib.universes;
   const author = !!getSettings().authorMode;
   document.body.classList.toggle('author-mode', author);

@@ -17,11 +17,14 @@ import { promptUniverse } from './library.js';
 
 let hooks = {};
 let current = null;
+let renderSequence = 0;
 
 /** Открыть экран вселенной (вызывается из app.js). */
 export async function renderUniverse(universeId, nextHooks) {
+  const request = ++renderSequence;
   hooks = nextHooks || hooks;
   const lib = await loadLibrary();
+  if (request !== renderSequence) return;
   const universe = lib.universes.find((u) => u.id === universeId)
     || lib.universes.find((u) => u.loose)
     || lib.universes[0];
