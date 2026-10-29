@@ -23,7 +23,9 @@
  */
 import * as esbuild from 'esbuild';
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { validateStories } from './validate.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const STORIES = path.join(ROOT, 'stories');
@@ -91,7 +93,7 @@ export async function scanStories() {
         const story = await readJSON(file);
         novels.push({ dir: novelDir, story });
       } catch (err) {
-        console.warn(`[vnmy] пропускаю «stories/${dir}/novels/${novelDir}»: ${err.message}`);
+        throw new Error(`stories/${dir}/novels/${novelDir}: ${err.message}`, { cause: err });
       }
     }
     universes.push({ dir, universe, novels });
@@ -199,9 +201,9 @@ function jsonForInlineScript(value) {
 }
 
 /** Картинки истории → data:image/…, чтобы файл был совсем один. */
-async function inlineAssets(story, base) {
+async function inlineAssets(story, base, registry = null) {
   const cache = new Map();
-  const inline = async (value) => {
+  const inline = async (value, direct = false) => {
     if (!value || typeof value !== 'string') return value;
     if (/^(data:|https?:|\/)/.test(value)) return value;
     const file = await resolveContainedFile(base, value);
@@ -210,10 +212,14 @@ async function inlineAssets(story, base) {
       const ext = path.extname(file).slice(1).toLowerCase();
       cache.set(file, `data:${MIME[ext] || 'application/octet-stream'};base64,${buffer.toString('base64')}`);
     }
-    return cache.get(file);
+    const data = cache.get(file);
+    if (!registry || direct) return data;
+    const id = `asset:${createHash('sha256').update(data).digest('hex').slice(0, 24)}`;
+    registry.set(id, data);
+    return id;
   };
 
-  story.cover = await inline(story.cover);
+  story.cover = await inline(story.cover, true);
   for (const item of story.media || []) item.url = await inline(item.url);
   for (const char of story.characters || []) {
     for (const key of Object.keys(char.sprites || {})) char.sprites[key] = await inline(char.sprites[key]);
@@ -227,7 +233,7 @@ async function inlineAssets(story, base) {
 }
 
 /** Вселенная для одного файла: обложка внутри, новеллы с data: картинками. */
-async function inlineUniverse({ dir, universe, novels }) {
+async function inlineUniverse({ dir, universe, novels }, registry) {
   const base = `stories/${dir}/`;
   const cover = await inlineAssets({ cover: universe.cover || '' }, base);
   return {
@@ -235,7 +241,7 @@ async function inlineUniverse({ dir, universe, novels }) {
     cover: cover.cover,
     baseUrl: '',
     novels: await Promise.all(novels.map(async ({ dir: novelDir, story }) => {
-      const inlined = await inlineAssets(structuredClone(story), `${base}novels/${novelDir}/`);
+      const inlined = await inlineAssets(structuredClone(story), `${base}novels/${novelDir}/`, registry);
       inlined.universe = universe.id;
       inlined._builtin = `${dir}/novels/${novelDir}`;
       return inlined;
@@ -255,7 +261,8 @@ export async function buildStandalone(scan) {
   const css = (await Promise.all(cssFiles.map((file) => fs.readFile(path.join(ROOT, file), 'utf8')))).join('\n');
 
   const universes = [];
-  for (const item of scan) universes.push(await inlineUniverse(item));
+  const registry = new Map();
+  for (const item of scan) universes.push(await inlineUniverse(item, registry));
 
   const watchdog = `window.__vnmyBoot = setTimeout(function () {
   if (window.__VNMY_BOOTED) return;
@@ -263,7 +270,7 @@ export async function buildStandalone(scan) {
   if (fallback) fallback.hidden = false;
 }, 1500);`;
 
-  const builtin = `window.__VNMY_BUILTIN_LIBRARY__ = ${jsonForInlineScript({ schema: 2, universes })};`;
+  const builtin = `window.__VNMY_BUILTIN_LIBRARY__ = ${jsonForInlineScript({ schema: 2, universes, assets: Object.fromEntries([...registry].sort(([a], [b]) => a.localeCompare(b))) })};`;
 
   return html
     .replace(/\n\s*<link rel="preload"[^>]*>/, '')
@@ -272,11 +279,12 @@ export async function buildStandalone(scan) {
     .replace('</head>', () => `<style>\n${css}\n</style>\n</head>`)
     .replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, () =>
       `<script>${inlineScript(watchdog)}</script>\n<script>${inlineScript(builtin)}</script>\n<script>${inlineScript(bundle)}</script>`)
-    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 2.0 — один файл: движок, стили, вселенные и картинки внутри. Сборка: npm run build -->');
+    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 2.1 — один файл: движок, стили, вселенные и картинки внутри. Сборка: npm run build -->');
 }
 
 async function main() {
   const scan = await scanStories();
+  await validateStories(scan);
   const [bundle, builtin, standalone, manifest] = await Promise.all([
     buildBundle(),
     buildBuiltinStories(scan),

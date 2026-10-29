@@ -606,3 +606,14 @@
 .field-col { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .op-list:empty, .var-list:empty, .gotoif-row:empty { display: none; }
 .field-col .text-btn { align-self: flex-start; text-align: left; }
+.scene-map { max-height: 42vh; overflow: auto; margin-block: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.scene-map svg { width: 100%; min-width: 280px; display: block; }
+.scene-map rect { fill: var(--surface-solid); stroke: var(--line-strong); }
+.scene-map text { fill: var(--ink); font: 13px var(--font); pointer-events: none; }
+.scene-map g { cursor: pointer; }
+.scene-map g:hover rect { stroke: var(--accent); }
+.map-edge { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: .6; }
+.story-search-results { max-height: 35vh; overflow: auto; }
+.story-search-results .sheet-row { width: 100%; text-align: left; }
+.story-search-results strong, .story-search-results small { display: block; }
+.all-diagnostics .lint-item { display: block; width: 100%; text-align: left; padding: 10px; }
