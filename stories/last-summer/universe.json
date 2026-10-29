@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "id": "last-summer",
+  "title": "Свет у воды",
+  "author": "VNMY",
+  "description": "Небольшие города у озера, конец лета и истории, которым ещё не пора заканчиваться.",
+  "cover": "novels/while-august-lasts/assets/cover.webp",
+  "accent": "#8fb8d8",
+  "order": 4
+}
