@@ -24,6 +24,23 @@
       "accent": "#8fb8d8",
       "order": 3,
       "novels": []
+    },
+    {
+      "id": "last-summer",
+      "dir": "last-summer",
+      "title": "Свет у воды",
+      "author": "VNMY",
+      "description": "Небольшие города у озера, конец лета и истории, которым ещё не пора заканчиваться.",
+      "cover": "novels/while-august-lasts/assets/cover.webp",
+      "accent": "#8fb8d8",
+      "order": 4,
+      "novels": [
+        {
+          "id": "story_poka_gorit_avgust",
+          "dir": "while-august-lasts",
+          "title": "Пока горит август"
+        }
+      ]
     }
   ]
 }
