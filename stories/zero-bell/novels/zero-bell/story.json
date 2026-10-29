@@ -1,0 +1,3522 @@
+{
+  "schema": 1,
+  "id": "story_zero_bell",
+  "title": "Нулевой звонок",
+  "author": "VNMY",
+  "description": "Тридцать восемнадцатилетних заперты в школе-пансионе. Каждый рассвет выбирает водящего. Лев учится переживать сроки, читать поведение группы и решать, кого он готов оставить последним.",
+  "cover": "assets/cover.webp",
+  "accent": "#b79ae0",
+  "universe": "zero-bell",
+  "lang": "ru",
+  "vars": [
+    {
+      "name": "trust_vera",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "trust_asya",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "trust_mark",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "trust_ilya",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "evidence",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "nerve",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "mercy",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "risk",
+      "type": "number",
+      "initial": 0
+    },
+    {
+      "name": "helped_ilya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "pressure_ilya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "betrayed_ilya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "ilya_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "denis_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "kirill_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "killed_mark",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "killed_vera",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "killed_asya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "killed_ilya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "killed_unknown",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "saved_asya",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "shared_plan",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "kept_promise",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "romance_vera",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "refused_to_kill",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "semen_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "timur_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "dasha_refused",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "dasha_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "pavel_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "danil_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "nikita_refused",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "nikita_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "rita_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "anton_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "mikhail_refused",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "mikhail_dead",
+      "type": "bool",
+      "initial": false
+    }
+  ],
+  "characters": [
+    {
+      "id": "lev",
+      "name": "Лев Арсеньев",
+      "color": "#c5d6ee",
+      "sprites": {}
+    },
+    {
+      "id": "ilya",
+      "name": "Илья Воронцов",
+      "color": "#b7c7d6",
+      "sprites": {
+        "neutral": "assets/ilya-neutral.webp",
+        "resolve": "assets/ilya-resolved.webp"
+      }
+    },
+    {
+      "id": "mark",
+      "name": "Марк Белый",
+      "color": "#d8c8aa",
+      "sprites": {
+        "neutral": "assets/mark-neutral.webp",
+        "smirk": "assets/mark-smirk.webp"
+      }
+    },
+    {
+      "id": "nikita",
+      "name": "Никита Круглов",
+      "color": "#9eb8c6",
+      "sprites": {
+        "neutral": "assets/nikita-neutral.webp",
+        "worried": "assets/nikita-worried.webp"
+      }
+    },
+    {
+      "id": "timur",
+      "name": "Тимур Асланов",
+      "color": "#d6ad85",
+      "sprites": {}
+    },
+    {
+      "id": "danil",
+      "name": "Данил Морозов",
+      "color": "#b6c0d4",
+      "sprites": {}
+    },
+    {
+      "id": "egor",
+      "name": "Егор Миронов",
+      "color": "#c0c7aa",
+      "sprites": {}
+    },
+    {
+      "id": "roman",
+      "name": "Роман Соловьёв",
+      "color": "#c9b4db",
+      "sprites": {}
+    },
+    {
+      "id": "pavel",
+      "name": "Павел Сидоров",
+      "color": "#c7c5b8",
+      "sprites": {}
+    },
+    {
+      "id": "anton",
+      "name": "Антон Рудин",
+      "color": "#b5b8c4",
+      "sprites": {}
+    },
+    {
+      "id": "stepan",
+      "name": "Степан Волков",
+      "color": "#d5b8a8",
+      "sprites": {}
+    },
+    {
+      "id": "kirill",
+      "name": "Кирилл Назаров",
+      "color": "#c1a8a8",
+      "sprites": {}
+    },
+    {
+      "id": "mikhail",
+      "name": "Михаил Зуев",
+      "color": "#b6cbbb",
+      "sprites": {
+        "neutral": "assets/mikhail-neutral.webp",
+        "worried": "assets/mikhail-worried.webp"
+      }
+    },
+    {
+      "id": "semen",
+      "name": "Семён Калинин",
+      "color": "#cbb8a4",
+      "sprites": {}
+    },
+    {
+      "id": "denis",
+      "name": "Денис Грачёв",
+      "color": "#a9b5c7",
+      "sprites": {}
+    },
+    {
+      "id": "vera",
+      "name": "Вера Ланская",
+      "color": "#d5a7b8",
+      "sprites": {
+        "neutral": "assets/vera-neutral.webp",
+        "smile": "assets/vera-soft.webp",
+        "worried": "assets/vera-worried.webp"
+      }
+    },
+    {
+      "id": "asya",
+      "name": "Ася Корнеева",
+      "color": "#a9c8a6",
+      "sprites": {
+        "neutral": "assets/asya-neutral.webp",
+        "concerned": "assets/asya-concerned.webp"
+      }
+    },
+    {
+      "id": "sonya",
+      "name": "Соня Латыпова",
+      "color": "#b6acd4",
+      "sprites": {}
+    },
+    {
+      "id": "dasha",
+      "name": "Даша Бекетова",
+      "color": "#d5b1a4",
+      "sprites": {
+        "neutral": "assets/dasha-neutral.webp",
+        "worried": "assets/dasha-worried.webp"
+      }
+    },
+    {
+      "id": "lera",
+      "name": "Лера Тарасова",
+      "color": "#d7b48f",
+      "sprites": {}
+    },
+    {
+      "id": "nina",
+      "name": "Нина Орлова",
+      "color": "#a7bccb",
+      "sprites": {}
+    },
+    {
+      "id": "alina",
+      "name": "Алина Маркова",
+      "color": "#c4b4d5",
+      "sprites": {}
+    },
+    {
+      "id": "yana",
+      "name": "Яна Елисеева",
+      "color": "#c8c697",
+      "sprites": {}
+    },
+    {
+      "id": "katya",
+      "name": "Катя Соколова",
+      "color": "#aabcc8",
+      "sprites": {}
+    },
+    {
+      "id": "zoya",
+      "name": "Зоя Петренко",
+      "color": "#d3a797",
+      "sprites": {}
+    },
+    {
+      "id": "polina",
+      "name": "Полина Руденко",
+      "color": "#b8a9cb",
+      "sprites": {}
+    },
+    {
+      "id": "marina",
+      "name": "Марина Белова",
+      "color": "#9eb7a4",
+      "sprites": {}
+    },
+    {
+      "id": "rita",
+      "name": "Рита Крылова",
+      "color": "#d1b3bd",
+      "sprites": {}
+    },
+    {
+      "id": "oksana",
+      "name": "Оксана Резникова",
+      "color": "#a8b5d3",
+      "sprites": {}
+    },
+    {
+      "id": "masha",
+      "name": "Маша Фролова",
+      "color": "#d0c2a6",
+      "sprites": {}
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sc_wake",
+      "name": "Класс 3-Б",
+      "act": "День первый · 05:57",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Сначала я услышал свет. Не увидел — именно услышал: ровный электрический гул потолочных ламп. Потом вернулись прямые линии. Парты. Рамы. Часы. Тридцать стульев."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Класс был чистым и готовым к уроку. На доске не осталось ни одной записи. За окнами не было улицы — только светло-серые панели, плотно подогнанные к рамам снаружи."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "На парте передо мной лежала карточка: «Лев Арсеньев. 18 лет». Имя ничего не разбудило. Но я знал, что умею читать, считать и составлять план. Память о том, откуда это знание, отсутствовала."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Я пересчитал людей дважды. Двадцать девять незнакомцев и я. На каждой карточке — восемнадцать лет. Никто не помнил, как оказался здесь."
+        },
+        {
+          "id": "t5",
+          "speaker": "vera",
+          "text": "Ты тоже считаешь?"
+        },
+        {
+          "id": "t6",
+          "speaker": "lev",
+          "text": "Пока считаю только то, что могу проверить."
+        },
+        {
+          "id": "t7",
+          "speaker": null,
+          "text": "Вера посмотрела на список на доске, потом на двери. Она не спросила, что я собираюсь делать. Почему-то именно это показалось разумным."
+        },
+        {
+          "id": "t8",
+          "speaker": null,
+          "text": "Первое решение было не о выходе. Оно было о том, кому я позволю увидеть мой план.",
+          "choices": [
+            {
+              "text": "Сказать Вере, что буду проверять всё по порядку.",
+              "goto": "sc_route_vera:t1"
+            },
+            {
+              "text": "Пойти к Асе: она уже проверяет, всем ли плохо.",
+              "goto": "sc_route_asya:t1"
+            },
+            {
+              "text": "Принять предложение Марка собрать всех вместе.",
+              "goto": "sc_route_mark:t1"
+            },
+            {
+              "text": "Остаться на месте и сначала записать факты.",
+              "goto": "sc_route_alone:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_route_vera",
+      "name": "Общий план",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "vera",
+          "text": "— Договоримся сразу: если ты собираешься исчезнуть в коридоре, хотя бы скажи зачем.",
+          "set": [
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Сначала проверю двери и часы. Потом решим, кому можно доверять."
+        },
+        {
+          "id": "t3",
+          "speaker": "vera",
+          "text": "— Неплохой план. Только доверие не появляется после проверки, как галочка в списке."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Я не ответил. Но в первый раз за утро оставил рядом с собой свободный стул.",
+          "set": [
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_rules:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_route_asya",
+      "name": "Проверка состояния",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "asya",
+          "text": "— Все дышат. Никто не упал. Паника пока громче, чем травмы.",
+          "set": [
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Ты умеешь оказывать первую помощь?"
+        },
+        {
+          "id": "t3",
+          "speaker": "asya",
+          "text": "— Не знаю, откуда умею. Но пальцы помнят, даже если голова — нет."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Ася предложила идти вместе. В её голосе не было обещания спасти всех. Только готовность не бросать человека на полу.",
+          "set": [
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_rules:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_route_mark",
+      "name": "Собрание",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— По одному нас раздавят. Давайте держаться группой. Сначала считаем людей, потом ищем выход.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Группа тоже может стать ловушкой."
+        },
+        {
+          "id": "t3",
+          "speaker": "mark",
+          "text": "— Может. Но в одиночку ты даже не узнаешь, кто закрыл дверь."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Марк говорил убедительно. Я записал не только его слова, но и то, как быстро остальные перестали спорить.",
+          "set": [
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_rules:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_route_alone",
+      "name": "Первые факты",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я записал на обороте карточки: тридцать человек; всем восемнадцать; память о личном прошлом отсутствует; электричество и отопление работают.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Пока остальные спорили, я отметил ещё один факт: никто не попросил найти учителя. Каждый уже понял, что взрослого здесь не будет.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_rules:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_rules",
+      "name": "Актовый зал",
+      "act": "День первый · 06:00",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В актовом зале горел свет, работал экран, а на столах стояли графины с водой. Здание было не заброшено — оно было приготовлено для нас."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Над дверями висели камеры. На табло появилось число 30. Затем из динамиков раздался голос без интонации."
+        },
+        {
+          "id": "t3",
+          "speaker": "system",
+          "text": "Участники: тридцать. Возраст каждого: восемнадцать лет. Связь с внешним миром отсутствует. Выход откроется после определения единственного выжившего."
+        },
+        {
+          "id": "t4",
+          "speaker": "system",
+          "text": "Ежедневно в 06:00 жребий выберет водящего среди живых участников. Ему будет выдан нож. До следующего звонка водящий должен убить одного участника. Если к сроку убийства не будет зарегистрировано, водящего устранит система."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Никто не переспросил. Слова были понятны. От этого они не стали реальнее."
+        },
+        {
+          "id": "t6",
+          "speaker": null,
+          "text": "Пока остальные смотрели на экран, я выбрал, что проверить первым.",
+          "choices": [
+            {
+              "text": "Внешнюю дверь: посмотреть, чем её закрыли.",
+              "goto": "sc_exit:t1"
+            },
+            {
+              "text": "Столовую: понять, сколько у нас еды и времени.",
+              "goto": "sc_cafeteria:t1"
+            },
+            {
+              "text": "Часы и табло: сверить, как устроен отсчёт.",
+              "goto": "sc_clock:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_exit",
+      "name": "Запечатанный вход",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Главная дверь открывалась внутрь, но за ней лежал слой свежего бетона и стальная рама. Ни пыли, ни осыпавшейся кладки: преграду поставили недавно и аккуратно."
+        },
+        {
+          "id": "t2",
+          "speaker": "nikita",
+          "text": "— Тепло подаётся. Вентиляция работает. Это не аварийное закрытие."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я проверил ещё одну дверь и остановился. Третья не дала бы нового факта, только отняла бы время.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_cafeteria",
+      "name": "Столовая",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В столовой пахло свежим хлебом. На раздаче стояли закрытые подносы, рядом — чистая посуда и полный графин воды. Всё было рассчитано не на один завтрак."
+        },
+        {
+          "id": "t2",
+          "speaker": "asya",
+          "text": "— Значит, голодом нас пока не возьмут. Это хоть что-то."
+        },
+        {
+          "id": "t3",
+          "speaker": "lev",
+          "text": "— Это значит, что нас планировали держать здесь дольше суток."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Ася посмотрела на меня так, будто хотела спросить, зачем я всегда превращаю надежду в расчёт.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_clock",
+      "name": "Общий отсчёт",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "На стене и на табло показывало 06:04. Секунды совпадали. Экран отсчитывал двадцать три часа пятьдесят шесть минут до следующего выбора."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Система не объявила, откуда берёт случайность и как подтверждает смерть. Я записал оба вопроса. Ответы сейчас не помогали открыть дверь.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_draw",
+      "name": "Первый жребий",
+      "act": "День первый · 06:05",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 0.98
+        },
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Табло показало все тридцать имён. Они перемешались, замерли, снова пришли в движение. Я не мог проверить, насколько честен жребий. Мог только смотреть."
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Водящий первого цикла: Илья Воронцов."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Из запертого отделения выдвинулся контейнер. Илья не сразу подошёл к нему. Никто не попытался остановить его — ещё не зная, нужно ли."
+        },
+        {
+          "id": "t4",
+          "speaker": "ilya",
+          "text": "— Я не буду выбирать, кто из вас умрёт.",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t5",
+          "speaker": "mark",
+          "text": "— Тогда система выберет за тебя. У нас сутки. Нужно хотя бы понять, что делать.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t6",
+          "speaker": null,
+          "text": "У меня было двадцать четыре часа до следующего звонка. Первым делом я решил, что делать с Ильёй.",
+          "choices": [
+            {
+              "text": "Помочь ему продержаться и наблюдать вместе.",
+              "goto": "sc_help_ilya:t1"
+            },
+            {
+              "text": "Поддержать Марка: заставить Илью принять решение.",
+              "goto": "sc_pressure_ilya:t1"
+            },
+            {
+              "text": "Передать Марку, где Илья собирается прятаться.",
+              "goto": "sc_betray_ilya:t1"
+            },
+            {
+              "text": "Не вмешиваться в спор. Сначала проверить доступные комнаты.",
+              "goto": "sc_watch_ilya:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_help_ilya",
+      "name": "Наблюдение",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 0.98
+        },
+        {
+          "char": "vera",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "ilya",
+          "text": "— Ты правда думаешь, что мы можем просто переждать?",
+          "set": [
+            {
+              "var": "helped_ilya",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_ilya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я думаю, что нельзя принимать решение за двадцать три часа до срока. Пока мы можем наблюдать и не оставлять никого одного."
+        },
+        {
+          "id": "t3",
+          "speaker": "vera",
+          "text": "— Я буду дежурить первой.",
+          "spriteOverride": "neutral"
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "У нас появился план на ночь. Не выход — только ещё одна ночь.",
+          "goto": "sc_deadline"
+        }
+      ]
+    },
+    {
+      "id": "sc_pressure_ilya",
+      "name": "Давление большинства",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "left",
+          "scale": 0.98
+        },
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Если он не выбирает, выбирает за него группа. Лучше пусть сам решит, чем мы начнём драться вслепую.",
+          "set": [
+            {
+              "var": "pressure_ilya",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": "ilya",
+          "text": "— Ты называешь это решением, потому что тебе так легче.",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я сказал, что время — тоже улика. Но не сказал, что каждый час давления делает случайный удар вероятнее.",
+          "set": [
+            {
+              "var": "trust_ilya",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_deadline"
+        }
+      ]
+    },
+    {
+      "id": "sc_betray_ilya",
+      "name": "Скрытый план",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Ты уверен, что он будет там?",
+          "set": [
+            {
+              "var": "betrayed_ilya",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я сказал, что это вероятно. Не что я уверен."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Марк услышал только полезную часть. Я понял это слишком поздно: план, переданный не тому человеку, перестаёт быть планом.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_deadline"
+        }
+      ]
+    },
+    {
+      "id": "sc_watch_ilya",
+      "name": "Считать шаги",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я отметил три комнаты, где Илью видели после обеда, и два промежутка без свидетелей. Карта здания становилась точнее. Люди — нет.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "ilya",
+          "text": "— Ты следишь за мной?"
+        },
+        {
+          "id": "t3",
+          "speaker": "lev",
+          "text": "— Я слежу за временем. Пока это не одно и то же.",
+          "goto": "sc_deadline"
+        }
+      ]
+    },
+    {
+      "id": "sc_deadline",
+      "name": "23:59",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "resolve",
+          "speaker": null,
+          "text": "К 05:59 табло всё ещё не показывало смерть. Последняя минута не принесла ответа; оставалось увидеть, что система сочтёт ответом.",
+          "gotoIf": [
+            {
+              "when": "pressure_ilya",
+              "goto": "sc_ilya_kills:t1"
+            },
+            {
+              "when": "betrayed_ilya",
+              "goto": "sc_ilya_betrayal:t1"
+            }
+          ],
+          "goto": "sc_ilya_refuses:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_ilya_refuses",
+      "name": "Срок",
+      "act": "День второй · 06:00",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "К 05:59 никто не погиб. Илья не напал на нас. Ни один из нас не смог убедить себя стать его рукой.",
+          "set": [
+            {
+              "var": "ilya_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящего истёк. Участник Илья Воронцов устранён."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "В коридоре погасла одна лампа. Когда свет вернулся, Ильи уже не было. На полу осталась карточка с его именем. Я запомнил не способ. Я запомнил, что система выполнила угрозу.",
+          "goto": "sc_lev_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_ilya_kills",
+      "name": "Порог",
+      "act": "День второй · 06:00",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Мы услышали шум за дверью крыла. Никто не видел самого момента. Через минуту табло подтвердило смерть Дениса Грачёва. Илья выполнил условие и остался среди нас.",
+          "set": [
+            {
+              "var": "denis_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "ilya",
+          "text": "— Я не хочу, чтобы кто-нибудь называл это победой.",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Нас стало двадцать девять. В этот раз система не забрала водящего.",
+          "goto": "sc_lev_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_ilya_betrayal",
+      "name": "Последствие утечки",
+      "act": "День второй · 06:00",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 0.98
+        },
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Марк пришёл к комнате Ильи раньше меня. Разговор закончился тем, что никто больше не верил прежним обещаниям. Ночью погиб Кирилл Назаров. Подробностей я не видел и не хотел додумывать.",
+          "set": [
+            {
+              "var": "kirill_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Ты сам сказал, где он будет. Не делай вид, что не понимал последствий.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Табло зарегистрировало смерть. Илья остался водящим до звонка, а Марк — человеком, которому я больше не собирался отдавать весь план.",
+          "goto": "sc_lev_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_lev_draw",
+      "name": "Второй жребий",
+      "act": "День второй · 06:01",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "system",
+          "text": "Жребий завершён. Водящий: Лев Арсеньев."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я успел составить восемь вариантов, пока табло ещё вращалось. Ни один не включал моё имя."
+        },
+        {
+          "id": "t3",
+          "speaker": "vera",
+          "text": "— Лев, посмотри на меня. Не на экран. На меня.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t4",
+          "speaker": "lev",
+          "text": "— Если я ничего не сделаю, система устранит меня через сутки."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Я мог отказаться. Мог выбрать жертву. Мог попытаться переложить решение на кого-то другого. Время уже шло.",
+          "choices": [
+            {
+              "text": "Отказаться убивать и принять последствия.",
+              "goto": "sc_bad_refusal:t1"
+            },
+            {
+              "text": "Убрать одного из тех, кого я почти не знаю.",
+              "goto": "sc_kill_unknown:t1"
+            },
+            {
+              "text": "Направить решение на Марка.",
+              "goto": "sc_kill_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Направить решение на Веру.",
+              "goto": "sc_kill_vera:t1",
+              "if": "!killed_vera"
+            },
+            {
+              "text": "Направить решение на Асю.",
+              "goto": "sc_kill_asya:t1",
+              "if": "!killed_asya"
+            },
+            {
+              "text": "Направить решение на Илью.",
+              "goto": "sc_kill_ilya:t1",
+              "if": "!ilya_dead && !killed_ilya"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_kill_unknown",
+      "name": "Чужое имя",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я выбрал Семёна Калинина — участника, с которым почти не говорил. Перед группой я не произнёс его имя. Табло погасило его карточку; я записал точное время и понял, что запомню этот выбор.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "killed_unknown",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "semen_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я выполнил требование игры. Никакой победы в этом не было.",
+          "goto": "sc_dasha_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_kill_mark",
+      "name": "Марк",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я выбрал Марка не потому, что доказал его вину. Я выбрал его потому, что боялся того, как быстро остальные начинали повторять его слова.",
+          "set": [
+            {
+              "var": "killed_mark",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Ты всё равно оставил мне последний ход, Лев.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "На табло погас его номер. Я впервые заметил, как пустым может стать целый зал.",
+          "goto": "sc_dasha_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_kill_vera",
+      "name": "Вера",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я выбрал Веру. В тот миг план был безупречен: одна цель, один срок, один результат. Только ни один расчёт не объяснял, почему я не мог поднять на неё взгляд.",
+          "set": [
+            {
+              "var": "killed_vera",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "vera",
+          "text": "— Не превращай это в доказательство, что ты ничего не чувствовал.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "На табло осталось на одно имя меньше. Моё — всё ещё горело.",
+          "goto": "sc_dasha_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_kill_asya",
+      "name": "Ася",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "concerned",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я выбрал Асю в столовой, между полными подносами и чистыми стаканами. Самая обычная школьная комната стала местом, где закончилась её очередь говорить.",
+          "set": [
+            {
+              "var": "killed_asya",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "asya",
+          "text": "— Ты хотя бы запомни, что это был выбор. Не правило.",
+          "spriteOverride": "concerned"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я выполнил условие. Часы не остановились.",
+          "goto": "sc_dasha_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_kill_ilya",
+      "name": "Илья",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я выбрал Илью, если он ещё был среди нас. В первый день я пытался защитить его; теперь его имя оказалось в моей колонке «срок».",
+          "set": [
+            {
+              "var": "killed_ilya",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "ilya",
+          "text": "— Значит, теперь ты понимаешь, что это не чужая задача.",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Табло подтвердило одну смерть. Я остался водящим только до следующего звонка.",
+          "goto": "sc_dasha_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_draw",
+      "name": "Третий жребий",
+      "act": "День третий · 06:00",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "dasha",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "system",
+          "text": "Жребий завершён. Водящая: Даша Бекетова."
+        },
+        {
+          "id": "t2",
+          "speaker": "dasha",
+          "text": "— Я весь вчерашний день сводила расписание, чтобы все были на виду. Теперь список не отвечает, кого мне выбрать.",
+          "spriteOverride": "worried",
+          "goto": "sc_dasha_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_day",
+      "name": "План на сутки",
+      "act": "День третий · утро",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "dasha",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "dasha",
+          "text": "— До шести утра есть сутки. Если я не убью другого, система устранит меня. Я не собираюсь просить тебя выбрать за меня.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Тогда начнём не с имени. Сначала проверим время, двери и людей, которых мы точно видели."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Мы не искали лазейку в прошлом. Только маршрут до 06:00. Я мог проверить факты, поделиться графиком с Марком или собрать всех вместе и отказаться выбирать цель.",
+          "choices": [
+            {
+              "text": "Сверить журнал дежурств и маршруты вместе с Дашей.",
+              "goto": "sc_dasha_observe:t1"
+            },
+            {
+              "text": "Поделиться графиком с Марком, чтобы держать людей на виду.",
+              "goto": "sc_dasha_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Уговорить Дашу не убивать и ждать 06:00 всем вместе.",
+              "goto": "sc_dasha_refuse:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_observe",
+      "name": "Проверить маршрут",
+      "act": "День третий · наблюдение",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "dasha",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Мы сверили дежурства с тем, кто действительно проходил через холл. Я отметил один пропущенный промежуток и не стал превращать его в готовую версию.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Расписание помогло увидеть, где Даша будет к сроку. Оно не давало безопасного выхода. К вечеру она решила сама.",
+          "goto": "sc_dasha_kills:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_mark",
+      "name": "Люди на виду",
+      "act": "День третий · коалиция",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "dasha",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я передал Марку сетку наблюдения, но не список целей. Он согласился убрать слепые зоны в коридорах; это было похоже на порядок, не на безопасность.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Группа останется на виду. Решение всё равно за Дашей.",
+          "goto": "sc_dasha_kills:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_refuse",
+      "name": "Общий зал",
+      "act": "День третий · срок",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "dasha",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "dasha",
+          "text": "— Я не буду выбирать жертву. Если система выполнит угрозу, это будет её решение, не моё.",
+          "spriteOverride": "worried",
+          "set": [
+            {
+              "var": "dasha_refused",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящей истёк. Даша Бекетова устранена системой за невыполнение задания.",
+          "set": [
+            {
+              "var": "dasha_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я не спутал её отказ с добровольной смертью. Решение исполнил механизм, который она не контролировала.",
+          "goto": "sc_nikita_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_dasha_kills",
+      "name": "Пять минут до срока",
+      "act": "День третий · 05:54",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "dasha",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:54 табло подтвердило смерть Тимура Асланова. Я не видел самого момента; видел только, что Даша выполнила условие и осталась среди нас.",
+          "set": [
+            {
+              "var": "timur_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "dasha",
+          "text": "— Я сама произнесла его имя. Не называй это твоим планом.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "До нового жребия оставались секунды. Я записал не только число, но и то, как легко порядок начинает звучать как оправдание.",
+          "goto": "sc_nikita_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_bad_refusal",
+      "name": "Без запасного хода",
+      "act": "Плохая концовка",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я не выбрал никого. Весь день держал дверь открытой и ждал, что появится другой выход. Ни один не появился.",
+          "set": [
+            {
+              "var": "refused_to_kill",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящего истёк. Участник Лев Арсеньев устранён."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Последняя мысль была не планом. Только сожалением, что я принял отказ от решения за решение.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Без запасного хода"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_draw",
+      "name": "Четвёртый жребий",
+      "act": "День четвёртый · 06:00",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "system",
+          "text": "Жребий завершён. Водящий — Никита Круглов."
+        },
+        {
+          "id": "t2",
+          "speaker": "nikita",
+          "text": "— Я знаю, какие двери открыты по расписанию. Служебная останется закрытой; а до шести мне всё равно нужно, чтобы кто-то выбыл.",
+          "spriteOverride": "worried",
+          "goto": "sc_nikita_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_day",
+      "name": "Служебный сектор",
+      "act": "День четвёртый · утро",
+      "bg": "assets/bg-service-corridor.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "nikita",
+          "text": "— Здесь всё работает. Но карта пропуска открывает только внутренние двери. Ни один маршрут не выводит наружу.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Проверим то, что можем измерить. Не будем называть закрытую дверь запасным ходом."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "До 06:00 оставались сутки. Я мог сверить карту, передать схему Марку или проверить дверь, не выбирая за Никиту цель.",
+          "choices": [
+            {
+              "text": "Сверить карту корпуса и время обходов вместе с Никитой.",
+              "goto": "sc_nikita_map:t1"
+            },
+            {
+              "text": "Передать схему Марку, чтобы он собрал группу на виду.",
+              "goto": "sc_nikita_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Проверить служебную дверь и не предлагать Никите жертву.",
+              "goto": "sc_nikita_refuse:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_map",
+      "name": "Карта маршрутов",
+      "act": "День четвёртый · наблюдение",
+      "bg": "assets/bg-service-corridor.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Коридор был чистым, свет — исправным, считыватель — закрытым. Мы измерили путь от жилого крыла и время обхода. Выхода это не дало, зато я отметил места, где коридор просматривается.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "К вечеру Никита перестал искать дверь, которой нет. Он решил, что выжить можно только приняв решение до срока.",
+          "goto": "sc_nikita_kills_pavel:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_mark",
+      "name": "Схема для Марка",
+      "act": "День четвёртый · коалиция",
+      "bg": "assets/bg-service-corridor.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "nikita",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я отдал Марку схему, не список целей. Он расставил людей так, чтобы в коридорах не оставалось пустых промежутков. Это было похоже на защиту — пока я не заметил, как внимательно он смотрит на расписание.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Двери заперты, Лев. Маршрут можно знать, но он не становится выходом. Данил будет у библиотеки после отбоя.",
+          "goto": "sc_nikita_kills_danil:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_refuse",
+      "name": "Закрытая дверь",
+      "act": "День четвёртый · срок",
+      "bg": "assets/bg-service-corridor.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "nikita",
+          "text": "— Считыватель не принимает карту. Внешней двери здесь нет. Я не нашёл выхода и не выберу человека вместо двери.",
+          "spriteOverride": "worried",
+          "set": [
+            {
+              "var": "nikita_refused",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящего истёк. Никита Круглов устранён системой за невыполнение задания.",
+          "set": [
+            {
+              "var": "nikita_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я не назвал это добровольной смертью. Никита отказался убивать; система сама исполнила угрозу. Дверь осталась закрытой.",
+          "goto": "sc_mikhail_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_kills_pavel",
+      "name": "Отметка у двери",
+      "act": "День четвёртый · 05:51",
+      "bg": "assets/bg-service-corridor.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:51 табло подтвердило смерть Павла Сидорова. Я не видел самого момента. Никита выполнил условие и остался среди нас.",
+          "set": [
+            {
+              "var": "pavel_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "nikita",
+          "text": "— Я выбрал его по маршруту. Теперь слышу, как холодно это звучит.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я записал время, но не стал записывать оправдание.",
+          "goto": "sc_mikhail_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_nikita_kills_danil",
+      "name": "График Марка",
+      "act": "День четвёртый · 05:43",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "nikita",
+          "sprite": "worried",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:43 табло подтвердило смерть Данила Морозова. Я передал схему Марку; он передал Никите время и место. Никита выполнил условие, но решение не стало случайностью.",
+          "set": [
+            {
+              "var": "danil_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "nikita",
+          "text": "— Я знал, где он будет. Никто не заставлял меня произносить его имя.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": "mark",
+          "text": "— У нас оставалось меньше минуты. Я не называл это безопасным.",
+          "spriteOverride": "smirk",
+          "goto": "sc_mikhail_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_draw",
+      "name": "Пятый жребий",
+      "act": "День пятый · 06:00",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "system",
+          "text": "Жребий завершён. Водящий — Михаил Зуев."
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я весь день собирал нас в одну группу. Теперь от меня ждут, что я назову, кого из неё убрать.",
+          "spriteOverride": "worried",
+          "goto": "sc_mikhail_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_day",
+      "name": "Разные версии",
+      "act": "День пятый · утро",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mikhail",
+          "text": "— Рита говорит, что была в библиотеке в 22:18. Антон утверждает, что библиотека в это время была пуста. Я хочу проверить часы, а не объявить кого-то виноватым.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Показание — это версия. Сначала проверим, что можно подтвердить."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "До 06:00 оставались сутки. Я мог проверить журнал библиотеки, передать Марку непроверенную запись или собрать всех и отказаться превращать алиби в список целей.",
+          "choices": [
+            {
+              "text": "Сверить журнал выдачи книг с отметкой часов в холле.",
+              "goto": "sc_mikhail_verify:t1"
+            },
+            {
+              "text": "Отдать Марку черновик и позволить ему вести проверку.",
+              "goto": "sc_mikhail_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Собрать группу и сказать, что несостыковка не доказывает вину.",
+              "goto": "sc_mikhail_refuse:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_verify",
+      "name": "Проверить алиби",
+      "act": "День пятый · сверка",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В журнале самообслуживания стояла отметка: Рита взяла книгу в 22:17. Часы в холле показывали 22:18, когда Антон говорил, что библиотека пуста. Это подтверждало её присутствие — но не объясняло, почему он сказал иначе.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я знаю, кто был в библиотеке. Не знаю, почему Антон соврал.",
+          "spriteOverride": "worried",
+          "goto": "sc_mikhail_kills_anton:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_mark",
+      "name": "Чужая таблица",
+      "act": "День пятый · коалиция",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я отдал Марку черновик без проверки. Он сложил время отсутствия Риты и слова Антона в одну версию; за аккуратной таблицей слишком легко было не заметить пробел.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Рита не оставила подтверждённой отметки. До срока меньше суток, Михаил.",
+          "spriteOverride": "smirk",
+          "goto": "sc_mikhail_kills_rita:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_refuse",
+      "name": "Не ставить имя",
+      "act": "День пятый · срок",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mikhail",
+          "text": "— Несостыковка — не доказательство. Я не произнесу имя только потому, что боюсь срока.",
+          "spriteOverride": "worried",
+          "set": [
+            {
+              "var": "mikhail_refused",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящего истёк. Михаил Зуев устранён системой за невыполнение задания.",
+          "set": [
+            {
+              "var": "mikhail_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я не назвал его отказ добровольной смертью. Михаил не убил участника; систему остановить он не мог.",
+          "goto": "sc_after_lev_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_kills_anton",
+      "name": "Подтверждённое время",
+      "act": "День пятый · 05:46",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:46 табло подтвердило смерть Антона Рудина. Михаил выполнил условие. Я не увидел момента и не знал, почему Антон солгал о библиотеке.",
+          "set": [
+            {
+              "var": "anton_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я проверил время. Не его намерения.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я отметил разницу между тем, что мы подтвердили, и тем, что только решили о человеке.",
+          "goto": "sc_after_lev_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_kills_rita",
+      "name": "Пустая строка",
+      "act": "День пятый · 05:39",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:39 табло подтвердило смерть Риты Крыловой. Михаил принял непроверенную версию Марка за достаточную. Условие выполнено; Рита не получила возможности объяснить отметки.",
+          "set": [
+            {
+              "var": "rita_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я всё ещё хотел сохранить группу. Но сначала позволил чужой таблице решить, кого в ней не будет.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": "mark",
+          "text": "— До срока оставалось двадцать одна минута. Это тоже факт.",
+          "spriteOverride": "smirk",
+          "goto": "sc_after_lev_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_after_lev_day",
+      "name": "После пятого цикла",
+      "act": "Через несколько циклов",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "К 06:00 на табло осталось двадцать пять имён. В каждом из пяти циклов исчезла ровно одна карточка. Я снова перепроверил счёт."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Даша пережила свой срок, но не финальный круг. Через несколько дней новый жребий выбрал другого водящего, и её карточка погасла. Я не видел момента; записал только время.",
+          "if": "!dasha_dead",
+          "set": [
+            {
+              "var": "dasha_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Никита тоже пережил собственный срок лишь до одного из следующих циклов: другой водящий выбрал его. Школа оставалась чистой и исправной; в коридоре всё ещё горел свет.",
+          "if": "!nikita_dead",
+          "set": [
+            {
+              "var": "nikita_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Михаил пережил свои сутки, но в одном из следующих циклов другой водящий выбрал его. Его последняя запись осталась в библиотечном журнале: время сходилось, имена — нет.",
+          "if": "!mikhail_dead",
+          "set": [
+            {
+              "var": "mikhail_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "Потом дни пошли быстрее: на рассвете — случайное имя, сутки, срок и новая отметка на табло. Я не расследовал, кто управляет системой; я считал время и готовил следующий ход."
+        },
+        {
+          "id": "t6",
+          "speaker": null,
+          "text": "Перед последним кругом нас осталось несколько человек. Я всё ещё мог выбрать, кому доверить последний план.",
+          "choices": [
+            {
+              "text": "Пойти к Вере и показать ей весь расчёт.",
+              "goto": "sc_mid_vera:t1",
+              "if": "!killed_vera && trust_vera >= 1"
+            },
+            {
+              "text": "Попросить Асю не тратить себя на остальных.",
+              "goto": "sc_mid_asya:t1",
+              "if": "!killed_asya && trust_asya >= 1"
+            },
+            {
+              "text": "Принять предложение Марка о последней коалиции.",
+              "goto": "sc_mid_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Если Илья жив, сверить с ним план на финальный день.",
+              "goto": "sc_mid_ilya:t1",
+              "if": "pressure_ilya && !betrayed_ilya && !ilya_dead && !killed_ilya"
+            },
+            {
+              "text": "Никому не отдавать план; проверить его ещё раз одному.",
+              "goto": "sc_mid_alone:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_mid_vera",
+      "name": "Вера · последний план",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "vera",
+          "text": "— В этот раз не оставляй за собой тайный запасной ход. Просто скажи, чего ты боишься.",
+          "set": [
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Что если я всё рассчитаю, всё равно кто-то умрёт."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Вера не стала обещать, что всё будет хорошо. Она осталась рядом.",
+          "choices": [
+            {
+              "text": "Сказать, что она стала для меня больше, чем союзницей.",
+              "goto": "sc_vera_romance:t1"
+            },
+            {
+              "text": "Сохранить разговор в границах плана, но пообещать не скрывать риски.",
+              "goto": "sc_vera_promise:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_vera_romance",
+      "name": "Сказать вслух",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "smile",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я сказал, что Вера важна мне не только потому, что рядом с ней план становился лучше. Её ответ был тихим, но не уклончивым.",
+          "set": [
+            {
+              "var": "romance_vera",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "kept_promise",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_final_vera_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_vera_promise",
+      "name": "Без недосказанности",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я не назвал это любовью. Пообещал только не скрывать от Веры риски и не выдавать расчёт за заботу.",
+          "set": [
+            {
+              "var": "kept_promise",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_final_vera_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_mid_asya",
+      "name": "Ася · долг",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "concerned",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "asya",
+          "text": "— Ты всё время считаешь, кого можно удержать. А себя в этот список включал?",
+          "set": [
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "saved_asya",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "spriteOverride": "concerned"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я ещё не закончил список."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Ася заставила меня сесть и съесть половину остывшего ужина. Это был первый план за день, который не требовал ни одного числа.",
+          "set": [
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "goto": "sc_final_asya_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_mid_mark",
+      "name": "Марк · коалиция",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Последний круг — не место для личных обещаний. Выигрывает тот, кто заранее знает, кто отступит.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— А кто решил, что отступать буду я?"
+        },
+        {
+          "id": "t3",
+          "speaker": "mark",
+          "text": "— Я не решил. Я проверяю."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Я согласился на коалицию, но не отдал Марку записи. Это было похоже на доверие только издалека.",
+          "goto": "sc_final_mark_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_mid_ilya",
+      "name": "Илья · выбор",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "ilya",
+          "text": "Илья не обвинил меня в том, что я промолчал. Я помог ему пережить первую ночь — не оправдать то, что случилось после.",
+          "set": [
+            {
+              "var": "trust_ilya",
+              "op": "add",
+              "value": 1
+            }
+          ],
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я хотел проверить, можно ли пройти день, не превращаясь в правило."
+        },
+        {
+          "id": "t3",
+          "speaker": "ilya",
+          "text": "— И что получилось?"
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Я не ответил. Впервые ответ не улучшил бы план.",
+          "set": [
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_ilya_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_mid_alone",
+      "name": "Без союзника",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я перепроверил счёт, сроки и доступные двери. Фактов стало больше. Людей рядом — нет.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Когда пришло время решать, я всё ещё был один. Теперь это было моим выбором.",
+          "goto": "sc_final_alone_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_vera_prep",
+      "name": "Последнее обещание",
+      "act": "Финальный круг · Вера",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "vera",
+          "text": "— Ты обещал не скрывать риск. Если останется только одна дверь, я хочу знать, где ты сам собираешься стоять.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Рядом с той версией плана, которую ты сама выберешь."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я показал Вере худший сценарий, а не только самый вероятный. Она добавила свои отметки, и план впервые перестал быть только моим.",
+          "set": [
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_asya_prep",
+      "name": "Своё решение",
+      "act": "Финальный круг · Ася",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "concerned",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "asya",
+          "text": "— Если мы дойдём до последней двери, я хочу, чтобы моё решение оставалось моим.",
+          "spriteOverride": "concerned"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Тебе не нужно доказывать мне, что ты можешь идти."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Мы сверили имена и время. Ася сама выбрала, что взять с собой; я впервые не стал добавлять её решение в свой список как готовый факт.",
+          "set": [
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "saved_asya",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_prep",
+      "name": "Последний график",
+      "act": "Финальный круг · Марк",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Мой график выведет нас в нужный коридор. Если будешь проверять каждую строку, времени не останется.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я мог сверить его расчёт со своими отметками или использовать чужой план, не задавая вопросов.",
+          "choices": [
+            {
+              "text": "Сверить время и маршрут с моими записями.",
+              "goto": "sc_final_mark_verify:t1"
+            },
+            {
+              "text": "Довериться Марку и не менять его график.",
+              "goto": "sc_final_mark_trust:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_verify",
+      "name": "Сверка графика",
+      "act": "Финальный круг · проверка",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Две отметки не совпали. Я поправил время перехода и потерял удобную простоту Маркова плана, зато ошибка стала видимой.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Теперь это твой расчёт. Не говори потом, что я выбрал за тебя.",
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_trust",
+      "name": "Довериться графику",
+      "act": "Финальный круг · решение",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я использовал график Марка без изменений. Это не было доказательством его правоты; только решением довериться ему в последний раз.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_ilya_prep",
+      "name": "Не перекладывать выбор",
+      "act": "Финальный круг · Илья",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "ilya",
+          "text": "— Ты однажды сказал, что группа решит за меня. Теперь ты готов отдать мне последнее решение?",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я готов выслушать тебя. Но не переложить на тебя ответственность за мой выбор."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я передал Илье точное время и все проверенные отметки — без тайного запасного хода. Мы могли не соглашаться, но хотя бы знали, о чём спорим.",
+          "set": [
+            {
+              "var": "trust_ilya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_alone_prep",
+      "name": "Последний расчёт",
+      "act": "Финальный круг · один",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я разложил карточки по времени, подтверждённым маршрутам и пустым местам. Последний список был короче первого, но ни одна строка не стала от этого безопасной.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "У меня не осталось человека, которому можно передать проверку. Последний расчёт был моим — вместе с его ошибкой.",
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_route",
+      "name": "Последний круг",
+      "act": "Последний день",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "final_circle",
+          "speaker": null,
+          "text": "На табло остались только те, кто дошёл до последнего круга. Я не стал говорить «победитель»: строка «ЕДИНСТВЕННЫЙ ВЫЖИВШИЙ» пока оставалась пустой."
+        },
+        {
+          "id": "risk_check",
+          "speaker": null,
+          "text": "Я сверил время и список ещё раз. Если проверенных фактов окажется мало, чужой план станет моей последней ошибкой.",
+          "gotoIf": [
+            {
+              "when": "risk >= 4 && evidence < 2",
+              "goto": "sc_bad_plan:t1"
+            }
+          ],
+          "goto": "sc_final_choice:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_choice",
+      "name": "Единственный выход",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "На табло появилась пустая строка: «ЕДИНСТВЕННЫЙ ВЫЖИВШИЙ». До финального круга дошли ещё несколько человек. Система не назвала победителя — только напомнила, что выход будет один."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "На последнем шаге не было безопасного решения. Я мог оставить шанс себе или отдать его одному из тех, кто прошёл этот путь рядом со мной.",
+          "choices": [
+            {
+              "text": "Выбрать себя. Дойти до выхода одному.",
+              "goto": "sc_end_lev:t1"
+            },
+            {
+              "text": "Отдать последний шанс Вере.",
+              "goto": "sc_end_vera:t1",
+              "if": "trust_vera >= 2 && kept_promise && !killed_vera"
+            },
+            {
+              "text": "Оставить последний шанс Асе.",
+              "goto": "sc_end_asya:t1",
+              "if": "trust_asya >= 2 && saved_asya && !killed_asya"
+            },
+            {
+              "text": "Доверить решение Илье.",
+              "goto": "sc_end_ilya:t1",
+              "if": "trust_ilya >= 2 && pressure_ilya && !ilya_dead && !killed_ilya"
+            },
+            {
+              "text": "Принять план Марка.",
+              "goto": "sc_end_mark:t1",
+              "if": "trust_mark >= 2 && evidence < 2 && !killed_mark"
+            },
+            {
+              "text": "Выйти самому, сохранив обещание Вере.",
+              "goto": "sc_end_lev_vera:t1",
+              "if": "romance_vera && trust_vera >= 2 && !killed_vera"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_bad_plan",
+      "name": "Чужой план",
+      "act": "Плохая концовка",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я отдал Марку слишком много решений и проверил слишком мало фактов. Он знал, где я буду, и я не предусмотрел, что он тоже строит план."
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Ты ведь сам говорил: вероятность — не гарантия."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Моё имя погасло раньше, чем табло дошло до последнего круга. Игра продолжилась без меня.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Чужой план"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_lev",
+      "name": "Последний расчёт",
+      "act": "Концовка · Лев",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Дверь открылась. За ней был обычный коридор — не свобода, только пространство, в котором не звучал школьный звонок."
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я остался один. В голове по-прежнему складывались планы: вода, выход, улица, помощь. Я не позволил себе назвать это победой."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Из всех имён я помнил каждое. Этого табло не требовало. Я решил, что не забуду их снова.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Последний расчёт"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_lev_vera",
+      "name": "Обещание до рассвета",
+      "act": "Концовка · Лев и Вера",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "vera",
+          "text": "— Если выйдешь первым, не говори, что это было ради меня.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— А если не выйду?"
+        },
+        {
+          "id": "t3",
+          "speaker": "vera",
+          "text": "— Тогда хотя бы не оставляй мне ложь вместо ответа."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "Я выжил один. Вера не вышла за мной. Последний звонок отнял больше, чем мог вернуть открытый коридор."
+        },
+        {
+          "id": "t5",
+          "speaker": null,
+          "text": "На карточке в моём кармане осталось её имя. Я наконец понял, что обещание — не способ переписать финал. Это способ не сделать вид, что его не было.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Обещание до рассвета"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_vera",
+      "name": "Твоя очередь жить",
+      "act": "Концовка · Вера",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "lev",
+          "text": "— Я обещал не прятать от тебя риск. Последний риск — это я."
+        },
+        {
+          "id": "t2",
+          "speaker": "vera",
+          "text": "— Я не просила выбирать за меня.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Но в последнем круге остались только двое. Вера вышла одна. Я не увидел улицу; я увидел, как её имя осталось единственным на табло."
+        },
+        {
+          "id": "t4",
+          "speaker": null,
+          "text": "В её кармане был мой план — с пометками, которые она сделала на полях. Она не собиралась жить по нему. Только помнить, что я пытался думать о ней как о человеке.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Твоя очередь жить"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_asya",
+      "name": "Белый свет",
+      "act": "Концовка · Ася",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "concerned",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "asya",
+          "text": "— Я обещала помогать тем, кто ещё может идти. Сейчас идти могу только я.",
+          "spriteOverride": "concerned"
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Последний круг оставил Асю одну. Она вышла, не оглянувшись на столовую, где когда-то считала для нас чистые стаканы."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "За дверью было утро. Впервые за всё время свет не включался по школьному расписанию.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Белый свет"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_ilya",
+      "name": "Тот, кого не выбрали",
+      "act": "Концовка · Илья",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "ilya",
+          "text": "— Я думал, что если откажусь от выбора, он перестанет быть моим. Оказалось, отказ тоже меняет, кто останется.",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Илья вышел один. Он не назвал это победой и не назвал поражением. Он только попросил не превращать его имя в правило."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я не услышал, что он сказал дальше. Дверь закрылась, и в школе впервые стало тихо.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Не чужая задача"
+        }
+      ]
+    },
+    {
+      "id": "sc_end_mark",
+      "name": "Теория Марка",
+      "act": "Концовка · Марк",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Я не хотел, чтобы всё дошло до этого.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Ты просто оставлял себе возможность сказать это в любой момент."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Марк остался один. Когда дверь открылась, он первым делом посмотрел на часы. Даже снаружи он всё ещё искал следующий ход.",
+          "end": true,
+          "endTitle": "КОНЕЦ · Теория Марка"
+        }
+      ]
+    }
+  ]
+}
