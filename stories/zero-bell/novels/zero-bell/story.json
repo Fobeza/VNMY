@@ -2684,7 +2684,7 @@
               "value": 1
             }
           ],
-          "goto": "sc_final_route"
+          "goto": "sc_final_vera_prep"
         }
       ]
     },
@@ -2718,7 +2718,7 @@
               "value": 1
             }
           ],
-          "goto": "sc_final_route"
+          "goto": "sc_final_vera_prep"
         }
       ]
     },
@@ -2770,7 +2770,7 @@
               "value": 1
             }
           ],
-          "goto": "sc_final_route"
+          "goto": "sc_final_asya_prep"
         }
       ]
     },
@@ -2820,7 +2820,7 @@
           "id": "t4",
           "speaker": null,
           "text": "Я согласился на коалицию, но не отдал Марку записи. Это было похоже на доверие только издалека.",
-          "goto": "sc_final_route"
+          "goto": "sc_final_mark_prep"
         }
       ]
     },
@@ -2872,7 +2872,7 @@
               "value": true
             }
           ],
-          "goto": "sc_final_route"
+          "goto": "sc_final_ilya_prep"
         }
       ]
     },
@@ -2904,6 +2904,295 @@
           "id": "t2",
           "speaker": null,
           "text": "Когда пришло время решать, я всё ещё был один. Теперь это было моим выбором.",
+          "goto": "sc_final_alone_prep"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_vera_prep",
+      "name": "Последнее обещание",
+      "act": "Финальный круг · Вера",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "vera",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "vera",
+          "text": "— Ты обещал не скрывать риск. Если останется только одна дверь, я хочу знать, где ты сам собираешься стоять.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Рядом с той версией плана, которую ты сама выберешь."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я показал Вере худший сценарий, а не только самый вероятный. Она добавила свои отметки, и план впервые перестал быть только моим.",
+          "set": [
+            {
+              "var": "trust_vera",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_asya_prep",
+      "name": "Своё решение",
+      "act": "Финальный круг · Ася",
+      "bg": "assets/bg-cafeteria.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "asya",
+          "sprite": "concerned",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "asya",
+          "text": "— Если мы дойдём до последней двери, я хочу, чтобы моё решение оставалось моим.",
+          "spriteOverride": "concerned"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Тебе не нужно доказывать мне, что ты можешь идти."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Мы сверили имена и время. Ася сама выбрала, что взять с собой; я впервые не стал добавлять её решение в свой список как готовый факт.",
+          "set": [
+            {
+              "var": "trust_asya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "saved_asya",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_prep",
+      "name": "Последний график",
+      "act": "Финальный круг · Марк",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mark",
+          "text": "— Мой график выведет нас в нужный коридор. Если будешь проверять каждую строку, времени не останется.",
+          "spriteOverride": "smirk"
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "Я мог сверить его расчёт со своими отметками или использовать чужой план, не задавая вопросов.",
+          "choices": [
+            {
+              "text": "Сверить время и маршрут с моими записями.",
+              "goto": "sc_final_mark_verify:t1"
+            },
+            {
+              "text": "Довериться Марку и не менять его график.",
+              "goto": "sc_final_mark_trust:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_verify",
+      "name": "Сверка графика",
+      "act": "Финальный круг · проверка",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Две отметки не совпали. Я поправил время перехода и потерял удобную простоту Маркова плана, зато ошибка стала видимой.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Теперь это твой расчёт. Не говори потом, что я выбрал за тебя.",
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_mark_trust",
+      "name": "Довериться графику",
+      "act": "Финальный круг · решение",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я использовал график Марка без изменений. Это не было доказательством его правоты; только решением довериться ему в последний раз.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_ilya_prep",
+      "name": "Не перекладывать выбор",
+      "act": "Финальный круг · Илья",
+      "bg": "assets/bg-dorm.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "ilya",
+          "sprite": "resolve",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "ilya",
+          "text": "— Ты однажды сказал, что группа решит за меня. Теперь ты готов отдать мне последнее решение?",
+          "spriteOverride": "resolve"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Я готов выслушать тебя. Но не переложить на тебя ответственность за мой выбор."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я передал Илье точное время и все проверенные отметки — без тайного запасного хода. Мы могли не соглашаться, но хотя бы знали, о чём спорим.",
+          "set": [
+            {
+              "var": "trust_ilya",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "shared_plan",
+              "op": "set",
+              "value": true
+            }
+          ],
+          "goto": "sc_final_route"
+        }
+      ]
+    },
+    {
+      "id": "sc_final_alone_prep",
+      "name": "Последний расчёт",
+      "act": "Финальный круг · один",
+      "bg": "assets/bg-classroom.webp",
+      "weather": "none",
+      "cast": [],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я разложил карточки по времени, подтверждённым маршрутам и пустым местам. Последний список был короче первого, но ни одна строка не стала от этого безопасной.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": null,
+          "text": "У меня не осталось человека, которому можно передать проверку. Последний расчёт был моим — вместе с его ошибкой.",
           "goto": "sc_final_route"
         }
       ]
@@ -2917,9 +3206,14 @@
       "cast": [],
       "steps": [
         {
+          "id": "final_circle",
+          "speaker": null,
+          "text": "На табло остались только те, кто дошёл до последнего круга. Я не стал говорить «победитель»: строка «ЕДИНСТВЕННЫЙ ВЫЖИВШИЙ» пока оставалась пустой."
+        },
+        {
           "id": "risk_check",
           "speaker": null,
-          "text": "Мы дошли до последнего круга. Я разложил факты и версии перед собой: впервые план должен был решить не только, как выжить, но и кому оставить единственный выход.",
+          "text": "Я сверил время и список ещё раз. Если проверенных фактов окажется мало, чужой план станет моей последней ошибкой.",
           "gotoIf": [
             {
               "when": "risk >= 4 && evidence < 2",
@@ -2945,7 +3239,7 @@
         {
           "id": "t2",
           "speaker": null,
-          "text": "Я мог выйти сам. Или исполнить обещание, которое дал раньше.",
+          "text": "На последнем шаге не было безопасного решения. Я мог оставить шанс себе или отдать его одному из тех, кто прошёл этот путь рядом со мной.",
           "choices": [
             {
               "text": "Выбрать себя. Дойти до выхода одному.",
