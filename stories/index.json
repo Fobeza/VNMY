@@ -41,6 +41,23 @@
           "title": "Пока горит август"
         }
       ]
+    },
+    {
+      "id": "zero-bell",
+      "dir": "zero-bell",
+      "title": "Нулевой звонок",
+      "author": "VNMY",
+      "description": "Закрытая школа-пансион, тридцать восемнадцатилетних и ежедневный жребий, который оставляет в живых только одного.",
+      "cover": "novels/zero-bell/assets/cover.webp",
+      "accent": "#b79ae0",
+      "order": 5,
+      "novels": [
+        {
+          "id": "story_zero_bell",
+          "dir": "zero-bell",
+          "title": "Нулевой звонок"
+        }
+      ]
     }
   ]
 }
