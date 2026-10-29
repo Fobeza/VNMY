@@ -1,10 +1,11 @@
 /* VNMY — экран прохождения: мост между движком, сохранениями и меню */
 import { Stage } from './engine.js';
 import { getSettings, saveSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, clearSaves } from './store.js';
-import { findScene, bareId } from './format.js';
-import { $, debounce, el, plural } from './util.js';
+import { findScene, bareId, resolveUrl } from './format.js';
+import { $, debounce, el, plural, deepClone } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
+import { restorePosition, storyRevision } from './session.js';
 
 let stage = null;
 let currentStory = null;
@@ -39,16 +40,21 @@ export function openPlayer(story, opts = {}) {
   // явно выбранный слот важнее автосейва; «продолжить» берёт автосейв
   const slotSave = opts.slot ? saves.slots.find((entry) => entry.slot === opts.slot) : null;
   const source = slotSave || (!opts.fresh ? saves.auto : null);
-  const canResume = !!source && (!!slotSave || !source.ended) && !!findScene(story, source.sceneId);
+  const restored = restorePosition(story, source);
+  const canResume = !!restored && (!!slotSave || !source.ended) && !!findScene(story, restored.sceneId);
   const resume = canResume
     ? {
-      sceneId: source.sceneId,
-      stepIndex: source.stepIndex,
-      vars: source.vars || {},
-      history: Array.isArray(source.history) ? source.history : [],
+      sceneId: restored.sceneId,
+      stepIndex: restored.stepIndex,
+      vars: restored.vars || {},
+      visual: restored.visual,
+      history: Array.isArray(restored.history) ? restored.history : [],
     }
     : { sceneId: story.scenes[0].id, stepIndex: 0, history: [] };
 
+  if (canResume && (restored.changed || restored.relocated)) {
+    toast(restored.relocated ? 'История обновилась: сохранённая реплика удалена. Открыто ближайшее место.' : 'История обновилась. Прогресс восстановлен по реплике.', 4500);
+  }
   const seenBefore = getSeen(story.id);
 
   let finished = false;
@@ -63,6 +69,9 @@ export function openPlayer(story, opts = {}) {
   stage = new Stage(host, {
     story,
     start: resume,
+    vars: resume.vars,
+    visual: resume.visual,
+    resuming: canResume,
     history: resume.history || [],
     mode: 'play',
     settings,
@@ -72,6 +81,9 @@ export function openPlayer(story, opts = {}) {
       markSeen(story.id, `${position.sceneId}:${bareId(step?.id || '')}`);
       persist(position, step);
     },
+    onJournal: () => openJournal(story),
+    onSaves: () => openSaves(story, opts),
+    onRestart: () => { finished = false; persist.cancel(); },
     onMenu: () => openPlayerMenu(story, opts),
     onExit: () => opts.onExit?.(),
     onBrokenLink: (ref) => toast(`Переход «${ref}» не найден`),
@@ -94,6 +106,9 @@ export function openPlayer(story, opts = {}) {
         vars: { ...stage.vars },
         history: [...stage.history],
         ended: true,
+        stepId: `${stage.sceneId}:${bareId(stage.step?.id || '')}`,
+        revision: storyRevision(story),
+        visual: deepClone(stage.visual),
       });
     },
   });
@@ -102,7 +117,7 @@ export function openPlayer(story, opts = {}) {
 
   keyHandler = (e) => {
     if (document.body.classList.contains('no-scroll')) return; // открыта шторка
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+    if (e.defaultPrevented || e.target.closest?.('input, textarea, select, button, [contenteditable]')) return;
     if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
       e.preventDefault();
       stage?.handleTap();
@@ -118,6 +133,9 @@ export function openPlayer(story, opts = {}) {
 /** Что именно запоминаем в сохранении: место, переменные, журнал. */
 function positionPayload(story, position, step) {
   return {
+    revision: storyRevision(story),
+    visual: position.visual || deepClone(stage?.visual || {}),
+    thumbnail: resolveUrl(story, (position.visual || stage?.visual)?.bg || story.cover || ''),
     sceneId: position.sceneId,
     sceneIndex: position.sceneIndex,
     stepIndex: position.stepIndex,
@@ -127,7 +145,7 @@ function positionPayload(story, position, step) {
     excerpt: (step?.text || '').slice(0, 90),
     vars: position.vars || {},
     history: [...(stage?.history || [])],
-    ended: false,
+    ended: !!position.ended,
   };
 }
 
@@ -184,7 +202,9 @@ function openSaves(story, opts) {
 
     for (const slot of SLOT_IDS) {
       const entry = saves.slots.find((item) => item.slot === slot);
-      const saveHere = () => {
+      const saveHere = async () => {
+        if (!stage) return;
+        if (entry && !await confirmDialog({ title: `Перезаписать слот ${slot}?`, text: 'Предыдущее место в этом слоте будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
         if (!stage) return;
         writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
         toast(`Сохранено в слот ${slot}`);
@@ -192,18 +212,23 @@ function openSaves(story, opts) {
       };
       list.append(el('div', { class: `save-slot${entry ? ' is-filled' : ''}` },
         el('button', {
-          class: 'save-slot-main',
+          class: `save-slot-main${entry?.thumbnail ? ' has-thumbnail' : ''}`,
           type: 'button',
           title: entry ? 'Перезаписать слот' : 'Сохранить здесь',
           onclick: saveHere,
         },
+        entry?.thumbnail ? el('img', { class: 'save-thumbnail', src: entry.thumbnail, alt: '', loading: 'lazy' }) : null,
+        el('span', { class: 'save-slot-copy' },
         el('span', { class: 'save-slot-title', text: `Слот ${slot}` }),
         el('span', {
           class: 'save-slot-meta',
           text: entry
-            ? `${entry.sceneName || 'без названия'} · ${Math.round((entry.percent || 0) * 100)}% · ${slotDate(entry.at)}`
+            ? `${entry.sceneName || 'без названия'} · ${slotDate(entry.at)}`
             : 'пусто — нажмите, чтобы сохранить здесь',
         }),
+        entry?.excerpt ? el('span', { class: 'save-excerpt', text: plainLine(entry.excerpt) }) : null,
+        el('span', { class: 'save-slot-write', text: entry ? 'Сохранить поверх…' : 'Сохранить' }),
+        ),
         ),
         entry ? el('button', {
           class: 'pill',
@@ -212,7 +237,7 @@ function openSaves(story, opts) {
             close();
             setTimeout(() => openPlayer(story, { ...opts, slot }), 200);
           },
-        }, 'Открыть') : null,
+        }, 'Загрузить') : null,
         entry ? el('button', {
           class: 'mini-btn is-danger',
           type: 'button',
@@ -230,7 +255,7 @@ function openSaves(story, opts) {
 
     return el('div', {},
       list,
-      el('p', { class: 'field-hint', text: 'Тап по слоту — сохранить текущее место, «Открыть» — вернуться в него. Автосохранение работает отдельно и всегда держит последнюю реплику.' }),
+      el('p', { class: 'field-hint', text: '«Сохранить» записывает текущее место, «Загрузить» возвращает в выбранный слот. Автосохранение работает отдельно и всегда держит последнюю реплику.' }),
     );
   };
 
@@ -248,6 +273,7 @@ export function closePlayer() {
   if (keyHandler) document.removeEventListener('keydown', keyHandler);
   keyHandler = null;
   // отложенное сохранение не должно сработать после выхода и перезаписать финал
+  pendingPersist?.flush?.();
   pendingPersist?.cancel?.();
   pendingPersist = null;
   stage?.destroy();
@@ -272,7 +298,7 @@ function openPlayerMenu(story, opts) {
   speed.value = String(56 - Number(settings.textSpeed || 22));
   const speedNote = document.createElement('span');
   speedNote.className = 'range-note';
-  speedNote.textContent = `${speed.value > 34 ? 'медленно' : speed.value > 18 ? 'обычно' : 'быстро'}`;
+  speedNote.textContent = `${speed.value > 34 ? 'быстро' : speed.value > 18 ? 'обычно' : 'медленно'}`;
   const speedWrap = document.createElement('div');
   speedWrap.className = 'range-row';
   speedWrap.append(speed, speedNote);
@@ -281,7 +307,7 @@ function openPlayerMenu(story, opts) {
     const ms = 56 - Number(speed.value);
     stage?.applySettings({ textSpeed: ms });
     saveSettings({ textSpeed: ms });
-    speedNote.textContent = speed.value > 34 ? 'медленно' : speed.value > 18 ? 'обычно' : 'быстро';
+    speedNote.textContent = speed.value > 34 ? 'быстро' : speed.value > 18 ? 'обычно' : 'медленно';
   });
 
   const sizeRow = document.createElement('div');
@@ -342,11 +368,19 @@ function openPlayerMenu(story, opts) {
     stage?.applySettings({ reduceMotion: next });
   });
 
-  content.append(speedRow, sizeRow, skipRow, awakeRow, motionRow);
+  const opacityRow = el('div', { class: 'field' }, el('label', { text: 'Подложка под текстом' }));
+  const opacity = el('input', { type: 'range', min: '0.35', max: '1', step: '0.05', value: String(settings.dialogueOpacity ?? 0.9), 'aria-label': 'Непрозрачность подложки' });
+  opacity.addEventListener('input', () => {
+    const patch = { dialogueOpacity: Number(opacity.value) };
+    stage?.applySettings(patch);
+    saveSettings(patch);
+  });
+  opacityRow.append(opacity);
+  content.append(speedRow, sizeRow, opacityRow, skipRow, awakeRow, motionRow);
 
   openSheet({
     title: story.title,
-    subtitle: `${Math.round(((stage?.position ? flatPosition(story, stage.position.sceneId, stage.position.stepIndex) + 1 : 1) / Math.max(1, totalSteps(story))) * 100)}% истории · прогресс сохраняется сам`,
+    subtitle: `${stage?.scene?.act ? stage.scene.act + ' · ' : ''}${stage?.scene?.name || 'Начало'} · прогресс сохраняется сам`,
     rows: [
       {
         label: 'История реплик',
@@ -395,5 +429,9 @@ function releaseWakeLock() {
 }
 
 document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pendingPersist?.flush?.();
   if (!document.hidden && currentStory && getSettings().keepAwake) requestWakeLock(true);
 });
+
+window.addEventListener('pagehide', () => pendingPersist?.flush?.());
+document.addEventListener('vnmy:modal', e => stage?.setPaused(e.detail > 0));

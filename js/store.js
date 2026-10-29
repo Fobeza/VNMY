@@ -3,6 +3,9 @@ import { normalizeStory, createStory, findScene, bareId, globalId } from './form
 import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
 import { uid, download, readFileAsText, deepClone, prefersReducedMotion } from './util.js';
 
+import { initializeStorage, getLargeRecord, putLargeRecord, removeLargeRecord, flushStorage, storageBackend, largeStorageSize, largeRecordKeys } from './persistence.js';
+export { initializeStorage, flushStorage, storageBackend };
+
 const K = {
   index: 'vnmy:index',
   story: (id) => `vnmy:story:${id}`,
@@ -15,11 +18,13 @@ const K = {
 const memory = new Map();
 
 function lsGet(key) {
+  if (memory.has(key)) return memory.get(key);
   try { return localStorage.getItem(key); } catch { return memory.get(key) ?? null; }
 }
 function lsSet(key, value) {
   try {
     localStorage.setItem(key, value);
+    memory.delete(key);
   } catch (err) {
     if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
       throw new Error('STORAGE_FULL');
@@ -28,7 +33,8 @@ function lsSet(key, value) {
   }
 }
 function lsRemove(key) {
-  try { localStorage.removeItem(key); } catch { memory.delete(key); }
+  memory.delete(key);
+  try { localStorage.removeItem(key); } catch { /* memory already removed */ }
 }
 function lsJSON(key, fallback) {
   const raw = lsGet(key);
@@ -75,11 +81,12 @@ function normalizeBuiltinStory(raw, { baseUrl, universeId }) {
 }
 
 function builtinFromEmbedded(lib) {
+  const assets = new Map(Object.entries(lib.assets || {}));
   const universes = [];
   for (const raw of lib.universes) {
     const universe = normalizeUniverse({ ...raw, baseUrl: '', builtin: true, readOnly: true });
     universe.novels = (raw.novels || []).map((novel) =>
-      normalizeBuiltinStory(novel, { baseUrl: '', universeId: universe.id }));
+      normalizeBuiltinStory(assets.size ? replaceAssetPaths(deepClone(novel), assets) : novel, { baseUrl: '', universeId: universe.id }));
     universes.push(universe);
   }
   return universes;
@@ -164,11 +171,12 @@ async function legacyUniverses(names) {
 /* ─────────────────────────── локальные истории ─────────────────────────── */
 
 export function listLocalStoryIds() {
-  return lsJSON(K.index, []);
+  const index = lsJSON(K.index, []);
+  return [...new Set([...(Array.isArray(index) ? index : []), ...largeRecordKeys().filter(k => k.startsWith('vnmy:story:')).map(k => k.slice('vnmy:story:'.length))])];
 }
 
 export function loadLocalStory(id) {
-  const data = lsJSON(K.story(id), null);
+  const data = getLargeRecord(K.story(id), () => lsJSON(K.story(id), null));
   if (!data) return null;
   const story = normalizeStory(data);
   story.readOnly = false;
@@ -184,7 +192,7 @@ export function saveStory(story, { touch = true } = {}) {
   if (touch) story.updatedAt = Date.now();
   const data = deepClone(story);
   delete data.readOnly;
-  lsSet(K.story(story.id), JSON.stringify(data));
+  putLargeRecord(K.story(story.id), data, () => lsSet(K.story(story.id), JSON.stringify(data)));
   const index = listLocalStoryIds();
   if (!index.includes(story.id)) {
     index.unshift(story.id);
@@ -194,7 +202,7 @@ export function saveStory(story, { touch = true } = {}) {
 }
 
 export function deleteStory(id) {
-  lsRemove(K.story(id));
+  removeLargeRecord(K.story(id), () => lsRemove(K.story(id)));
   lsSet(K.index, JSON.stringify(listLocalStoryIds().filter((x) => x !== id)));
   lsRemove(K.saves(id));
   lsRemove(K.seen(id));
@@ -343,22 +351,49 @@ export async function exportUniversePortable(universe, novels, { limitMb = 64 } 
 }
 
 /** Экспорт всех локальных историй одним файлом — бэкап браузера. */
-export function exportBackup() {
-  const stories = listLocalStories().map((s) => {
-    const copy = deepClone(s);
-    delete copy.readOnly;
-    return copy;
-  });
+export async function exportBackup() {
+  const stories = [];
+  for (const story of listLocalStories()) {
+    const { data, skipped } = await portableStory(story, { limitMb: Infinity });
+    if (skipped) throw new Error('BACKUP_ASSETS_MISSING');
+    stories.push(data);
+  }
   const payload = {
     format: 'vnmy-backup',
-    version: 2,
+    version: 3,
     exportedAt: Date.now(),
     universes: listLocalUniverses(),
     stories,
+    browser: browserBackupData(),
   };
   const stamp = new Date().toISOString().slice(0, 10);
   download(`vnmy-backup-${stamp}.json`, JSON.stringify(payload));
   return stories.length;
+}
+
+/** Small records include built-in progress, seen markers, and preferences. */
+export function browserBackupData() {
+  const data = {};
+  const keys = new Set(memory.keys());
+  try { for (let i = 0; i < localStorage.length; i++) keys.add(localStorage.key(i)); } catch { /* memory fallback */ }
+  for (const key of keys) {
+    if (key === K.settings || key?.startsWith('vnmy:saves:') || key?.startsWith('vnmy:seen:')) {
+      const value = lsJSON(key, null);
+      if (value != null) data[key] = value;
+    }
+  }
+  return data;
+}
+
+function restoreBrowserBackup(data, idMap) {
+  for (const [key, value] of Object.entries(data || {})) {
+    if (key === K.settings && value && typeof value === 'object') lsSet(key, JSON.stringify(value));
+    else if (/^vnmy:(saves|seen):.+/.test(key)) {
+      const prefix = key.startsWith('vnmy:saves:') ? 'vnmy:saves:' : 'vnmy:seen:';
+      const id = key.slice(prefix.length);
+      lsSet(prefix + (idMap.get(id) || id), JSON.stringify(value));
+    }
+  }
 }
 
 /** Импорт набора новелл с защитой от переполнения места. */
@@ -418,6 +453,7 @@ export async function importStoryFile(file) {
   if (parsed?.format === 'vnmy-universe') {
     const { universe, novels } = importUniverseBundle(parsed);
     // у массива есть .universe — библиотеке нужно имя, чтобы показать тост
+    await flushStorage();
     return Object.assign(novels, { universe });
   }
 
@@ -426,11 +462,18 @@ export async function importStoryFile(file) {
       try { saveUniverse(createUniverse(raw)); } catch { /* бэкап важнее вселенной */ }
     }
     libraryCache = null;
-    return importStoryList(parsed.stories || parsed.novels || []);
+    const source = parsed.stories || parsed.novels || [];
+    const imported = importStoryList(source);
+    const ids = new Map(source.map((raw, i) => [raw.id, imported[i]?.id]));
+    restoreBrowserBackup(parsed.browser, ids);
+    await flushStorage();
+    return imported;
   }
 
   const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.stories) ? parsed.stories : [parsed];
-  return importStoryList(list);
+  const imported = importStoryList(list);
+  await flushStorage();
+  return imported;
 }
 
 export function exportStory(story) {
@@ -456,14 +499,14 @@ export function storageUsage() {
       used += key.length + (localStorage.getItem(key)?.length || 0);
     }
   } catch { /* ignore */ }
-  return { used, limit: 5 * 1024 * 1024 };
+  return { used: used + largeStorageSize(), limit: storageBackend() === 'IndexedDB' ? null : 5 * 1024 * 1024, backend: storageBackend() };
 }
 
 /* ─────────────────────── свои вселенные и вся библиотека ─────────────────────── */
 
 /** Вселенные, созданные в браузере (лежат рядом со своими новеллами). */
 export function listLocalUniverses() {
-  return lsJSON(K.universes, []).filter(Boolean).map((u) => normalizeUniverse(u));
+  return getLargeRecord(K.universes, () => lsJSON(K.universes, [])).filter(Boolean).map((u) => normalizeUniverse(u));
 }
 
 export function loadLocalUniverse(id) {
@@ -475,7 +518,7 @@ export function saveUniverse(universe, { touch = true } = {}) {
   if (touch) next.updatedAt = Date.now();
   const list = listLocalUniverses().filter((u) => u.id !== next.id);
   list.push(universeData(next));
-  lsSet(K.universes, JSON.stringify(list));
+  putLargeRecord(K.universes, list, () => lsSet(K.universes, JSON.stringify(list)));
   libraryCache = null;
   return next;
 }
@@ -494,7 +537,8 @@ export function uniqueUniverseId(base) {
  * Сами новеллы удаляются только вместе с историями (см. deleteStory).
  */
 export function deleteUniverse(id) {
-  lsSet(K.universes, JSON.stringify(listLocalUniverses().filter((u) => u.id !== id)));
+  const list = listLocalUniverses().filter(u => u.id !== id);
+  putLargeRecord(K.universes, list, () => lsSet(K.universes, JSON.stringify(list)));
   for (const story of listLocalStories()) {
     if (story.universe !== id) continue;
     story.universe = '';
@@ -566,7 +610,8 @@ export async function loadLibrary() {
 /* ─────────────────────────── сохранения прохождения ─────────────────────────── */
 
 export function getSaves(storyId) {
-  return lsJSON(K.saves(storyId), { slots: [], auto: null });
+  const value = lsJSON(K.saves(storyId), null);
+  return { slots: Array.isArray(value?.slots) ? value.slots.filter(Boolean) : [], auto: value?.auto && typeof value.auto === 'object' ? value.auto : null };
 }
 
 export function writeSave(storyId, slot, payload) {
@@ -600,7 +645,8 @@ export function clearSaves(storyId) {
 /* ─────────────────────────── настройки и «прочитано» ─────────────────────────── */
 
 export function getSeen(storyId) {
-  return new Set(lsJSON(K.seen(storyId), []));
+  const seen = lsJSON(K.seen(storyId), []);
+  return new Set(Array.isArray(seen) ? seen : []);
 }
 
 export function markSeen(storyId, stepId) {

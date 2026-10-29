@@ -32,7 +32,7 @@
  * }
  */
 
-import { compile as compileExpression, interpolatedVars } from './expr.js';
+import { compile as compileExpression, interpolatedVars, evalCondition } from './expr.js';
 
 export const SCHEMA_VERSION = 1;
 
@@ -161,7 +161,9 @@ export function normalizeStory(input) {
   });
 
   const sceneIds = new Set();
-  story.scenes = story.scenes.filter(Boolean).map((s) => {
+  story.scenes = story.scenes.filter(s => s && typeof s === 'object');
+  if (!story.scenes.length) story.scenes = [newScene()];
+  story.scenes = story.scenes.map((s) => {
     const scene = {
       id: s.id || uid('sc'),
       name: String(s.name || 'Сцена'),
@@ -177,7 +179,9 @@ export function normalizeStory(input) {
     if (sceneIds.has(scene.id)) scene.id = uid('sc');
     sceneIds.add(scene.id);
     const ids = new Set();
-    scene.steps = scene.steps.filter(Boolean).map((t) => {
+    scene.steps = scene.steps.filter(t => t && typeof t === 'object');
+    if (!scene.steps.length) scene.steps = [newStep()];
+    scene.steps = scene.steps.map((t) => {
       const step = normalizeStep(t);
       if (ids.has(step.id)) step.id = uid('t');
       ids.add(step.id);
@@ -277,7 +281,7 @@ export function resolveTarget(story, ref, currentSceneId) {
   const byIndex = (scene) => {
     const n = parseInt(maybeStep, 10);
     if (!Number.isFinite(n)) return -1;
-    return clampIndex(n - 1, scene.steps.length);
+    return Number.isInteger(n) && n >= 1 && n <= scene.steps.length ? n - 1 : -1;
   };
   if (maybeStep !== undefined) {
     const scene = findScene(story, maybeScene);
@@ -302,7 +306,7 @@ function clampIndex(i, len) {
 }
 
 /** Полное состояние сцены на конкретном шаге: с учётом всех переопределений. */
-export function stateAt(story, sceneId, stepIndex) {
+export function stateAt(story, sceneId, stepIndex, vars = null) {
   const scene = findScene(story, sceneId);
   if (!scene) return { bg: '', weather: 'none', cast: [] };
   const state = { bg: scene.bg, weather: scene.weather, cast: scene.cast.map((c) => ({ ...c })) };
@@ -310,6 +314,7 @@ export function stateAt(story, sceneId, stepIndex) {
   for (let i = 0; i <= last; i++) {
     const step = scene.steps[i];
     if (!step) break;
+    if (vars && step.if && !evalCondition(step.if, vars)) continue;
     if (step.bg) state.bg = step.bg;
     if (step.weather) state.weather = step.weather;
     if (step.cast) state.cast = step.cast.map((c) => ({ ...c }));
@@ -436,6 +441,42 @@ export function lintStory(story) {
         if (!nextScene) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Финал сцены «${scene.name}» — история здесь закончится. Поставьте «Конец» или переход.` });
       }
     }
+  }
+  // Conservative reachability: include conditional fall-through and every branch.
+  const nodes = new Map();
+  const edges = new Map();
+  const keyOf = (sceneId, step) => `${sceneId}:${bareId(step.id)}`;
+  for (const [si, scene] of story.scenes.entries()) {
+    for (const [i, step] of scene.steps.entries()) {
+      const key = keyOf(scene.id, step);
+      nodes.set(key, { sceneId: scene.id, stepId: step.id });
+      const next = scene.steps[i + 1] ? keyOf(scene.id, scene.steps[i + 1])
+        : story.scenes[si + 1]?.steps[0] ? keyOf(story.scenes[si + 1].id, story.scenes[si + 1].steps[0]) : null;
+      const targets = new Set();
+      const refs = [step.goto, ...(step.gotoIf || []).map(r => r.goto), ...(step.choices || []).map(c => c.goto)];
+      for (const ref of refs) {
+        const target = resolveTarget(story, ref, scene.id);
+        if (target) targets.add(keyOf(target.sceneId, findScene(story, target.sceneId).steps[target.stepIndex]));
+      }
+      const optionalChoices = !step.choices?.length || step.choices.every(c => c.if);
+      if (next && (step.if || (!step.end && !step.goto && optionalChoices))) targets.add(next);
+      edges.set(key, targets);
+      if (step.choices?.length && step.choices.every(c => c.if) && !step.goto && !step.end) {
+        issues.push({ level: 'warn', sceneId: scene.id, stepId: step.id, text: 'Все варианты условные: если ни один недоступен, игра продолжит следующий шаг. Добавьте запасной выбор.' });
+      }
+      for (const c of step.cast || []) if (!characterById(story, c.char)) issues.push({ level: 'error', sceneId: scene.id, stepId: step.id, text: 'В шаге есть неизвестный персонаж' });
+    }
+  }
+  const reached = new Set();
+  const pending = story.scenes[0]?.steps[0] ? [keyOf(story.scenes[0].id, story.scenes[0].steps[0])] : [];
+  while (pending.length) {
+    const key = pending.pop();
+    if (reached.has(key)) continue;
+    reached.add(key);
+    for (const target of edges.get(key) || []) pending.push(target);
+  }
+  for (const scene of story.scenes) {
+    if (!scene.steps.some(step => reached.has(keyOf(scene.id, step)))) issues.push({ level: 'warn', sceneId: scene.id, text: `Сцена «${scene.name}» недостижима из начала истории` });
   }
   return issues;
 }
