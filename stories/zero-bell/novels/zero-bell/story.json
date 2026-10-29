@@ -168,6 +168,26 @@
       "name": "nikita_dead",
       "type": "bool",
       "initial": false
+    },
+    {
+      "name": "rita_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "anton_dead",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "mikhail_refused",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "mikhail_dead",
+      "type": "bool",
+      "initial": false
     }
   ],
   "characters": [
@@ -256,7 +276,10 @@
       "id": "mikhail",
       "name": "Михаил Зуев",
       "color": "#b6cbbb",
-      "sprites": {}
+      "sprites": {
+        "neutral": "assets/mikhail-neutral.webp",
+        "worried": "assets/mikhail-worried.webp"
+      }
     },
     {
       "id": "semen",
@@ -2077,7 +2100,7 @@
           "id": "t3",
           "speaker": null,
           "text": "Я не назвал это добровольной смертью. Никита отказался убивать; система сама исполнила угрозу. Дверь осталась закрытой.",
-          "goto": "sc_after_lev_day:t1"
+          "goto": "sc_mikhail_draw:t1"
         }
       ]
     },
@@ -2118,7 +2141,7 @@
           "id": "t3",
           "speaker": null,
           "text": "Я записал время, но не стал записывать оправдание.",
-          "goto": "sc_after_lev_day:t1"
+          "goto": "sc_mikhail_draw:t1"
         }
       ]
     },
@@ -2166,13 +2189,325 @@
           "speaker": "mark",
           "text": "— У нас оставалось меньше минуты. Я не называл это безопасным.",
           "spriteOverride": "smirk",
+          "goto": "sc_mikhail_draw:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_draw",
+      "name": "Пятый жребий",
+      "act": "День пятый · 06:00",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "system",
+          "text": "Жребий завершён. Водящий — Михаил Зуев."
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я весь день собирал нас в одну группу. Теперь от меня ждут, что я назову, кого из неё убрать.",
+          "spriteOverride": "worried",
+          "goto": "sc_mikhail_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_day",
+      "name": "Разные версии",
+      "act": "День пятый · утро",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "neutral",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mikhail",
+          "text": "— Рита говорит, что была в библиотеке в 22:18. Антон утверждает, что библиотека в это время была пуста. Я хочу проверить часы, а не объявить кого-то виноватым.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t2",
+          "speaker": "lev",
+          "text": "— Показание — это версия. Сначала проверим, что можно подтвердить."
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "До 06:00 оставались сутки. Я мог проверить журнал библиотеки, передать Марку непроверенную запись или собрать всех и отказаться превращать алиби в список целей.",
+          "choices": [
+            {
+              "text": "Сверить журнал выдачи книг с отметкой часов в холле.",
+              "goto": "sc_mikhail_verify:t1"
+            },
+            {
+              "text": "Отдать Марку черновик и позволить ему вести проверку.",
+              "goto": "sc_mikhail_mark:t1",
+              "if": "!killed_mark"
+            },
+            {
+              "text": "Собрать группу и сказать, что несостыковка не доказывает вину.",
+              "goto": "sc_mikhail_refuse:t1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_verify",
+      "name": "Проверить алиби",
+      "act": "День пятый · сверка",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В журнале самообслуживания стояла отметка: Рита взяла книгу в 22:17. Часы в холле показывали 22:18, когда Антон говорил, что библиотека пуста. Это подтверждало её присутствие — но не объясняло, почему он сказал иначе.",
+          "set": [
+            {
+              "var": "evidence",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "nerve",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я знаю, кто был в библиотеке. Не знаю, почему Антон соврал.",
+          "spriteOverride": "worried",
+          "goto": "sc_mikhail_kills_anton:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_mark",
+      "name": "Чужая таблица",
+      "act": "День пятый · коалиция",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mark",
+          "sprite": "neutral",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "Я отдал Марку черновик без проверки. Он сложил время отсутствия Риты и слова Антона в одну версию; за аккуратной таблицей слишком легко было не заметить пробел.",
+          "set": [
+            {
+              "var": "trust_mark",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mark",
+          "text": "— Рита не оставила подтверждённой отметки. До срока меньше суток, Михаил.",
+          "spriteOverride": "smirk",
+          "goto": "sc_mikhail_kills_rita:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_refuse",
+      "name": "Не ставить имя",
+      "act": "День пятый · срок",
+      "bg": "assets/bg-assembly.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "center",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": "mikhail",
+          "text": "— Несостыковка — не доказательство. Я не произнесу имя только потому, что боюсь срока.",
+          "spriteOverride": "worried",
+          "set": [
+            {
+              "var": "mikhail_refused",
+              "op": "set",
+              "value": true
+            },
+            {
+              "var": "mercy",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "risk",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "system",
+          "text": "Срок водящего истёк. Михаил Зуев устранён системой за невыполнение задания.",
+          "set": [
+            {
+              "var": "mikhail_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я не назвал его отказ добровольной смертью. Михаил не убил участника; систему остановить он не мог.",
+          "goto": "sc_after_lev_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_kills_anton",
+      "name": "Подтверждённое время",
+      "act": "День пятый · 05:46",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:46 табло подтвердило смерть Антона Рудина. Михаил выполнил условие. Я не увидел момента и не знал, почему Антон солгал о библиотеке.",
+          "set": [
+            {
+              "var": "anton_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я проверил время. Не его намерения.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": null,
+          "text": "Я отметил разницу между тем, что мы подтвердили, и тем, что только решили о человеке.",
+          "goto": "sc_after_lev_day:t1"
+        }
+      ]
+    },
+    {
+      "id": "sc_mikhail_kills_rita",
+      "name": "Пустая строка",
+      "act": "День пятый · 05:39",
+      "bg": "assets/bg-library.webp",
+      "weather": "none",
+      "cast": [
+        {
+          "char": "mikhail",
+          "sprite": "worried",
+          "pos": "left",
+          "scale": 1.0
+        },
+        {
+          "char": "mark",
+          "sprite": "smirk",
+          "pos": "right",
+          "scale": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "id": "t1",
+          "speaker": null,
+          "text": "В 05:39 табло подтвердило смерть Риты Крыловой. Михаил принял непроверенную версию Марка за достаточную. Условие выполнено; Рита не получила возможности объяснить отметки.",
+          "set": [
+            {
+              "var": "rita_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "speaker": "mikhail",
+          "text": "— Я всё ещё хотел сохранить группу. Но сначала позволил чужой таблице решить, кого в ней не будет.",
+          "spriteOverride": "worried"
+        },
+        {
+          "id": "t3",
+          "speaker": "mark",
+          "text": "— До срока оставалось двадцать одна минута. Это тоже факт.",
+          "spriteOverride": "smirk",
           "goto": "sc_after_lev_day:t1"
         }
       ]
     },
     {
       "id": "sc_after_lev_day",
-      "name": "После четвёртого цикла",
+      "name": "После пятого цикла",
       "act": "Через несколько циклов",
       "bg": "assets/bg-assembly.webp",
       "weather": "none",
@@ -2181,7 +2516,7 @@
         {
           "id": "t1",
           "speaker": null,
-          "text": "К 06:00 на табло осталось двадцать шесть имён. В каждом из четырёх циклов исчезла ровно одна карточка. Я снова перепроверил счёт."
+          "text": "К 06:00 на табло осталось двадцать пять имён. В каждом из пяти циклов исчезла ровно одна карточка. Я снова перепроверил счёт."
         },
         {
           "id": "t2",
@@ -2212,10 +2547,23 @@
         {
           "id": "t4",
           "speaker": null,
-          "text": "Потом дни пошли быстрее: на рассвете — случайное имя, сутки, срок и новая отметка на табло. Я не расследовал, кто управляет системой; я считал время и готовил следующий ход."
+          "text": "Михаил пережил свои сутки, но в одном из следующих циклов другой водящий выбрал его. Его последняя запись осталась в библиотечном журнале: время сходилось, имена — нет.",
+          "if": "!mikhail_dead",
+          "set": [
+            {
+              "var": "mikhail_dead",
+              "op": "set",
+              "value": true
+            }
+          ]
         },
         {
           "id": "t5",
+          "speaker": null,
+          "text": "Потом дни пошли быстрее: на рассвете — случайное имя, сутки, срок и новая отметка на табло. Я не расследовал, кто управляет системой; я считал время и готовил следующий ход."
+        },
+        {
+          "id": "t6",
           "speaker": null,
           "text": "Перед последним кругом нас осталось несколько человек. Я всё ещё мог выбрать, кому доверить последний план.",
           "choices": [
@@ -2574,7 +2922,7 @@
           "text": "Мы дошли до последнего круга. Я разложил факты и версии перед собой: впервые план должен был решить не только, как выжить, но и кому оставить единственный выход.",
           "gotoIf": [
             {
-              "when": "risk >= 3 && evidence < 2",
+              "when": "risk >= 4 && evidence < 2",
               "goto": "sc_bad_plan:t1"
             }
           ],
