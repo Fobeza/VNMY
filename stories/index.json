@@ -43,6 +43,23 @@
       ]
     },
     {
+      "id": "pulse-right",
+      "dir": "pulse-right",
+      "title": "Право на пульс",
+      "author": "Fobeza",
+      "description": "Вереск. Человеческое тело можно заменить по частям. Кто решает, когда человек заканчивается?",
+      "cover": "novels/chapter-one/assets/cover.webp",
+      "accent": "#ef5dba",
+      "order": 5,
+      "novels": [
+        {
+          "id": "story_pulse_right_chapter_one",
+          "dir": "chapter-one",
+          "title": "Право на пульс · Глава I"
+        }
+      ]
+    },
+    {
       "id": "zero-bell",
       "dir": "zero-bell",
       "title": "Нулевой звонок",

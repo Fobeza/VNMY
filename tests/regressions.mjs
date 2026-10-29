@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import { APP_VERSION } from '../js/version.js';
 import { build } from 'esbuild';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { IDBFactory } from 'fake-indexeddb';
@@ -13,7 +14,9 @@ import * as store from './js/store.js';
 import * as ui from './js/ui.js';
 import * as format from './js/format.js';
 import * as persistence from './js/persistence.js';
-window.audit = { Stage, player, store, ui, format, persistence };`, resolveDir: process.cwd() }, bundle: true, format: 'iife', write: false })).outputFiles[0].text;
+import * as library from './js/library.js';
+import * as novels from './js/novels.js';
+window.audit = { Stage, player, store, ui, format, persistence, library, novels };`, resolveDir: process.cwd() }, bundle: true, format: 'iife', write: false })).outputFiles[0].text;
 const html = (await fs.readFile('index.html', 'utf8')).replace(/<script>[\s\S]*?<\/script>/g, '');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let count = 0;
@@ -140,6 +143,25 @@ await test('backup includes built-in saves and maps restored local story IDs', a
   assert.equal(a.store.getSaves(imported[0].id).slots[0].vars.score, 7);
   assert.equal(a.store.getSaves('builtin-story').auto.sceneId, 'x'); assert(a.store.getSeen('builtin-story').has('x:a'));
 });
+await test('overlapping library renders keep only the latest result', async () => {
+  w.localStorage.clear();
+  const originalFetch = w.fetch;
+  let release; let calls = 0;
+  const firstResponse = new Promise(resolve => { release = resolve; });
+  w.fetch = async () => {
+    calls++;
+    if (calls === 1) return firstResponse;
+    return { ok:true, json: async () => ({ universes:[{ id:'render-world', dir:'render-world', title:'Latest world', novels:[] }] }) };
+  };
+  const first=a.library.renderLibrary({});
+  const second=a.library.renderLibrary({});
+  await second;
+  release({ ok:true, json:async()=>({ universes:[{ id:'render-world', dir:'render-world', title:'Stale world', novels:[] }] }) });
+  await first;
+  const cards=w.document.querySelectorAll('#universe-list .universe-card');
+  assert.equal(cards.length,1); assert(cards[0].textContent.includes('Latest world'));
+  w.fetch=originalFetch;
+});
 assert.equal(h.errors.length, 0, h.errors.map(e => e.message).join('\n'));
 h.close();
 
@@ -162,7 +184,7 @@ await test('service worker preserves unrelated caches and rejects incomplete she
   const events = {}; const deleted = []; let skipped = false; let operation;
   const self = { addEventListener: (key, fn) => { events[key] = fn; }, skipWaiting: () => { skipped = true; }, clients: { claim() {} } };
   const caches = {
-    keys: async () => ['vnmy-2.0-shell', 'vnmy-2.1.0-shell', 'another-app-cache'],
+    keys: async () => ['vnmy-2.0-shell', `vnmy-${APP_VERSION}-shell`, 'another-app-cache'],
     delete: async key => { deleted.push(key); },
     open: async () => ({ addAll: async () => { throw new Error('offline update'); } }),
   };

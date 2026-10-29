@@ -70,6 +70,47 @@ try {
   await page.screenshot({ path: `${output}/editor-search.png` });
   await page.locator('.story-search-results .sheet-row').first().click();
   await page.locator('#ed-preview .ending-title').waitFor();
+  // The shipped chapter must be playable through the real Stage and survive reload.
+  await page.goto(address);
+  await page.locator('.universe-card').first().waitFor();
+  await page.evaluate(async () => { const store = await import('/js/store.js'); store.saveSettings({ reduceMotion: true, fontSize: 1 }); });
+  await page.locator('.universe-card').filter({ hasText: 'Право на пульс' }).click();
+  await page.locator('.story-card').filter({ hasText: 'Право на пульс' }).click();
+  await page.waitForFunction(() => document.querySelector('.stage .text')?.textContent.includes('Первым вернулся звук'));
+  await page.screenshot({ path: `${output}/pulse-lab.png` });
+  const captured = new Set();
+  let reloaded = false;
+  for (let i=0; i<600; i++) {
+    if (await page.locator('.ending-layer.is-visible').count()) break;
+    assert.equal(await page.locator('.sprite[data-char="self"]').count(), 0, 'Protagonist appeared as a sprite');
+    const text = await page.locator('.stage .text').textContent();
+    for (const [marker,name] of [['Внутри было тесно','diner'],['Мастерская занимала','workshop'],['Мира подвинула ко мне маленький экран','cg'],['Внутри было холоднее','depot']]) {
+      if (text.includes(marker) && !captured.has(name)) {
+        captured.add(name);
+        await page.waitForTimeout(400);
+        await page.screenshot({ path: `${output}/pulse-${name}.png` });
+      }
+    }
+    if (!reloaded && text.includes('Пять минут') === false && text.includes('Лев ушёл собирать инструменты')) {
+      await page.waitForFunction(() => JSON.parse(localStorage.getItem('vnmy:saves:story_pulse_right_chapter_one') || '{}').auto?.vars?.read_pulse === true);
+      const before = await page.locator('.stage .text').textContent();
+      await page.reload(); await page.locator('.continue-card button').click();
+      assert.equal(await page.locator('.stage .text').textContent(), before);
+      reloaded = true;
+    }
+    await page.evaluate(() => {
+      const choices = [...document.querySelectorAll('.stage .choice-layer button')];
+      if (choices.length) choices[0].click();
+      else document.querySelector('.stage .tap-layer').click();
+    });
+  }
+  assert(reloaded, 'Chapter did not test save/load');
+  assert.equal(captured.size,4);
+  assert((await page.locator('.ending-title').textContent()).includes('Четверо на рассвете'));
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('vnmy:saves:story_pulse_right_chapter_one')).auto);
+  assert(saved.ended && saved.vars.lev_alive && saved.vars.asya_alive && saved.vars.fake_id);
+  await page.screenshot({ path: `${output}/pulse-ending.png` });
+
   // Standalone file is also exercised by the integration suite; verify real Chromium.
   const standalone = await context.newPage();
   await standalone.goto(`file://${root}/vnmy.html`);
@@ -78,7 +119,13 @@ try {
   await standalone.locator('.story-card').filter({ hasText: 'Пока горит август' }).click();
   await standalone.waitForFunction(() => document.querySelector('.stage .text')?.textContent.length > 10);
   await standalone.screenshot({ path: `${output}/standalone.png` });
+  await standalone.locator('.topbar-back').click(); await standalone.locator('#uni-back').click();
+  await standalone.locator('.universe-card').filter({ hasText: 'Право на пульс' }).click();
+  await standalone.locator('.story-card').filter({ hasText: 'Право на пульс' }).click();
+  await standalone.waitForFunction(() => document.querySelector('.stage .text')?.textContent.includes('Первым вернулся звук'));
+  const nativeBg = await standalone.locator('.stage .bg.is-active').evaluate(async node => { const image = new Image(); image.src = getComputedStyle(node).backgroundImage.slice(5,-2); await image.decode(); return image.naturalWidth; });
+  assert(nativeBg>0);
   await standalone.close();
   assert.deepEqual(errors, []);
-  console.log('Browser checks passed: reading, saves, resume, editor search, 4 viewport sizes, standalone file');
+  console.log('Browser checks passed: reading, saves, resume, editor search, 4 viewport sizes, full Pulse Right chapter with save/load, standalone file');
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }
