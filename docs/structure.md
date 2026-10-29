@@ -46,10 +46,13 @@ VNMY/
 │   ├── _template/             заготовки: copy-paste для новой вселенной/новеллы
 │   │   ├── universe.json
 │   │   └── novels/novel-example/{story.json, assets/README.md}
-│   ├── silent-rails/          ← пустая вселенная «Тихие пути»
-│   │   ├── universe.json      название, описание, обложка, акцент, порядок
-│   │   └── cover.webp         обложка вселенной (4:5 или 9:14)
-│   └── peresylka/             ← пустая вселенная «Пересылка»
+│   ├── last-summer/           ← вселенная «Свет у воды»
+│   │   ├── universe.json
+│   │   └── novels/while-august-lasts/ ← новелла «Пока горит август» и assets/
+│   ├── silent-rails/          ← пустой пример «Тихие пути»
+│   │   ├── universe.json
+│   │   └── cover.webp
+│   └── peresylka/             ← пустой пример «Пересылка»
 │       ├── universe.json
 │       └── cover.webp
 │
