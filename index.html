@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#08090c" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,10 +24,15 @@
     <div class="lib-scroll">
       <header class="lib-head">
         <div class="wordmark">VNMY<span class="dot">.</span></div>
-        <p class="lib-sub">движок визуальных новелл</p>
+        <p class="lib-sub">истории, в которых выбираешь ты</p>
+        <div class="mode-switch" role="group" aria-label="Режим библиотеки">
+          <button class="pill is-active" id="mode-read" type="button" aria-pressed="true">Читать</button>
+          <button class="pill" id="mode-author" type="button" aria-pressed="false">Создавать</button>
+        </div>
       </header>
 
-      <div class="lib-actions">
+      <div id="continue-reading"></div>
+      <div class="lib-actions author-only">
         <button class="ghost-btn is-primary" id="btn-new-universe" type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Новая вселенная
@@ -80,7 +85,7 @@
       </header>
       <p class="uni-desc" id="uni-desc"></p>
 
-      <div class="lib-actions">
+      <div class="lib-actions author-only">
         <button class="ghost-btn is-primary" id="btn-new-story" type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Новая новелла
@@ -177,6 +182,11 @@
       </div>
     </div>
 
+    <div class="quick-actions">
+      <button class="pill quick-journal" type="button">История</button>
+      <button class="pill quick-save" type="button">Сохранения</button>
+      <button class="pill quick-hide" type="button" aria-label="Скрыть интерфейс до следующего касания">Скрыть</button>
+    </div>
     <header class="topbar">
       <button class="icon-btn topbar-back" type="button" data-act="back" aria-label="В библиотеку">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>

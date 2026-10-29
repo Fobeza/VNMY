@@ -7,7 +7,7 @@ import { renderLibrary, wireLibrary, markBuiltinWarning } from './library.js';
 import { renderUniverse, wireUniverse } from './novels.js';
 import { openPlayer, closePlayer } from './player.js';
 import { openEditor, closeEditor } from './editor.js';
-import { createStory, saveStory, loadBuiltinUniverses } from './store.js';
+import { createStory, saveStory, loadBuiltinUniverses, initializeStorage } from './store.js';
 import { $ } from './util.js';
 import { toast } from './ui.js';
 
@@ -53,6 +53,7 @@ async function goBack() {
 }
 
 function playStory(story, opts = {}) {
+  currentUniverseId = story.universe || '';
   closeEditor({ silent: true });
   show('player');
   openPlayer(story, {
@@ -118,6 +119,8 @@ function registerServiceWorker() {
 async function boot() {
   window.__VNMY_BOOTED = true;
   clearTimeout(window.__vnmyBoot);
+  await initializeStorage();
+  document.addEventListener('vnmy:storage-error', () => toast('Не удалось сохранить данные. Экспортируйте копию перед выходом.', 6000));
   registerServiceWorker();
   wireLibrary();
   wireUniverse();

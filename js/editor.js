@@ -2,6 +2,7 @@
  * Всё сохраняется в localStorage этого браузера; экспорт — в story.json.
  */
 import { Stage } from './engine.js';
+import { openStoryNavigator } from './navigation.js';
 import { POSITION_SHORT } from './editor-tabs.js';
 import {
   findScene, newStep, newScene, newCharacter, stateAt, POSITIONS, POSITION_LABELS, WEATHERS,
@@ -11,7 +12,7 @@ import {
 } from './format.js';
 import {
   saveStory, exportStory, exportStoryPortable, duplicateStory, deleteStory, clearSaves,
-  getSettings, storageUsage,
+  getSettings, storageUsage, flushStorage,
 } from './store.js';
 import { el, $, $$, deepClone, debounce, plural } from './util.js';
 import { formatValue } from './expr.js';
@@ -48,6 +49,7 @@ export function openEditor(story, opts = {}) {
     tab: 'step',
     stage: null,
     dirty: false,
+    generation: 0,
     undo: [],
     redo: [],
     undoBytes: 0,
@@ -95,14 +97,19 @@ export function isEditorDirty() {
 
 const scheduleSave = debounce(() => flushSave(), 500);
 
-function flushSave() {
+async function flushSave() {
   if (!S) return;
+  const session = S;
+  const generation = session.generation;
   try {
-    saveStory(S.story);
+    saveStory(session.story);
+    await flushStorage();
+    if (S !== session || S.generation !== generation) return;
     S.dirty = false;
     S.original = S.story;
     setSaveState(`сохранено · ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`);
   } catch (err) {
+    if (S !== session) return;
     console.error(err);
     if (String(err?.message) === 'STORAGE_FULL') {
       setSaveState('не сохранено — мало места');
@@ -116,6 +123,7 @@ function flushSave() {
 function markDirty() {
   if (!S) return;
   S.dirty = true;
+  S.generation++;
   setSaveState('сохраняем…');
   scheduleSave();
 }
@@ -285,7 +293,8 @@ function ensureHeaderActions() {
   undoBtn.id = 'ed-undo';
   const redoBtn = iconButton(ICONS.redo, { label: 'Повторить', onclick: redo });
   redoBtn.id = 'ed-redo';
-  const actions = el('div', { class: 'ed-undo-group' }, undoBtn, redoBtn);
+  const mapBtn = el('button', { type: 'button', class: 'pill', 'aria-label': 'Карта и поиск по сценарию', onclick: () => openStoryNavigator(S.story, target => { S.sceneId = target.sceneId; S.stepIndex = target.stepIndex; renderPanel(); mountPreview(); }) }, 'Сценарий');
+  const actions = el('div', { class: 'ed-undo-group' }, mapBtn, undoBtn, redoBtn);
   $('.ed-head').insertBefore(actions, $('#ed-menu'));
   if (!headerWired) {
     headerWired = true;
