@@ -38,6 +38,7 @@ VNMY/
 ├── docs/ai-guide.md        ← как добавить вселенную/новеллу (для человека и ИИ)
 ├── docs/structure.md       ← карта проекта
 ├── docs/format.md          ← полный справочник по universe.json и story.json
+├── docs/ice-shift-design.md ← проект новой новеллы «Ледовая смена»
 └── manifest.webmanifest
 ```
 
