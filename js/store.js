@@ -98,13 +98,24 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+// Пустой каталог — нормальное состояние (в поставке может не быть историй).
+// Ошибкой считается только недоступная библиотека: её и показываем в подписи.
+let builtinBroken = false;
+
+/** true — встроенные вселенные не удалось прочитать (пустой каталог ошибкой не считается). */
+export function builtinIsBroken() {
+  return builtinBroken;
+}
+
 /** Вселенные, которые едут вместе с движком. */
 export async function loadBuiltinUniverses() {
+  builtinBroken = false;
   const embedded = embeddedLibrary();
   if (location.protocol === 'file:') {
     // с диска сети нет: только вшитая сборка
     if (embedded) return builtinFromEmbedded(embedded);
     console.warn('[vnmy] нет встроенной библиотеки — соберите файлы командой npm run build');
+    builtinBroken = true;
     return [];
   }
 
@@ -120,6 +131,7 @@ export async function loadBuiltinUniverses() {
     // сборка «один файл» (папки stories рядом нет) или старый манифест-список
     if (embedded) return builtinFromEmbedded(embedded);
     if (Array.isArray(manifest)) return legacyUniverses(manifest);
+    builtinBroken = true;
     return [];
   }
 

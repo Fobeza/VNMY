@@ -10,6 +10,10 @@ import { integrationStory as INTEGRATION_STORY } from './fixtures/integration-st
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
+/* Вселенная фикстуры: в поставке контента нет, поэтому она живёт в localStorage. */
+const UNIVERSE_ID = 'silent-rails';
+const UNIVERSE_DEMO = 'Тихие пути';
+
 const errors = [];
 const vc = new VirtualConsole();
 vc.on('jsdomError', (e) => { if (!/scrollTo|Not implemented/.test(e.message)) errors.push('jsdomError: ' + (e.stack || e.message)); });
@@ -38,6 +42,17 @@ const dom = new JSDOM(html, {
   pretendToBeVisual: true,
   virtualConsole: vc,
   beforeParse(window) {
+    // В поставке нет игровых вселенных, поэтому тестовая вселенная живёт в браузере.
+    window.localStorage.setItem('vnmy:universes', JSON.stringify([{
+      schema: 1,
+      id: UNIVERSE_ID,
+      title: UNIVERSE_DEMO,
+      author: 'VNMY tests',
+      description: 'Вселенная для интеграционных проверок.',
+      cover: '',
+      accent: '#8fb8d8',
+      order: 1,
+    }]));
     window.localStorage.setItem('vnmy:index', JSON.stringify([INTEGRATION_STORY.id]));
     window.localStorage.setItem(`vnmy:story:${INTEGRATION_STORY.id}`, JSON.stringify(INTEGRATION_STORY));
     window.scrollTo = () => {};
@@ -100,9 +115,6 @@ function setInput(node, value) {
 }
 
 /* ───────── навигация по вселенным (вселенная → новеллы → игра) ───────── */
-
-const UNIVERSE_ID = 'silent-rails';
-const UNIVERSE_DEMO = 'Тихие пути';
 
 function universeCards() {
   return [...document.querySelectorAll('#universe-list .universe-card')];
@@ -865,7 +877,7 @@ await step('импорт вселенной одним файлом', async () =
 });
 
 await step('файлы для двойного щелчка собраны и свежие', async () => {
-  const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest, scanStories } = await import(path.join(ROOT, 'tools/build.mjs'));
   const bundle = await buildBundle();
   const builtin = await buildBuiltinStories();
   const standalone = await buildStandalone();
@@ -879,19 +891,23 @@ await step('файлы для двойного щелчка собраны и с
   assert(savedStandalone === standalone, 'vnmy.html устарел — запустите npm run build');
   assert(savedManifest === manifest, 'stories/index.json устарел — запустите npm run build');
   const parsedManifest = JSON.parse(savedManifest);
-  assert(parsedManifest.schema === 2 && parsedManifest.universes.length >= 1, 'манифест без вселенных');
-  const shippedUniverse = parsedManifest.universes.find((u) => u.id === 'last-summer');
-  assert(shippedUniverse?.novels.length === 1
-    && shippedUniverse.novels[0].id === 'story_poka_gorit_avgust', 'в манифест не попала встроенная новелла');
-  for (const id of ['silent-rails', 'peresylka']) {
-    const example = parsedManifest.universes.find((u) => u.id === id);
-    assert(example && example.novels.length === 0, `пример вселенной «${id}» должен оставаться пустым`);
+  assert(parsedManifest.schema === 2 && Array.isArray(parsedManifest.universes), 'манифест без списка вселенных');
+  // Манифест — ровно то, что лежит в stories/: тест не зависит от конкретных историй.
+  const scan = await scanStories();
+  assert(parsedManifest.universes.length === scan.length,
+    `в манифесте ${parsedManifest.universes.length} вселенных, в stories/ — ${scan.length}`);
+  for (const item of scan) {
+    const entry = parsedManifest.universes.find((u) => u.dir === item.dir);
+    assert(entry, `вселенной «${item.dir}» нет в манифесте`);
+    assert(entry.id === item.universe.id, `id вселенной «${item.dir}» не совпал: ${entry.id}`);
+    assert(entry.novels.length === item.novels.length,
+      `у вселенной «${item.dir}» ${entry.novels.length} новелл вместо ${item.novels.length}`);
+    for (const novel of item.novels) {
+      assert(entry.novels.some((n) => n.dir === novel.dir && n.id === novel.story.id),
+        `новелла «${item.dir}/${novel.dir}» не попала в манифест`);
+    }
   }
-  // шаблон не попадает в манифест; примеры пусты, игровая история включена.
   assert(!parsedManifest.universes.some((u) => u.id === '_template'), 'шаблон попал в манифест');
-  for (const universe of parsedManifest.universes) {
-    await fs.access(path.join(ROOT, 'stories', universe.dir, 'universe.json'));
-  }
   // Один файл не должен тянуть ничего снаружи.
   assert(!/\ssrc="(?!data:)/.test(savedStandalone), 'в vnmy.html есть внешний src');
   assert(!/\shref="(?!data:|#)/.test(savedStandalone), 'в vnmy.html есть внешний href');
@@ -928,7 +944,6 @@ await step('файлы для двойного щелчка собраны и с
 
 await step('с диска (file://) открывается и играет без сервера', async () => {
   const bundle = await fs.readFile(path.join(ROOT, 'bundle.js'), 'utf8');
-  const builtin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
   let shell = await fs.readFile(path.join(ROOT, 'index.html'), 'utf8');
   shell = shell.replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, '');
   // как в настоящем браузере с диска: модули и fetch к файлам недоступны
@@ -965,11 +980,25 @@ await step('с диска (file://) открывается и играет бе�
     node.textContent = source;
     fileDom.window.document.body.append(node);
   };
-  inject(builtin);
-  const fileLibrary = fileDom.window.__VNMY_BUILTIN_LIBRARY__;
-  const fileUniverse = fileLibrary?.universes?.find((u) => u.id === UNIVERSE_ID);
-  assert(fileUniverse, 'в файле нет тестовой вселенной');
-  fileUniverse.novels.push(INTEGRATION_STORY);
+  // В поставке вселенных больше нет, поэтому встроенную библиотеку собираем
+  // из синтетической фикстуры — проверяется сам механизм file://, не контент.
+  const syntheticLibrary = `window.__VNMY_BUILTIN_LIBRARY__ = ${JSON.stringify({
+    schema: 2,
+    universes: [{
+      id: UNIVERSE_ID,
+      title: UNIVERSE_DEMO,
+      author: 'VNMY tests',
+      description: 'Вселенная для проверки file://.',
+      cover: '',
+      accent: '#8fb8d8',
+      order: 1,
+      baseUrl: '',
+      builtin: true,
+      readOnly: true,
+      novels: [INTEGRATION_STORY],
+    }],
+  })};`;
+  inject(syntheticLibrary);
   inject(bundle);
 
   const fdoc = fileDom.window.document;
@@ -1003,58 +1032,103 @@ await step('с диска (file://) открывается и играет бе�
   fileDom.window.close();
 });
 
-await step('один файл vnmy.html открывает встроенную библиотеку офлайн', async () => {
-  const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
-  let fetchCalls = 0;
-  const fileErrors = [];
-  const consoleOut = new VirtualConsole();
-  consoleOut.on('jsdomError', (e) => fileErrors.push('jsdomError: ' + e.message));
-  consoleOut.on('error', (...a) => fileErrors.push('console.error: ' + a.map(String).join(' ')));
-
-  const soloDom = new JSDOM(standalone, {
-    url: 'file:///Downloads/vnmy.html',
-    runScripts: 'dangerously',
-    pretendToBeVisual: true,
-    virtualConsole: consoleOut,
-    beforeParse(window) {
-      window.scrollTo = () => {};
-      window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
-      window.fetch = async () => { fetchCalls++; throw new TypeError('Failed to fetch'); };
-      window.HTMLCanvasElement.prototype.getContext = function () {
-        const noop = () => {};
-        return {
-          setTransform: noop, clearRect: noop, beginPath: noop, moveTo: noop, lineTo: noop, stroke: noop,
-          fill: noop, ellipse: noop, arc: noop, save: noop, restore: noop, translate: noop, scale: noop,
-          fillRect: noop, strokeRect: noop, closePath: noop, drawImage: noop,
-          globalAlpha: 1, lineWidth: 1, strokeStyle: '', fillStyle: '', lineCap: '',
+await step('один файл vnmy.html открывается офлайн и не тянет сеть', async () => {
+  // jsdom-оболочка «как файл с диска»: fetch запрещён, canvas и метрики заглушены.
+  const openFile = (html, url) => {
+    const stats = { fetchCalls: 0, errors: [] };
+    const consoleOut = new VirtualConsole();
+    consoleOut.on('jsdomError', (e) => stats.errors.push('jsdomError: ' + e.message));
+    consoleOut.on('error', (...a) => stats.errors.push('console.error: ' + a.map(String).join(' ')));
+    const dom = new JSDOM(html, {
+      url,
+      runScripts: 'dangerously',
+      pretendToBeVisual: true,
+      virtualConsole: consoleOut,
+      beforeParse(window) {
+        window.scrollTo = () => {};
+        window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+        window.fetch = async () => { stats.fetchCalls++; throw new TypeError('Failed to fetch'); };
+        window.HTMLCanvasElement.prototype.getContext = function () {
+          const noop = () => {};
+          return {
+            setTransform: noop, clearRect: noop, beginPath: noop, moveTo: noop, lineTo: noop, stroke: noop,
+            fill: noop, ellipse: noop, arc: noop, save: noop, restore: noop, translate: noop, scale: noop,
+            fillRect: noop, strokeRect: noop, closePath: noop, drawImage: noop,
+            globalAlpha: 1, lineWidth: 1, strokeStyle: '', fillStyle: '', lineCap: '',
+          };
         };
-      };
-      window.Element.prototype.getBoundingClientRect = function () {
-        return { x: 0, y: 0, width: 390, height: 844, top: 0, left: 0, right: 390, bottom: 844, toJSON() {} };
-      };
+        window.Element.prototype.getBoundingClientRect = function () {
+          return { x: 0, y: 0, width: 390, height: 844, top: 0, left: 0, right: 390, bottom: 844, toJSON() {} };
+        };
+      },
+    });
+    return { dom, stats };
+  };
+
+  // 1. Поставляемый vnmy.html: движок, стили и та же библиотека, что в манифесте.
+  const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
+  const shippedManifest = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/index.json'), 'utf8'));
+  const shipped = openFile(standalone, 'file:///Downloads/vnmy.html');
+  const sdoc = shipped.dom.window.document;
+  await waitFor(() => sdoc.querySelector('#universe-list .lib-note')
+    || sdoc.querySelector('#universe-list .universe-card'), { timeout: 8000, label: 'автономная библиотека' });
+  const shippedLibrary = shipped.dom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
+  assert(shippedLibrary.universes.length === shippedManifest.universes.length,
+    `в файле ${shippedLibrary.universes.length} вселенных, в манифесте ${shippedManifest.universes.length}`);
+  assert(sdoc.querySelectorAll('#universe-list .universe-card').length === shippedLibrary.universes.length,
+    'карточки вселенных не совпали с встроенной библиотекой');
+  assert(shipped.stats.fetchCalls === 0, 'автономный файл ходил в сеть: ' + shipped.stats.fetchCalls);
+  assert(!shipped.stats.errors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length,
+    'ошибки в одном файле: ' + shipped.stats.errors.join(' | '));
+  if (!shippedLibrary.universes.length) {
+    assert(sdoc.querySelector('#universe-list .lib-note')?.textContent.includes('Пока нет ни одной вселенной'),
+      'нет подсказки на пустой библиотеке');
+  } else {
+    const first = shippedLibrary.universes[0];
+    sdoc.querySelector('#universe-list .universe-card')
+      .dispatchEvent(new shipped.dom.window.MouseEvent('click', { bubbles: true }));
+    await waitFor(() => sdoc.querySelectorAll('#story-list .story-card').length === first.novels.length,
+      { label: 'новеллы встроенной вселенной' });
+    if (first.novels.length) {
+      sdoc.querySelector('#story-list .story-card')
+        .dispatchEvent(new shipped.dom.window.MouseEvent('click', { bubbles: true }));
+      await waitFor(() => (sdoc.querySelector('.stage .text')?.textContent || '').length > 5,
+        { label: 'первая реплика встроенной новеллы' });
+    }
+  }
+  shipped.dom.window.close();
+
+  // 2. Собранный из истории один файл: всё внутри, играется с диска.
+  const { buildStandalone } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const synthetic = await buildStandalone([{
+    dir: 'test-world',
+    universe: {
+      id: 'test-world', title: 'Тестовый мир', author: 'VNMY tests',
+      description: 'Вселенная для проверки автономной сборки.',
+      cover: 'data:image/webp;base64,UklGRg==', accent: '#8fb8d8', order: 1,
     },
-  });
-
-  const sdoc = soloDom.window.document;
-  const started = Date.now();
-  while (Date.now() - started < 8000 && !sdoc.querySelectorAll('#universe-list .universe-card').length) await sleep(50);
-  assert(sdoc.querySelectorAll('#universe-list .universe-card').length >= 1, 'вселенная не загрузилась из автономного файла');
-  assert(fetchCalls === 0, 'автономный файл ходил в сеть: ' + fetchCalls);
-  const library = soloDom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
-  assert(library.universes.length > 0, 'в автономный файл не попали вселенные');
-  const storyUniverse = library.universes.find((u) => u.id === 'last-summer');
-  assert(storyUniverse?.novels?.some((novel) => novel.id === 'story_poka_gorit_avgust'), 'в автономный файл не попала новелла');
-  assert(['silent-rails', 'peresylka'].every((id) => library.universes.find((u) => u.id === id)?.novels?.length === 0), 'пустые примеры изменились');
-  assert(String(library.universes[0].cover).startsWith('data:image/'), 'обложка вселенной не вшита');
-
-  const storyCard = [...sdoc.querySelectorAll('#universe-list .universe-card')]
-    .find((card) => card.textContent.includes('Свет у воды'));
-  assert(storyCard, 'карточка вселенной с новеллой не появилась');
-  storyCard.dispatchEvent(new soloDom.window.MouseEvent('click', { bubbles: true }));
-  await waitFor(() => sdoc.querySelectorAll('#story-list .story-card').length === 1, { label: 'встроенная новелла офлайн' });
-  assert(sdoc.querySelector('#story-list .story-card').textContent.includes('Пока горит август'), 'карточка встроенной новеллы не появилась');
-  assert(!fileErrors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length, 'ошибки в одном файле: ' + fileErrors.join(' | '));
-  soloDom.window.close();
+    novels: [{ dir: 'test-fixture', story: INTEGRATION_STORY }],
+  }]);
+  const built = openFile(synthetic, 'file:///Downloads/vnmy-test.html');
+  const bdoc = built.dom.window.document;
+  await waitFor(() => bdoc.querySelectorAll('#universe-list .universe-card').length === 1,
+    { timeout: 8000, label: 'собранная вселенная офлайн' });
+  const builtLibrary = built.dom.window.__VNMY_BUILTIN_LIBRARY__;
+  assert(builtLibrary.universes.length === 1, 'в собранный файл не попала вселенная');
+  assert(String(builtLibrary.universes[0].cover).startsWith('data:image/'), 'обложка вселенной не вшита');
+  assert(builtLibrary.universes[0].novels[0].title === INTEGRATION_STORY.title, 'новелла не вшита');
+  bdoc.querySelector('#universe-list .universe-card')
+    .dispatchEvent(new built.dom.window.MouseEvent('click', { bubbles: true }));
+  await waitFor(() => bdoc.querySelectorAll('#story-list .story-card').length === 1,
+    { label: 'новелла из автономного файла' });
+  bdoc.querySelector('#story-list .story-card')
+    .dispatchEvent(new built.dom.window.MouseEvent('click', { bubbles: true }));
+  await waitFor(() => bdoc.querySelector('.stage .text')?.textContent.length > 5,
+    { label: 'первая реплика из автономного файла' });
+  assert(built.stats.fetchCalls === 0, 'автономная сборка ходила в сеть: ' + built.stats.fetchCalls);
+  assert(!built.stats.errors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length,
+    'ошибки в автономной сборке: ' + built.stats.errors.join(' | '));
+  built.dom.window.close();
 });
 
 await step('спрайты сохраняют пропорции картинки на любой ширине экрана', async () => {
@@ -1121,103 +1195,50 @@ await step('акты сохраняются в формате, линтер пр
   assert(!issues.length, 'ошибки в тестовой истории: ' + issues.map((issue) => issue.text).join('; '));
 });
 
-await step('встроенная новелла и пустые примеры сохранены вместе с шаблоном', async () => {
+await step('шаблон на месте, а манифест и встроенная сборка совпадают с папками', async () => {
   const { scanStories } = await import(path.join(ROOT, 'tools/build.mjs'));
-  const { normalizeStory, lintStory, resolveTarget } = await import(path.join(ROOT, 'js/format.js'));
+  const { normalizeStory, lintStory } = await import(path.join(ROOT, 'js/format.js'));
   const catalog = await scanStories();
-  assert(catalog.length > 0, 'вселенные проекта удалены вместе с новеллами');
-  const examples = ['silent-rails', 'peresylka'];
-  for (const id of examples) {
-    const universe = catalog.find((item) => item.universe.id === id);
-    assert(universe && universe.novels.length === 0, `пример вселенной «${id}» должен быть пустым`);
+
+  // Удалённые ранее вселенные не должны вернуться сами собой.
+  for (const id of ['last-summer', 'pulse-right', 'zero-bell', 'silent-rails', 'peresylka']) {
+    await assertRejects(fs.access(path.join(ROOT, 'stories', id)), `папка «${id}» всё ещё в stories/`);
   }
-  const universe = catalog.find((item) => item.universe.id === 'last-summer');
-  assert(universe?.novels.length === 1, 'вселенная «Свет у воды» должна содержать одну новеллу');
-  const { dir: novelDir, story: rawStory } = universe.novels[0];
-  assert(rawStory.id === 'story_poka_gorit_avgust' && rawStory.title === 'Пока горит август', 'неверная встроенная новелла');
-  assert(rawStory.description.includes('после расставания'), 'в завязке потерялось возвращение героя после расставания');
-  const meeting = rawStory.scenes.find((scene) => scene.id === 'sc_cafe')?.steps.map((step) => step.text).join(' ') || '';
-  assert(meeting.includes('Он приехал на показ'), 'главный герой должен быть обозначен мужчиной');
-  assert(rawStory.vars.some((variable) => variable.name === 'имя' && variable.type === 'text')
-    && rawStory.characters.some((character) => character.id === 'hero' && character.name === '{имя}')
-    && rawStory.scenes[0].steps.some((step) => step.ask?.var === 'имя'), 'имя героя должно задаваться игроком');
-  const homeIntro = rawStory.scenes.find((scene) => scene.id === 'sc_house')?.steps.map((step) => step.text).join(' ') || '';
-  assert(homeIntro.includes('двадцать два'), 'возраст героя должен быть в заданном диапазоне 18–25');
-  const heroineIntro = ['sc_cafe', 'sc_cinema_intro'].map((id) => rawStory.scenes.find((scene) => scene.id === id)?.steps.map((step) => step.text).join(' ') || '').join(' ');
-  assert(['двадцать три', 'двадцать один', 'двадцать четыре'].every((age) => heroineIntro.includes(age)), 'возраст героинь должен быть указан');
-  for (const id of ['marta', 'lera', 'nadya']) {
-    const character = rawStory.characters.find((item) => item.id === id);
-    assert(['neutral', 'happy', 'worried', 'surprised'].every((emotion) => character?.sprites?.[emotion]), `у персонажа ${id} не хватает эмоциональных спрайтов`);
+
+  for (const file of ['stories/_template/universe.json', 'stories/_template/novels/novel-example/story.json']) {
+    await fs.access(path.join(ROOT, file));
   }
-  const story = normalizeStory(rawStory);
-  assert(story.scenes.length === 60, `ожидалось 60 сцен, найдено ${story.scenes.length}`);
-  const issues = lintStory(story).filter((issue) => issue.level === 'error');
-  assert(!issues.length, 'ошибки в новелле: ' + issues.map((issue) => issue.text).join('; '));
-  assert(story.scenes.filter((scene) => scene.steps.some((step) => step.end)).length === 3, 'у новеллы должно быть ровно три маршрутных финала');
-  const base = path.join(ROOT, 'stories', universe.dir, 'novels', novelDir);
-  const assets = [story.cover, ...story.scenes.map((scene) => scene.bg),
-    ...story.characters.flatMap((character) => Object.values(character.sprites || {}))]
-    .filter((asset) => asset && !/^(?:https?:|data:)/i.test(asset));
-  for (const asset of new Set(assets)) await fs.access(path.join(base, asset));
-  for (const scene of story.scenes) {
-    const castStates = [...(scene.cast || []), ...scene.steps.flatMap((step) => step.cast || [])];
-    for (const state of castStates) {
-      const character = story.characters.find((item) => item.id === state.char);
-      assert(character?.sprites?.[state.sprite], `нет спрайта ${state.char}:${state.sprite} в сцене ${scene.id}`);
-    }
-  }
-  const playRoute = (route) => {
-    const vars = Object.fromEntries(story.vars.map((variable) => [variable.name, variable.initial]));
-    const routeChoice = { marta: 0, lera: 1, nadya: 2 };
-    const matches = (condition) => {
-      const match = String(condition || '').match(/^\s*route\s*==\s*[\"']([^\"']+)[\"']\s*$/);
-      return !match || vars.route === match[1];
-    };
-    const visited = [];
-    let sceneIndex = 0;
-    let stepIndex = 0;
-    let words = 0;
-    let ending = '';
-    const jump = (ref, sceneId) => {
-      const target = resolveTarget(story, ref, sceneId);
-      assert(target, `переход «${ref}» не разрешился`);
-      sceneIndex = story.scenes.findIndex((scene) => scene.id === target.sceneId);
-      stepIndex = target.stepIndex;
-    };
-    for (let guard = 0; guard < 10000; guard++) {
-      const scene = story.scenes[sceneIndex];
-      assert(scene, `маршрут ${route} вышел за пределы списка сцен`);
-      if (stepIndex === 0) visited.push(scene.id);
-      const step = scene.steps[stepIndex];
-      if (!step) { sceneIndex++; stepIndex = 0; continue; }
-      if (step.if && !matches(step.if)) { stepIndex++; continue; }
-      words += (step.text || '').trim().split(/\s+/).filter(Boolean).length;
-      for (const operation of step.set || []) {
-        if (operation.op === 'set') vars[operation.var] = operation.value;
-      }
-      if (step.choices?.length) {
-        const choiceIndex = scene.id === 'sc_choice_route' ? routeChoice[route] : 0;
-        assert(step.choices[choiceIndex], `нет варианта выбора для маршрута ${route}`);
-        jump(step.choices[choiceIndex].goto, scene.id);
-        continue;
-      }
-      if (step.goto) { jump(step.goto, scene.id); continue; }
-      const branch = (step.gotoIf || []).find((item) => matches(item.when));
-      if (branch) { jump(branch.goto, scene.id); continue; }
-      if (step.end) { ending = scene.id; break; }
-      stepIndex++;
-      if (guard === 9999) assert(false, `маршрут ${route} зациклился`);
-    }
-    return { visited, words, ending };
-  };
-  for (const route of ['marta', 'lera', 'nadya']) {
-    const path = playRoute(route);
-    assert(path.visited.length === 40 && new Set(path.visited).size === 40, `маршрут ${route}: ожидалось 40 разных сцен`);
-    assert(path.ending === `sc_end_${route}`, `маршрут ${route} пришёл не к своему финалу`);
-    assert(path.words >= 13000 && path.words <= 14500, `маршрут ${route}: ожидаемая длительность не подтверждена (${path.words} слов)`);
-  }
+  const templateUniverse = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/_template/universe.json'), 'utf8'));
+  assert(templateUniverse.id && templateUniverse.title, 'шаблон вселенной пуст');
   const template = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/_template/novels/novel-example/story.json'), 'utf8'));
-  assert(template.title, 'шаблон для создания новых историй удалён или пуст');
+  assert(template.title && template.scenes.length, 'шаблон новеллы удалён или пуст');
+  const templateStory = normalizeStory(structuredClone(template));
+  const issues = lintStory(templateStory).filter((issue) => issue.level === 'error');
+  assert(!issues.length, 'ошибки в шаблоне: ' + issues.map((issue) => issue.text).join('; '));
+
+  // Манифест и встроенная сборка описывают ровно то, что лежит в stories/.
+  const manifest = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/index.json'), 'utf8'));
+  assert(manifest.universes.length === catalog.length,
+    `в манифесте ${manifest.universes.length} вселенных, в stories/ — ${catalog.length}`);
+  for (const item of catalog) {
+    assert(manifest.universes.some((u) => u.dir === item.dir && u.id === item.universe.id),
+      `вселенной «${item.dir}» нет в манифесте`);
+  }
+  assert(!manifest.universes.some((universe) => universe.id === '_template'), 'шаблон попал в манифест');
+
+  const builtinSource = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
+  const marker = 'window.__VNMY_BUILTIN_LIBRARY__ = ';
+  const start = builtinSource.indexOf(marker);
+  assert(start >= 0, 'в builtin.js нет встроенной библиотеки');
+  const builtin = JSON.parse(builtinSource.slice(start + marker.length).trim().replace(/;$/, ''));
+  assert(builtin.universes.length === catalog.length,
+    `во встроенной сборке ${builtin.universes.length} вселенных, в stories/ — ${catalog.length}`);
+  for (const item of catalog) {
+    const embedded = builtin.universes.find((u) => u.id === item.universe.id);
+    assert(embedded, `вселенной «${item.dir}» нет в builtin.js`);
+    assert(embedded.novels.length === item.novels.length,
+      `в builtin.js у «${item.dir}» ${embedded.novels.length} новелл вместо ${item.novels.length}`);
+  }
 });
 
 await step('доступные выборы на шаге-конце имеют приоритет', async () => {
