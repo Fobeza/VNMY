@@ -7,7 +7,7 @@ import { renderLibrary, wireLibrary, markBuiltinWarning } from './library.js';
 import { renderUniverse, wireUniverse } from './novels.js';
 import { openPlayer, closePlayer } from './player.js';
 import { openEditor, closeEditor } from './editor.js';
-import { createStory, saveStory, loadBuiltinUniverses, initializeStorage } from './store.js';
+import { createStory, saveStory, loadBuiltinUniverses, builtinIsBroken, initializeStorage } from './store.js';
 import { $ } from './util.js';
 import { toast } from './ui.js';
 
@@ -132,11 +132,12 @@ async function boot() {
     console.error(err);
     toast('Не удалось загрузить библиотеку');
   }
-  // проверяем, что встроенные вселенные вообще доступны (пустые вселенные — нормальное состояние)
+  // проверяем, что встроенные вселенные вообще доступны
+  // (пустой каталог — нормальное состояние: в поставке может не быть историй)
   try {
-    const builtin = await loadBuiltinUniverses();
-    markBuiltinWarning(!builtin.length);
-    if (!builtin.length) await renderLibrary(hooks);
+    await loadBuiltinUniverses();
+    markBuiltinWarning(builtinIsBroken());
+    if (builtinIsBroken()) await renderLibrary(hooks);
   } catch { /* ignore */ }
 
   if (!navigator.onLine) toast('Офлайн-режим: работает и без сети');

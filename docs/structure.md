@@ -46,15 +46,7 @@ VNMY/
 │   ├── _template/             заготовки: copy-paste для новой вселенной/новеллы
 │   │   ├── universe.json
 │   │   └── novels/novel-example/{story.json, assets/README.md}
-│   ├── last-summer/           ← вселенная «Свет у воды»
-│   │   ├── universe.json
-│   │   └── novels/while-august-lasts/ ← новелла «Пока горит август» и assets/
-│   ├── silent-rails/          ← пустой пример «Тихие пути»
-│   │   ├── universe.json
-│   │   └── cover.webp
-│   └── peresylka/             ← пустой пример «Пересылка»
-│       ├── universe.json
-│       └── cover.webp
+│   └── <вселенная>/           ваши вселенные: universe.json + novels/<новелла>/ + картинки
 │
 ├── tools/build.mjs            сборка: манифест, bundle.js, builtin.js, vnmy.html
 ├── tests/
@@ -64,7 +56,8 @@ VNMY/
 ├── docs/
 │   ├── ai-guide.md            как добавить контент и не сломать проект
 │   ├── structure.md           этот файл
-│   └── format.md              полный справочник по story.json
+│   ├── format.md              полный справочник по story.json
+│   └── ice-shift-design.md    проект новеллы «Ледовая смена» (вселенная «Тихая»)
 ├── assets/                    иконки PWA
 ├── sw.js                      service worker (офлайн), версия кэша = версия приложения
 ├── manifest.webmanifest
