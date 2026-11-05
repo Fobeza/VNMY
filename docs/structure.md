@@ -56,7 +56,8 @@ VNMY/
 ├── docs/
 │   ├── ai-guide.md            как добавить контент и не сломать проект
 │   ├── structure.md           этот файл
-│   └── format.md              полный справочник по story.json
+│   ├── format.md              полный справочник по story.json
+│   └── ice-shift-design.md    проект новеллы «Ледовая смена» (вселенная «Тихая»)
 ├── assets/                    иконки PWA
 ├── sw.js                      service worker (офлайн), версия кэша = версия приложения
 ├── manifest.webmanifest
