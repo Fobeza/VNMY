@@ -1,14 +1,14 @@
 {
   "name": "vnmy",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "private": true,
-  "description": "VNMY 2.1 — движок визуальных новелл с вселенными для мобильного браузера",
+  "description": "VNMY 2.2 — движок визуальных новелл с вселенными для мобильного браузера",
   "type": "module",
   "scripts": {
     "start": "./start.sh",
     "build": "node tools/build.mjs",
     "check": "node tools/check.mjs",
-    "test": "node tests/chapter-one.mjs && node tests/regressions.mjs && node tests/run.mjs",
+    "test": "node tests/regressions.mjs && node tests/run.mjs",
     "test:browser": "node tests/browser.mjs"
   },
   "devDependencies": {

@@ -46,15 +46,7 @@ VNMY/
 │   ├── _template/             заготовки: copy-paste для новой вселенной/новеллы
 │   │   ├── universe.json
 │   │   └── novels/novel-example/{story.json, assets/README.md}
-│   ├── last-summer/           ← вселенная «Свет у воды»
-│   │   ├── universe.json
-│   │   └── novels/while-august-lasts/ ← новелла «Пока горит август» и assets/
-│   ├── silent-rails/          ← пустой пример «Тихие пути»
-│   │   ├── universe.json
-│   │   └── cover.webp
-│   └── peresylka/             ← пустой пример «Пересылка»
-│       ├── universe.json
-│       └── cover.webp
+│   └── <вселенная>/           ваши вселенные: universe.json + novels/<новелла>/ + картинки
 │
 ├── tools/build.mjs            сборка: манифест, bundle.js, builtin.js, vnmy.html
 ├── tests/
