@@ -279,7 +279,7 @@ export async function buildStandalone(scan) {
     .replace('</head>', () => `<style>\n${css}\n</style>\n</head>`)
     .replace(/<script>\s*\/\/ Если приложение не поднялось[\s\S]*?<\/script>/, () =>
       `<script>${inlineScript(watchdog)}</script>\n<script>${inlineScript(builtin)}</script>\n<script>${inlineScript(bundle)}</script>`)
-    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 2.1 — один файл: движок, стили, вселенные и картинки внутри. Сборка: npm run build -->');
+    .replace('<!doctype html>', '<!doctype html>\n<!-- VNMY 2.2 — один файл: движок, стили и встроенная библиотека внутри. Сборка: npm run build -->');
 }
 
 async function main() {
