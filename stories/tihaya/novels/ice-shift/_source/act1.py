@@ -1,33 +1,35 @@
 #!/usr/bin/env python3
-"""«Ледовая смена» — акт I. Собирает story.json.
+"""«Ледовая смена» — акт I. Данные сцен; story.json собирает build.py.
 
-Запуск:  python3 stories/tihaya/novels/ice-shift/_source/act1.py
+Запуск:  python3 stories/tihaya/novels/ice-shift/_source/build.py
 После правок текста: npm run build
 
 Правило движка: у выбора нет своих set, поэтому каждый вариант ведёт на
 короткую реплику-следствие, где и меняются переменные. Дальше — goto назад
 в основную линию сцены.
 """
-import json
-import pathlib
-
-OUT = pathlib.Path(__file__).resolve().parents[1] / "story.json"
-
 ACT = "Акт I · Первая тишина"
+
+
+def _norm(step):
+    """Python не даёт назвать аргумент `if`, поэтому принимаем if_ и пишем if."""
+    if "if_" in step:
+        step["if"] = step.pop("if_")
+    return step
 
 
 def n(sid, text, **kw):
     """Реплика рассказчика."""
     step = {"id": sid, "speaker": None, "text": text}
     step.update(kw)
-    return step
+    return _norm(step)
 
 
 def s(sid, who, text, **kw):
     """Реплика персонажа."""
     step = {"id": sid, "speaker": who, "text": text}
     step.update(kw)
-    return step
+    return _norm(step)
 
 
 def add(var, value=1):
@@ -52,6 +54,9 @@ def choice(text, goto, if_=None):
 KIM = [{"char": "kim", "sprite": "neutral", "pos": "right"}]
 VERA = [{"char": "vera", "sprite": "neutral", "pos": "left"}]
 VERA_CENTER = [{"char": "vera", "sprite": "neutral", "pos": "center"}]
+ALYA = [{"char": "alya", "sprite": "neutral", "pos": "center"}]
+GRISHA = [{"char": "grisha", "sprite": "neutral", "pos": "center"}]
+DAN = [{"char": "dan", "sprite": "neutral", "pos": "center"}]
 
 scenes = []
 
@@ -109,13 +114,13 @@ scenes.append({
     "act": ACT,
     "bg": "assets/bg-radio.webp",
     "weather": "none",
-    "cast": [],
+    "cast": ALYA,
     "steps": [
         n("t1", "В радиорубке тесно, как в шкафу. Аля сидит, поджав ноги, и крутит верньер, хотя крутить уже нечего: терминал цифровой, верньер здесь для привычки."),
         s("t2", "alya", "— Одиннадцать пятьдесят восемь. Сейчас поймаем."),
         n("t3", "Она говорит это каждый день. И каждый день в двенадцать в динамике щёлкает, а потом наступает ровная, аккуратная тишина."),
         n("t4", "В 12:00 щёлкает. В 12:03 — снова. В 12:10 Аля снимает наушники и кладёт их на стол так осторожно, будто они могут разбиться."),
-        s("t5", "alya", "— Спутник ушёл. Или у нас. — Она не смотрит на тебя. — Или у нас."),
+        s("t5", "alya", "— Спутник ушёл. Или у нас. — Она не смотрит на тебя. — Или у нас.", spriteOverride="scared"),
         n("t6", "", choices=[
             choice("Спросить, что она слышит в тишине", "sc_radio:c_ask"),
             choice("Налить ей чай и промолчать", "sc_radio:c_tea"),
@@ -125,7 +130,7 @@ scenes.append({
         n("c_tea", "Ты наливаешь ей чай, не спрашивая. Она обхватывает кружку обеими руками и держит, пока не становится больно.",
           set=[add("trust_alya")], goto="sc_radio:t7"),
         n("t7", "Дверь открывается без стука. Ким — в свитере, с фонарём на поясе. Лицо спокойное, как у человека, который давно решил, что паника — это роскошь.",
-          cast=KIM),
+          cast=[{"char": "alya", "sprite": "neutral", "pos": "left"}] + KIM),
         s("t8", "kim", "— Ветер. Антенну занесло. Завтра к утру почистим. — Он смотрит на Алю. — В эфир — только через меня. Без самодеятельности."),
         n("t9", "Ты замечаешь, что он не спрашивает, что случилось. Он уже знает."),
         n("t10", "", choices=[
@@ -148,7 +153,7 @@ scenes.append({
     "act": ACT,
     "bg": "assets/bg-hall.webp",
     "weather": "none",
-    "cast": [],
+    "cast": GRISHA,
     "steps": [
         n("t1", "К обеду в кают-компании пахнет супом и мокрой шерстью. На столе шесть кружек, но садятся пятеро: Аля осталась в радиорубке."),
         s("t2", "grisha", "— Кто не ест, тот мёрзнет, — объявляет Гриша и ставит перед тобой тарелку. — Ешь, доктор. Ты у нас один."),
@@ -215,7 +220,7 @@ scenes.append({
     "cast": [],
     "steps": [
         n("t1", "Гриша приходит в пять, с обожжённой ладонью и извинениями."),
-        s("t2", "grisha", "— Плита. Рукав. Сам виноват. — Он улыбается, и от этой улыбки становится только тревожнее."),
+        s("t2", "grisha", "— Плита. Рукав. Сам виноват. — Он улыбается, и от этой улыбки становится только тревожнее.", cast=GRISHA, spriteOverride="warm"),
         n("t3", "Ты обрабатываешь ожог. Он смотрит в сторону — на шкаф, где лежит прошлогодний журнал."),
         s("t4", "grisha", "— Ты его читаешь? — тихо спрашивает он. — Славин?"),
         n("t5", "", choices=[
@@ -231,7 +236,7 @@ scenes.append({
           set=[sub("trust_grisha")], goto="sc_med_grisha:t6"),
         s("t6", "grisha", "— Я в ту ночь плохо спал, — говорит он вместо ответа. — И видел в окно, как кто-то шёл к вышке. Не один."),
         n("t7", "Он уходит раньше, чем ты успеваешь спросить, что значит «не один». Ты открываешь журнал на последней странице. 14 декабря.",
-          set=[add("evidence")]),
+          set=[add("evidence")], cast=[]),
         n("t8", "Строка обрывается на середине: «...в 23:40 ушёл к вышке. Ким...» Дальше бумага вычищена лезвием."),
         s("t9", "hero", "— Ким, — читаешь ты вслух. — И дальше — пусто."),
     ],
@@ -249,7 +254,7 @@ scenes.append({
         n("t1", "Вечер. Ветер усиливается, и дом начинает отвечать: стекло звенит, труба гудит, где-то на чердаке что-то катается."),
         n("t2", "Свет мигает дважды. Все поднимают головы — и все опускают, кроме Веры.", mood="flash"),
         s("t3", "vera", "— Не я, — говорит она Киму. — Пока не я."),
-        s("t4", "kim", "— Завтра почистим антенну, проверим дизель и ляжем вовремя. — Он гасит верхний свет, оставляя лампу над столом. — Всем ясно?"),
+        s("t4", "kim", "— Завтра почистим антенну, проверим дизель и ляжем вовремя. — Он гасит верхний свет, оставляя лампу над столом. — Всем ясно?", spriteOverride="hard"),
         n("t5", "Ты видишь, как Дан открывает рот, чтобы что-то сказать, и закрывает."),
         n("t6", "", choices=[
             choice("Спросить при всех, почему нельзя вызвать вертолёт", "sc_evening:c_heli"),
@@ -321,7 +326,7 @@ scenes.append({
           set=[add("trust_vera")], goto="sc_night_diesel:t7"),
         n("c_sit", "Ты садишься рядом на второй ящик. Она не отодвигается.",
           set=[add("trust_vera")], goto="sc_night_diesel:t7"),
-        s("t7", "vera", "— Я не люблю, когда кто-то уходит в темноту один, — говорит она тихо. — Тут это плохо заканчивается."),
+        s("t7", "vera", "— Я не люблю, когда кто-то уходит в темноту один, — говорит она тихо. — Тут это плохо заканчивается.", spriteOverride="soft"),
         n("t8", "Она говорит не о тебе. Ты это понимаешь и ничего не спрашиваешь."),
     ],
 })
@@ -379,7 +384,7 @@ scenes.append({
           set=[add("evidence")], goto="sc_confront:t6"),
         n("c_wait", "— Сначала ремонт, — соглашаешься ты. Ким кивает, и напряжение в комнате опускается на полтона.",
           set=[add("trust_kim")], goto="sc_confront:t6"),
-        s("t6", "kim", "— Ремонт. Сначала ремонт. — Он забирает кабель. — И ещё: с этого часа один из нас всегда на связи. По очереди. Начинаем сегодня."),
+        s("t6", "kim", "— Ремонт. Сначала ремонт. — Он забирает кабель. — И ещё: с этого часа один из нас всегда на связи. По очереди. Начинаем сегодня.", spriteOverride="hard"),
         n("t7", "Он говорит «на связи», но смотрит на тебя. Ты понимаешь, что это не про радио."),
     ],
 })
@@ -413,7 +418,7 @@ scenes.append({
     "weather": "none",
     "cast": VERA_CENTER,
     "steps": [
-        n("t1", "Вера ждёт тебя у дизеля, как будто вы договорились. Может, и договорились — просто не словами."),
+        n("t1", "Вера ждёт тебя у дизеля, как будто вы договорились. Может, и договорились — просто не словами.", set=[put("route", "vera")]),
         s("t2", "vera", "— Ты видел срез. И я видела, что ты его увидел."),
         n("t3", "Она берёт со стола ключ, потом кладёт обратно. Пальцы у неё дрожат — не от холода."),
         s("t4", "vera", "— Если я попрошу тебя кое о чём не спрашивать, ты попросишь взамен?"),
@@ -431,7 +436,7 @@ scenes.append({
         n("t7", "В кармане у неё что-то тяжёлое. Она не достаёт. Ты не просишь."),
         n("t8", "За стеной дизель делает вдох — и на полтакта замолкает.", mood="shake"),
         n("t9", "Ты успеваешь подумать, что «полтакта» — это ровно столько, сколько нужно, чтобы что-то решить.",
-          end=True, endTitle="КОНЕЦ · Акт I · Вера"),
+          goto="sc_a2_open:t1"),
     ],
 })
 
@@ -444,7 +449,7 @@ scenes.append({
     "weather": "none",
     "cast": [],
     "steps": [
-        n("t1", "Аля закрывает дверь радиорубки на щеколду — впервые за три недели."),
+        n("t1", "Аля закрывает дверь радиорубки на щеколду — впервые за три недели.", set=[put("route", "alya")], cast=ALYA),
         s("t2", "alya", "— У меня есть запись. — Она говорит быстро, будто боится, что не успеет. — Последняя передача Славы. Не через терминал. Через резерв."),
         n("t3", "Она достаёт из-за панели маленький диктофон, обёрнутый в шерстяной носок. Ставит на стол. Не включает."),
         s("t4", "alya", "— Если отдам Киму — он её уничтожит. Если не отдам — я буду знать, что слышала."),
@@ -459,10 +464,10 @@ scenes.append({
           set=[add("trust_alya")], goto="sc_route_alya:t6"),
         n("c_stop", "Ты не трогаешь диктофон. Он лежит между вами, как ещё один человек в комнате.",
           goto="sc_route_alya:t6"),
-        s("t6", "alya", "— Там три секунды, — говорит она. — И на них он говорит: «...не верь отчёту»."),
+        s("t6", "alya", "— Там три секунды, — говорит она. — И на них он говорит: «...не верь отчёту».", spriteOverride="scared"),
         n("t7", "В коридоре шаги. Кто-то останавливается у двери и стоит. Вы оба смотрите на щеколду."),
         n("t8", "Шаги уходят. Аля выдыхает и кладёт ладонь на диктофон, как будто он может согреться.",
-          end=True, endTitle="КОНЕЦ · Акт I · Аля"),
+          goto="sc_a2_open:t1"),
     ],
 })
 
@@ -475,11 +480,11 @@ scenes.append({
     "weather": "none",
     "cast": [],
     "steps": [
-        n("t1", "В лаборатории холоднее, чем в доме: тут никто не топит. Ты включаешь лампу над столом Дана."),
+        n("t1", "В лаборатории холоднее, чем в доме: тут никто не топит. Ты включаешь лампу над столом Дана.", set=[put("route", "solo")]),
         n("t2", "Полевой журнал лежит открытым. Ты листаешь: цифры, даты, подписи. А потом видишь, что под графитом остались вдавленные следы."),
         n("t3", "Дан писал карандашом, стирал и обводил ручкой. Один и тот же лёд, две разные толщины. Вторая — на четверть метра больше."),
-        n("t4", "За спиной скрипит дверь. Дан стоит в проёме с чашкой в руке и смотрит на раскрытый журнал."),
-        s("t5", "dan", "— Ты же врач, — говорит он наконец. — Ты же понимаешь, что бывает, когда человеку некуда деваться."),
+        n("t4", "За спиной скрипит дверь. Дан стоит в проёме с чашкой в руке и смотрит на раскрытый журнал.", cast=DAN),
+        s("t5", "dan", "— Ты же врач, — говорит он наконец. — Ты же понимаешь, что бывает, когда человеку некуда деваться.", spriteOverride="tense"),
         n("t6", "", choices=[
             choice("Сказать: понимаю", "sc_route_solo:c_yes"),
             choice("Спросить, кто заставил", "sc_route_solo:c_who"),
@@ -493,51 +498,43 @@ scenes.append({
           goto="sc_route_solo:t7"),
         n("t7", "Он садится на табурет, ставит чашку и не пьёт. За окном начинается ветер — сначала тихо, будто кто-то пробует голос."),
         n("t8", "На столе между вами лежит журнал. Один и тот же лёд. Две разные толщины. Ты ещё не знаешь, какая из них настоящая.",
-          end=True, endTitle="КОНЕЦ · Акт I · Один"),
+          goto="sc_a2_open:t1"),
     ],
 })
 
-story = {
-    "schema": 1,
-    "id": "story_ice_shift",
-    "title": "Ледовая смена · Акт I",
-    "author": "Fobeza",
-    "description": "Полярная станция «Тихая», шесть человек и пять суток без связи. Первый акт истории: знакомство, первый сбой и первый выбор, с кем идти дальше.",
-    "cover": "assets/bg-antenna.webp",
-    "accent": "#8fb8d8",
-    "universe": "tihaya",
-    "lang": "ru",
-    "vars": [
-        {"name": "имя", "type": "text", "initial": "Артём"},
-        {"name": "route", "type": "text", "initial": ""},
-        {"name": "trust_vera", "type": "number", "initial": 0},
-        {"name": "trust_alya", "type": "number", "initial": 0},
-        {"name": "trust_kim", "type": "number", "initial": 0},
-        {"name": "trust_dan", "type": "number", "initial": 0},
-        {"name": "trust_grisha", "type": "number", "initial": 0},
-        {"name": "evidence", "type": "number", "initial": 0},
-        {"name": "heat", "type": "number", "initial": 3},
-        {"name": "meds", "type": "number", "initial": 2},
-        {"name": "comms", "type": "bool", "initial": False},
-        {"name": "journal_read", "type": "bool", "initial": False},
-        {"name": "asked_kim", "type": "bool", "initial": False},
-        {"name": "saw_light", "type": "bool", "initial": False},
-        {"name": "woke_kim", "type": "bool", "initial": False},
-    ],
-    "characters": [
-        {"id": "hero", "name": "{имя}", "color": "#f0d1a1", "sprites": {}},
-        {"id": "kim", "name": "Ким", "color": "#a8b8c8",
-         "sprites": {"neutral": "assets/kim-neutral.webp"}},
-        {"id": "vera", "name": "Вера", "color": "#d98a5a",
-         "sprites": {"neutral": "assets/vera-neutral.webp"}},
-        {"id": "alya", "name": "Аля", "color": "#9ec7d8", "sprites": {}},
-        {"id": "grisha", "name": "Гриша", "color": "#c9a87a", "sprites": {}},
-        {"id": "dan", "name": "Дан", "color": "#b7a8d8", "sprites": {}},
-    ],
-    "scenes": scenes,
-}
+VARS = [
+    {"name": "имя", "type": "text", "initial": "Артём"},
+    {"name": "route", "type": "text", "initial": ""},
+    {"name": "trust_vera", "type": "number", "initial": 0},
+    {"name": "trust_alya", "type": "number", "initial": 0},
+    {"name": "trust_kim", "type": "number", "initial": 0},
+    {"name": "trust_dan", "type": "number", "initial": 0},
+    {"name": "trust_grisha", "type": "number", "initial": 0},
+    {"name": "evidence", "type": "number", "initial": 0},
+    {"name": "heat", "type": "number", "initial": 3},
+    {"name": "meds", "type": "number", "initial": 2},
+    {"name": "comms", "type": "bool", "initial": False},
+    {"name": "journal_read", "type": "bool", "initial": False},
+    {"name": "asked_kim", "type": "bool", "initial": False},
+    {"name": "saw_light", "type": "bool", "initial": False},
+    {"name": "woke_kim", "type": "bool", "initial": False},
+    {"name": "scalpel", "type": "bool", "initial": False},
+    {"name": "told_vera", "type": "bool", "initial": False},
+    {"name": "beacon", "type": "bool", "initial": False},
+]
 
-OUT.write_text(json.dumps(story, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-words = sum(len((st.get("text") or "").split()) for sc in scenes for st in sc["steps"])
-print(f"scenes: {len(scenes)}, steps: {sum(len(sc['steps']) for sc in scenes)}, words: {words}")
-print(f"written: {OUT}")
+CHARACTERS = [
+    {"id": "hero", "name": "{имя}", "color": "#f0d1a1", "sprites": {}},
+    {"id": "kim", "name": "Ким", "color": "#a8b8c8",
+     "sprites": {"neutral": "assets/kim-neutral.webp", "hard": "assets/kim-hard.webp"}},
+    {"id": "vera", "name": "Вера", "color": "#d98a5a",
+     "sprites": {"neutral": "assets/vera-neutral.webp", "soft": "assets/vera-soft.webp"}},
+    {"id": "alya", "name": "Аля", "color": "#9ec7d8",
+     "sprites": {"neutral": "assets/alya-neutral.webp", "scared": "assets/alya-scared.webp"}},
+    {"id": "grisha", "name": "Гриша", "color": "#c9a87a",
+     "sprites": {"neutral": "assets/grisha-neutral.webp", "warm": "assets/grisha-warm.webp"}},
+    {"id": "dan", "name": "Дан", "color": "#b7a8d8",
+     "sprites": {"neutral": "assets/dan-neutral.webp", "tense": "assets/dan-tense.webp"}},
+]
+
+SCENES = scenes
