@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "id": "tihaya",
+  "title": "Тихая",
+  "author": "Fobeza",
+  "description": "Земля Франца-Иосифа, полярная ночь и одна станция на скале. Шесть человек, четыре месяца до рассвета и связи ровно десять минут в сутки.",
+  "cover": "novels/ice-shift/assets/bg-station.webp",
+  "accent": "#8fb8d8",
+  "order": 1
+}

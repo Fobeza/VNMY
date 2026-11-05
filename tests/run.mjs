@@ -877,7 +877,7 @@ await step('импорт вселенной одним файлом', async () =
 });
 
 await step('файлы для двойного щелчка собраны и свежие', async () => {
-  const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest } = await import(path.join(ROOT, 'tools/build.mjs'));
+  const { buildBundle, buildBuiltinStories, buildStandalone, buildManifest, scanStories } = await import(path.join(ROOT, 'tools/build.mjs'));
   const bundle = await buildBundle();
   const builtin = await buildBuiltinStories();
   const standalone = await buildStandalone();
@@ -892,8 +892,21 @@ await step('файлы для двойного щелчка собраны и с
   assert(savedManifest === manifest, 'stories/index.json устарел — запустите npm run build');
   const parsedManifest = JSON.parse(savedManifest);
   assert(parsedManifest.schema === 2 && Array.isArray(parsedManifest.universes), 'манифест без списка вселенных');
-  assert(parsedManifest.universes.length === 0, 'в поставке не должно быть вселенных: '
-    + parsedManifest.universes.map((u) => u.id).join(','));
+  // Манифест — ровно то, что лежит в stories/: тест не зависит от конкретных историй.
+  const scan = await scanStories();
+  assert(parsedManifest.universes.length === scan.length,
+    `в манифесте ${parsedManifest.universes.length} вселенных, в stories/ — ${scan.length}`);
+  for (const item of scan) {
+    const entry = parsedManifest.universes.find((u) => u.dir === item.dir);
+    assert(entry, `вселенной «${item.dir}» нет в манифесте`);
+    assert(entry.id === item.universe.id, `id вселенной «${item.dir}» не совпал: ${entry.id}`);
+    assert(entry.novels.length === item.novels.length,
+      `у вселенной «${item.dir}» ${entry.novels.length} новелл вместо ${item.novels.length}`);
+    for (const novel of item.novels) {
+      assert(entry.novels.some((n) => n.dir === novel.dir && n.id === novel.story.id),
+        `новелла «${item.dir}/${novel.dir}» не попала в манифест`);
+    }
+  }
   assert(!parsedManifest.universes.some((u) => u.id === '_template'), 'шаблон попал в манифест');
   // Один файл не должен тянуть ничего снаружи.
   assert(!/\ssrc="(?!data:)/.test(savedStandalone), 'в vnmy.html есть внешний src');
@@ -1052,20 +1065,37 @@ await step('один файл vnmy.html открывается офлайн и �
     return { dom, stats };
   };
 
-  // 1. Поставляемый vnmy.html: движок, стили и пустая библиотека, без запросов.
+  // 1. Поставляемый vnmy.html: движок, стили и та же библиотека, что в манифесте.
   const standalone = await fs.readFile(path.join(ROOT, 'vnmy.html'), 'utf8');
+  const shippedManifest = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/index.json'), 'utf8'));
   const shipped = openFile(standalone, 'file:///Downloads/vnmy.html');
   const sdoc = shipped.dom.window.document;
   await waitFor(() => sdoc.querySelector('#universe-list .lib-note')
     || sdoc.querySelector('#universe-list .universe-card'), { timeout: 8000, label: 'автономная библиотека' });
-  assert(!sdoc.querySelectorAll('#universe-list .universe-card').length, 'в поставке не должно быть вселенных');
-  assert(sdoc.querySelector('#universe-list .lib-note')?.textContent.includes('Пока нет ни одной вселенной'),
-    'нет подсказки на пустой библиотеке');
   const shippedLibrary = shipped.dom.window.__VNMY_BUILTIN_LIBRARY__ || { universes: [] };
-  assert(shippedLibrary.universes.length === 0, 'в автономный файл попали вселенные');
+  assert(shippedLibrary.universes.length === shippedManifest.universes.length,
+    `в файле ${shippedLibrary.universes.length} вселенных, в манифесте ${shippedManifest.universes.length}`);
+  assert(sdoc.querySelectorAll('#universe-list .universe-card').length === shippedLibrary.universes.length,
+    'карточки вселенных не совпали с встроенной библиотекой');
   assert(shipped.stats.fetchCalls === 0, 'автономный файл ходил в сеть: ' + shipped.stats.fetchCalls);
   assert(!shipped.stats.errors.filter((e) => !/CSS|Could not parse CSS/i.test(e)).length,
     'ошибки в одном файле: ' + shipped.stats.errors.join(' | '));
+  if (!shippedLibrary.universes.length) {
+    assert(sdoc.querySelector('#universe-list .lib-note')?.textContent.includes('Пока нет ни одной вселенной'),
+      'нет подсказки на пустой библиотеке');
+  } else {
+    const first = shippedLibrary.universes[0];
+    sdoc.querySelector('#universe-list .universe-card')
+      .dispatchEvent(new shipped.dom.window.MouseEvent('click', { bubbles: true }));
+    await waitFor(() => sdoc.querySelectorAll('#story-list .story-card').length === first.novels.length,
+      { label: 'новеллы встроенной вселенной' });
+    if (first.novels.length) {
+      sdoc.querySelector('#story-list .story-card')
+        .dispatchEvent(new shipped.dom.window.MouseEvent('click', { bubbles: true }));
+      await waitFor(() => (sdoc.querySelector('.stage .text')?.textContent || '').length > 5,
+        { label: 'первая реплика встроенной новеллы' });
+    }
+  }
   shipped.dom.window.close();
 
   // 2. Собранный из истории один файл: всё внутри, играется с диска.
@@ -1165,14 +1195,16 @@ await step('акты сохраняются в формате, линтер пр
   assert(!issues.length, 'ошибки в тестовой истории: ' + issues.map((issue) => issue.text).join('; '));
 });
 
-await step('в поставке нет вселенных, а шаблон для новых историй на месте', async () => {
+await step('шаблон на месте, а манифест и встроенная сборка совпадают с папками', async () => {
   const { scanStories } = await import(path.join(ROOT, 'tools/build.mjs'));
   const { normalizeStory, lintStory } = await import(path.join(ROOT, 'js/format.js'));
   const catalog = await scanStories();
-  assert(catalog.length === 0, 'в stories/ остались вселенные: ' + catalog.map((item) => item.dir).join(','));
+
+  // Удалённые ранее вселенные не должны вернуться сами собой.
   for (const id of ['last-summer', 'pulse-right', 'zero-bell', 'silent-rails', 'peresylka']) {
     await assertRejects(fs.access(path.join(ROOT, 'stories', id)), `папка «${id}» всё ещё в stories/`);
   }
+
   for (const file of ['stories/_template/universe.json', 'stories/_template/novels/novel-example/story.json']) {
     await fs.access(path.join(ROOT, file));
   }
@@ -1180,14 +1212,33 @@ await step('в поставке нет вселенных, а шаблон дл�
   assert(templateUniverse.id && templateUniverse.title, 'шаблон вселенной пуст');
   const template = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/_template/novels/novel-example/story.json'), 'utf8'));
   assert(template.title && template.scenes.length, 'шаблон новеллы удалён или пуст');
-  const story = normalizeStory(structuredClone(template));
-  const issues = lintStory(story).filter((issue) => issue.level === 'error');
+  const templateStory = normalizeStory(structuredClone(template));
+  const issues = lintStory(templateStory).filter((issue) => issue.level === 'error');
   assert(!issues.length, 'ошибки в шаблоне: ' + issues.map((issue) => issue.text).join('; '));
+
+  // Манифест и встроенная сборка описывают ровно то, что лежит в stories/.
   const manifest = JSON.parse(await fs.readFile(path.join(ROOT, 'stories/index.json'), 'utf8'));
+  assert(manifest.universes.length === catalog.length,
+    `в манифесте ${manifest.universes.length} вселенных, в stories/ — ${catalog.length}`);
+  for (const item of catalog) {
+    assert(manifest.universes.some((u) => u.dir === item.dir && u.id === item.universe.id),
+      `вселенной «${item.dir}» нет в манифесте`);
+  }
   assert(!manifest.universes.some((universe) => universe.id === '_template'), 'шаблон попал в манифест');
-  const builtin = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
-  assert(/window\.__VNMY_BUILTIN_LIBRARY__ = \{"schema":2,"universes":\[\]\}/.test(builtin),
-    'встроенная библиотека должна быть пустой и собираться без вселенных');
+
+  const builtinSource = await fs.readFile(path.join(ROOT, 'stories/builtin.js'), 'utf8');
+  const marker = 'window.__VNMY_BUILTIN_LIBRARY__ = ';
+  const start = builtinSource.indexOf(marker);
+  assert(start >= 0, 'в builtin.js нет встроенной библиотеки');
+  const builtin = JSON.parse(builtinSource.slice(start + marker.length).trim().replace(/;$/, ''));
+  assert(builtin.universes.length === catalog.length,
+    `во встроенной сборке ${builtin.universes.length} вселенных, в stories/ — ${catalog.length}`);
+  for (const item of catalog) {
+    const embedded = builtin.universes.find((u) => u.id === item.universe.id);
+    assert(embedded, `вселенной «${item.dir}» нет в builtin.js`);
+    assert(embedded.novels.length === item.novels.length,
+      `в builtin.js у «${item.dir}» ${embedded.novels.length} новелл вместо ${item.novels.length}`);
+  }
 });
 
 await step('доступные выборы на шаге-конце имеют приоритет', async () => {
