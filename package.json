@@ -1,8 +1,8 @@
 {
   "name": "vnmy",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
-  "description": "VNMY 2.2 — движок визуальных новелл с вселенными для мобильного браузера",
+  "description": "VNMY 2.3 — движок визуальных новелл с вселенными для мобильного браузера",
   "type": "module",
   "scripts": {
     "start": "./start.sh",

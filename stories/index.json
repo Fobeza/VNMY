@@ -2,5 +2,23 @@
   "schema": 2,
   "generated": "npm run build",
   "note": "Создаётся автоматически по папкам stories/. Руками не правим.",
-  "universes": []
+  "universes": [
+    {
+      "id": "tihaya",
+      "dir": "tihaya",
+      "title": "Тихая",
+      "author": "Fobeza",
+      "description": "Земля Франца-Иосифа, полярная ночь и одна станция на скале. Шесть человек, четыре месяца до рассвета и связи ровно десять минут в сутки.",
+      "cover": "novels/ice-shift/assets/bg-station.webp",
+      "accent": "#8fb8d8",
+      "order": 1,
+      "novels": [
+        {
+          "id": "story_ice_shift",
+          "dir": "ice-shift",
+          "title": "Ледовая смена · Акт I"
+        }
+      ]
+    }
+  ]
 }
