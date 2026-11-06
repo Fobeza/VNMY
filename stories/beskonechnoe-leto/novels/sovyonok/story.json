@@ -429,8 +429,7 @@
               "pos": "center"
             }
           ],
-          "_join": true,
-          "goto": "gate:s032"
+          "goto": "gate:s038"
         },
         {
           "speaker": "ilya",
@@ -460,8 +459,7 @@
           "speaker": "ilya",
           "text": "Блин. Первая реплика, а я уже под дисциплинарным взысканием.",
           "id": "s034",
-          "_join": true,
-          "goto": "gate:s035"
+          "goto": "gate:s038"
         },
         {
           "speaker": "ilya",
@@ -498,7 +496,6 @@
           "speaker": null,
           "text": "(Звучит, как будто я на собеседовании. Не люблю таких, а сам теперь из них. Афигеть.)",
           "id": "s037",
-          "_join": true,
           "goto": "gate:s038"
         },
         {
@@ -908,8 +905,7 @@
           "speaker": "polina",
           "text": "Если хотите, я потом ещё принесу. И вообще, заходите в первый отряд, у нас весело!",
           "id": "s070",
-          "_join": true,
-          "goto": "square:s071"
+          "goto": "square:s074"
         },
         {
           "speaker": "ilya",
@@ -966,7 +962,6 @@
           "speaker": "polina",
           "text": "Ой, ну тогда… в другой раз. Хорошо?",
           "id": "s073",
-          "_join": true,
           "goto": "square:s074"
         },
         {
@@ -1209,8 +1204,7 @@
               "pos": "right"
             }
           ],
-          "_join": true,
-          "goto": "stage:s092"
+          "goto": "stage:s095"
         },
         {
           "speaker": "ilya",
@@ -1274,7 +1268,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "stage:s095"
         },
         {
@@ -1538,8 +1531,7 @@
           "speaker": "ilya",
           "text": "Правда. Хотя… я вряд ли разберусь. Но слушать умею.",
           "id": "s111",
-          "_join": true,
-          "goto": "stage:s112"
+          "goto": "stage:s116"
         },
         {
           "speaker": "ilya",
@@ -1618,7 +1610,6 @@
           "speaker": null,
           "text": "(Блин. Шутка вышла. Но кого-то задела. Выводы сделаю потом.)",
           "id": "s115",
-          "_join": true,
           "goto": "stage:s116"
         },
         {
@@ -1757,8 +1748,7 @@
           "speaker": null,
           "text": "(Не люблю слишком правильных. Но, кажется, правильность у неё вместо брони. Хотя… сойдёт.)",
           "id": "s125",
-          "_join": true,
-          "goto": "cabin:s126"
+          "goto": "cabin:s130"
         },
         {
           "speaker": "ilya",
@@ -1807,7 +1797,6 @@
           "speaker": "ilya",
           "text": "Одна улыбка в мою пользу. Запишем.",
           "id": "s129",
-          "_join": true,
           "goto": "cabin:s130"
         },
         {
@@ -2061,8 +2050,7 @@
               "pos": "center"
             }
           ],
-          "_join": true,
-          "goto": "med:s158"
+          "goto": "med:s161"
         },
         {
           "speaker": "ilya",
@@ -2092,7 +2080,6 @@
           "speaker": null,
           "text": "(Улыбнулась уголком рта. Это вряд ли случайность.)",
           "id": "s160",
-          "_join": true,
           "goto": "med:s161"
         },
         {
@@ -2302,8 +2289,7 @@
           "speaker": null,
           "text": "(Если бы все так на лесть реагировали, жить было бы проще.)",
           "id": "s181",
-          "_join": true,
-          "goto": "kitchen:s182"
+          "goto": "kitchen:s186"
         },
         {
           "speaker": "ilya",
@@ -2374,7 +2360,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "kitchen:s186"
         },
         {
@@ -2663,8 +2648,7 @@
           "speaker": null,
           "text": "(Люблю таких: прямолинейные, громкие, без двойного дна. Устаю от них быстро, но зато не надо ничего расшифровывать.)",
           "id": "s209",
-          "_join": true,
-          "goto": "dining:s210"
+          "goto": "dining:s213"
         },
         {
           "speaker": "ilya",
@@ -2711,7 +2695,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "dining:s213"
         },
         {
@@ -2887,8 +2870,7 @@
           "speaker": null,
           "text": "(Афигеть. Вот так просто сказала то, что я годами формулировал.)",
           "id": "s223",
-          "_join": true,
-          "goto": "dining:s224"
+          "goto": "dining:s228"
         },
         {
           "speaker": "ilya",
@@ -2943,7 +2925,6 @@
           "speaker": "polina",
           "text": "Ой, ну и ладно, я бы всё равно ничего не купила!",
           "id": "s227",
-          "_join": true,
           "goto": "dining:s228"
         },
         {
@@ -3282,8 +3263,7 @@
           "speaker": null,
           "text": "(Вот зараза. Попала ровно в то, о чём я сам думаю.)",
           "id": "s255",
-          "_join": true,
-          "goto": "library:s256"
+          "goto": "library:s260"
         },
         {
           "speaker": "ilya",
@@ -3332,7 +3312,6 @@
               "pos": "center"
             }
           ],
-          "_join": true,
           "goto": "library:s260"
         },
         {
@@ -3460,8 +3439,7 @@
               "pos": "center"
             }
           ],
-          "_join": true,
-          "goto": "library:s272"
+          "goto": "library:s276"
         },
         {
           "speaker": "ilya",
@@ -3496,7 +3474,6 @@
               "pos": "center"
             }
           ],
-          "_join": true,
           "goto": "library:s276"
         },
         {
@@ -3706,8 +3683,7 @@
               "pos": "center"
             }
           ],
-          "_join": true,
-          "goto": "radio:s297"
+          "goto": "radio:s302"
         },
         {
           "speaker": "ilya",
@@ -3761,7 +3737,6 @@
           "speaker": null,
           "text": "(Чуть не ляпнул про интернет. Надо бы поосторожнее.)",
           "id": "s301",
-          "_join": true,
           "goto": "radio:s302"
         },
         {
@@ -4004,8 +3979,7 @@
           "speaker": null,
           "text": "(Вот смотри-ка. Простой человек, а попал в точку. Не хочется никуда — вот она, главная формула лагеря. И моего старого одиночества, только с другим знаком.)",
           "id": "s321",
-          "_join": true,
-          "goto": "radio:s322"
+          "goto": "radio:s326"
         },
         {
           "speaker": "ilya",
@@ -4074,7 +4048,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "radio:s326"
         },
         {
@@ -4260,8 +4233,7 @@
           "speaker": null,
           "text": "(Вот это да. Ещё один человек, который живёт в мечте, только бегом.)",
           "id": "s343",
-          "_join": true,
-          "goto": "stadium:s344"
+          "goto": "stadium:s347"
         },
         {
           "speaker": "ilya",
@@ -4298,7 +4270,6 @@
               "pos": "center"
             }
           ],
-          "_join": true,
           "goto": "stadium:s347"
         },
         {
@@ -4572,8 +4543,7 @@
           "speaker": null,
           "text": "(Вот так легко говорит то, что я боюсь себе признать. И не напрягается. Завидно.)",
           "id": "s374",
-          "_join": true,
-          "goto": "shower:s375"
+          "goto": "shower:s379"
         },
         {
           "speaker": "ilya",
@@ -4615,7 +4585,6 @@
               "pos": "center"
             }
           ],
-          "_join": true,
           "goto": "shower:s379"
         },
         {
@@ -4965,8 +4934,7 @@
           "speaker": null,
           "text": "(Вот что значит искренность. Ничего не просит, просто рада, что кто-то придёт. Редкость.)",
           "id": "s413",
-          "_join": true,
-          "goto": "beach:s414"
+          "goto": "beach:s418"
         },
         {
           "speaker": "ilya",
@@ -5018,7 +4986,6 @@
           "speaker": "ilya",
           "text": "Только не говорите Виолетте. Я не конкурент.",
           "id": "s417",
-          "_join": true,
           "goto": "beach:s418"
         },
         {
@@ -5191,8 +5158,7 @@
               "pos": "right"
             }
           ],
-          "_join": true,
-          "goto": "beach:s426"
+          "goto": "beach:s430"
         },
         {
           "speaker": "ilya",
@@ -5264,7 +5230,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "beach:s430"
         },
         {
@@ -5861,8 +5826,7 @@
           "speaker": null,
           "text": "(Ровно то, чего мне не хватало. Не кем-то быть. Просто быть. Хотя… вряд ли это можно сохранить навсегда.)",
           "id": "s472",
-          "_join": true,
-          "goto": "boats:s473"
+          "goto": "boats:s476"
         },
         {
           "speaker": null,
@@ -5897,7 +5861,6 @@
           "speaker": "ilya",
           "text": "Спасибо. Я вообще стараюсь по минимуму.",
           "id": "s475",
-          "_join": true,
           "goto": "boats:s476"
         },
         {
@@ -6159,8 +6122,7 @@
           "speaker": null,
           "text": "(Тихая. Ту, что я обычно обхожу стороной. А рядом с ней почему-то не тревожно.)",
           "id": "s495",
-          "_join": true,
-          "goto": "music:s496"
+          "goto": "music:s500"
         },
         {
           "speaker": "ilya",
@@ -6236,7 +6198,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "music:s500"
         },
         {
@@ -6670,8 +6631,7 @@
               "pos": "right"
             }
           ],
-          "_join": true,
-          "goto": "supper:s535"
+          "goto": "supper:s547"
         },
         {
           "speaker": "ilya",
@@ -6801,8 +6761,7 @@
               "pos": "right"
             }
           ],
-          "_join": true,
-          "goto": "supper:s541"
+          "goto": "supper:s547"
         },
         {
           "speaker": "ilya",
@@ -6915,7 +6874,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "supper:s547"
         },
         {
@@ -7015,8 +6973,7 @@
           "speaker": null,
           "text": "(Приятно, когда просят по-человечески. Даже если картошка.)",
           "id": "s555",
-          "_join": true,
-          "goto": "supper:s556"
+          "goto": "lineup:s560"
         },
         {
           "speaker": "ilya",
@@ -7058,7 +7015,6 @@
               "pos": "center"
             }
           ],
-          "_join": true,
           "goto": "lineup:s560"
         }
       ],
@@ -7480,8 +7436,7 @@
           "speaker": null,
           "text": "(Блин. Опять как на собеседовании. Но зато она улыбнулась. Хоть чуть-чуть. Это стоит одной неловкой фразы.)",
           "id": "s585",
-          "_join": true,
-          "goto": "lineup:s586"
+          "goto": "lineup:s591"
         },
         {
           "speaker": "ilya",
@@ -7582,7 +7537,6 @@
               "pos": "right"
             }
           ],
-          "_join": true,
           "goto": "lineup:s591"
         },
         {
@@ -7796,11 +7750,2096 @@
         {
           "speaker": null,
           "text": "(Если это игра, то отличная. Если сон — то я не хочу просыпаться. Хотя… я ведь ещё толком не начал.)",
-          "id": "s602",
-          "end": true
+          "id": "s602"
         }
       ],
       "act": "День первый · Вечер"
+    },
+    {
+      "id": "dusk",
+      "name": "Домик в сумерках",
+      "bg": "assets/backgrounds/bg_059.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Лагерь медленно синеет. У домика под соснами уже горит лампа, и в её свете видно, как на тропинке пляшет мошкара. Я захожу переодеться перед костром.",
+          "id": "s603"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Только не забудь надеть что-нибудь тёплое. Ночью холодно.",
+          "id": "s604",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "strogost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это в лагере-то летом?",
+          "id": "s605"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Это у озера. Там всегда прохладно. Возьми кофту, она на спинке стула.",
+          "id": "s606",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Чужая?",
+          "id": "s607"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Моя. Запасная. Только не потеряй.",
+          "id": "s608",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Так. Беру под честное слово.",
+          "id": "s609"
+        },
+        {
+          "speaker": null,
+          "text": "Я натягиваю кофту, а в кармане штанов нащупываю что-то мятое. Достаю. Это небольшой картонный билетик, серый, с побледневшей печатью.",
+          "id": "s610"
+        },
+        {
+          "speaker": null,
+          "text": "(Автобусный билет. Зимний. Тот самый. Остановка «Совёнок» в графе пункта назначения. Даты нет.)",
+          "id": "s611"
+        },
+        {
+          "speaker": null,
+          "text": "(Так. Вариантов два. Либо кто-то мне это подсунул, либо я правда ехал сюда. Ни то, ни другое не успокаивает.)",
+          "id": "s612"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Что там у тебя?",
+          "id": "s613",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "trevoga",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Билет. Старый. Наверно, завалялся.",
+          "id": "s614"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Покажи?",
+          "id": "s615",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Не сейчас. Потом. Он… ничего интересного.",
+          "id": "s616"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Ладно. Не настаиваю. Но если захочешь рассказать — я слушаю.",
+          "id": "s617",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Вот так просто сказала, и не давит. Хотя… я же говорил, что не люблю слишком правильных. Видимо, придётся пересмотреть.)",
+          "id": "s618"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Идём. Нас ждут.",
+          "id": "s619",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        }
+      ],
+      "act": "День первый · Сумерки"
+    },
+    {
+      "id": "bonfire",
+      "name": "Костёр",
+      "bg": "assets/backgrounds/bg_015.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Костровая поляна уже заполнена. Из вечерней темноты по краям проступают лавки, а в центре пылает огонь. Искры взлетают к небу и гаснут среди первых звёзд. Пахнет дымом, печёной картошкой и хвоей.",
+          "id": "s620"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Вот он, наш новый человек! Илья, иди сюда, я тебе покажу, как разжигать по-настоящему!",
+          "id": "s621",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я вообще-то из тех, кто боится огня.",
+          "id": "s622"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Это лечится!",
+          "id": "s623",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Артём, ты опять неправильно сложил поленья. Нужно колодцем. Воздух должен проходить снизу.",
+          "id": "s624",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Кирилл, горит же!",
+          "id": "s625",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "nedovolstvo",
+              "pos": "left"
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Горит, но неэффективно.",
+          "id": "s626",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "nedovolstvo",
+              "pos": "left"
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Хорошо горит.",
+          "id": "s627",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "nedovolstvo",
+              "pos": "left"
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "У костра полукругом сидят лагерные. Огонь бросает на лица красные и жёлтые отблески. Кто-то уже жуёт картошку, кто-то лениво щёлкает по струнам, а Тамара с огромной кастрюлей ходит между скамьями, раздавая кружки.",
+          "id": "s628"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Чаю! Горячего! С мятой! Пейте, а то продрогнете!",
+          "id": "s629",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "tamara",
+          "text": "Илья, держи. Твоя кружка. И не обжигайся, у меня на тебя большие планы.",
+          "id": "s630",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            },
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "На картошку?",
+          "id": "s631"
+        },
+        {
+          "speaker": "tamara",
+          "text": "На картошку и на всё остальное.",
+          "id": "s632",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Тамара, дай и мне, пожалуйста. Илья, добрый вечер. Как самочувствие?",
+          "id": "s633",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Светлана. Нормально. Панама пригодилась.",
+          "id": "s634"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Рада. Только не сиди близко к огню, лицо обгорит.",
+          "id": "s635",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ],
+          "choices": [
+            {
+              "text": "Поблагодарить: «Вы заботливая. Редкость».",
+              "goto": "bonfire:s636"
+            },
+            {
+              "text": "Отшутиться: «Лицо — не картошка, не обгорит».",
+              "goto": "bonfire:s640"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Вы удивительно заботливая. Это сейчас редкость, знаете?",
+          "id": "s636",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_svetlana",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Заботливая — это когда не получается иначе. Я просто не умею просто смотреть.",
+          "id": "s637",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хотя… звучит как лучшая профессия.",
+          "id": "s638"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Профессия — да. Но, знаешь, иногда хочется, чтобы кто-нибудь заботился и обо мне.",
+          "id": "s639",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ],
+          "goto": "bonfire:s643"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Лицо — не картошка. Не обгорит. Наверно.",
+          "id": "s640",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "left"
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Картошку всегда можно съесть. С лицом сложнее.",
+          "id": "s641"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Принято. Отодвигаюсь на метр.",
+          "id": "s642",
+          "goto": "bonfire:s643"
+        },
+        {
+          "speaker": null,
+          "text": "Я оглядываюсь в поисках места. Справа свободное бревно рядом с Алисой, которая сидит, подтянув колени и укрывшись пледом. Слева между Кирой и Полиной тоже есть место, а у самой границы света, на отдельном бревне, тихо устроилась Виолетта.",
+          "id": "s643",
+          "cast": []
+        },
+        {
+          "speaker": null,
+          "text": "(Три варианта. Алиса — колючки, но интересно. Кира с Полиной — шум и свет, зато легко. Виолетта — тишина, зато вряд ли обижу. Так. Мне всё равно придётся с кем-то сидеть.)",
+          "id": "s644",
+          "choices": [
+            {
+              "text": "Сесть рядом с Алисой.",
+              "goto": "bonfire:s645"
+            },
+            {
+              "text": "Сесть между Кирой и Полиной.",
+              "goto": "bonfire:s650"
+            },
+            {
+              "text": "Сесть рядом с Виолеттой.",
+              "goto": "bonfire:s655"
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Занято. Шучу. Садись, только не мешай читать огонь.",
+          "id": "s645",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_alisa",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Огонь читать? Хотя… красиво звучит.",
+          "id": "s646"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Это когда смотришь и понимаешь, что у него свой сюжет. Начало, пик, угасание.",
+          "id": "s647",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Короткий роман.",
+          "id": "s648"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Лучший вид романов. Никто не успевает надоесть.",
+          "id": "s649",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            }
+          ],
+          "goto": "bonfire:s660"
+        },
+        {
+          "speaker": "kira",
+          "text": "О! Новенький! Садись! Мы как раз делили последнюю картошку!",
+          "id": "s650",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_polina",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "sym_kira",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Я не делила, я предлагала! Держите, Илья, половинка ваша.",
+          "id": "s651",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спасибо. Это самая красивая половинка из всех, что я видел.",
+          "id": "s652"
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой, правда? Она же обычная.",
+          "id": "s653",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Он льстит. Хороший навык.",
+          "id": "s654",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "right"
+            }
+          ],
+          "goto": "bonfire:s660"
+        },
+        {
+          "speaker": "violetta",
+          "text": "…Вы уверены? Здесь немного… темно.",
+          "id": "s655",
+          "cast": [
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_violetta",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Уверен. Темно — это нормально. Если очень хочется света, можно придвинуться к огню.",
+          "id": "s656"
+        },
+        {
+          "speaker": "violetta",
+          "text": "…Нет. Мне так лучше.",
+          "id": "s657",
+          "cast": [
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "Спасибо, что сели. Иногда рядом хочется чьё-то молчание. Только не слишком близко.",
+          "id": "s658",
+          "cast": [
+            {
+              "char": "violetta",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Принято. Молчу на дистанции.",
+          "id": "s659",
+          "goto": "bonfire:s660"
+        },
+        {
+          "speaker": null,
+          "text": "Артём подбрасывает в огонь охапку веток, и пламя вздымается ввысь. Вокруг слышны голоса: смех, приглушённый разговор, чьё-то пение вполголоса. Тёмное небо над поляной полно звёзд, таких густых, каких в городе не бывает.",
+          "id": "s660",
+          "cast": []
+        },
+        {
+          "speaker": "milana",
+          "text": "Так, народ! Внимание! Сегодня у нас вечер историй! Каждый рассказывает одну. Кто начнёт?",
+          "id": "s661",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я! Я расскажу про сову!",
+          "id": "s662",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Конечно ты. Давай, но коротко.",
+          "id": "s663",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Значит, так. Давным-давно, когда лагеря ещё не было, в этом лесу жила сова. Огромная, белая, с золотыми глазами. И однажды к ней пришёл человек, уставший и грустный, и сказал: «Хочу забыть всё плохое».",
+          "id": "s664",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Сова ответила: «Тогда оставайся здесь». И человек остался. А когда утром проснулся, то ничего плохого не помнил. Только всё хорошее.",
+          "id": "s665",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой… А дальше?",
+          "id": "s666",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "А дальше он жил долго и счастливо. И никто не знает, где он теперь. Может, он сидит среди нас!",
+          "id": "s667",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Кира, это страшилка или реклама?",
+          "id": "s668",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center"
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Это легенда! Настоящая!",
+          "id": "s669",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "nedovolstvo",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center"
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Легенды заканчиваются нравоучением. Здесь его нет.",
+          "id": "s670",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "nedovolstvo",
+              "pos": "left"
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center"
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Я вижу нравоучение: «Не ходите в лес без ужина».",
+          "id": "s671",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "left"
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хотя… а если человек не хотел забывать? Если он хотел помнить, но жить спокойно?",
+          "id": "s672"
+        },
+        {
+          "speaker": "kira",
+          "text": "Тогда сова бы не помогла. Она только про забыть.",
+          "id": "s673",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Сова только про «забыть». Прекрасно. Если это намёк, то он очень прозрачный. Если нет, то Кира просто сочинила красивую сказку.)",
+          "id": "s674"
+        },
+        {
+          "speaker": "milana",
+          "text": "Новичок, а теперь твоя очередь. Что у тебя в запасе?",
+          "id": "s675",
+          "choices": [
+            {
+              "text": "Рассказать историю про человека в автобусе.",
+              "goto": "bonfire:s676"
+            },
+            {
+              "text": "Выдать абсурдный анекдот про сову и бухгалтера.",
+              "goto": "bonfire:s683"
+            },
+            {
+              "text": "Предложить спеть всем вместе вместо историй.",
+              "goto": "bonfire:s689"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хорошо. История короткая. Один человек ехал в автобусе и уснул. Ему приснилось, что он попал в лагерь. И он решил, что сон — это не так плохо.",
+          "id": "s676",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_valeriya",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "И что дальше?",
+          "id": "s677",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Дальше — пока не знаю. Автор не закончил.",
+          "id": "s678"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Это… правда сочинение?",
+          "id": "s679",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "zadumchivost",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "valeriya",
+              "sprite": "trevoga",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Конечно. Чистая выдумка.",
+          "id": "s680"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Хорошо. Но очень… близко.",
+          "id": "s681",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "zadumchivost",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Попал. Валерия слушает слишком внимательно. Надо сбавить обороты.)",
+          "id": "s682",
+          "goto": "bonfire:s694"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Пришёл как-то бухгалтер к сове и говорит: «Хочу забыть налоги». Сова отвечает: «Забывать не буду, но подпись поставлю».",
+          "id": "s683",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_milana",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Ха-ха-ха! Подпись поставлю! Гениально!",
+          "id": "s684",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Сова-бюрократ! Беру!",
+          "id": "s685",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "С точки зрения логики, сова не имеет права подписывать налоговые документы.",
+          "id": "s686",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left"
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center"
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Кирилл, это была шутка.",
+          "id": "s687"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Я знаю. Но формально… ладно, смешно.",
+          "id": "s688",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left"
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center"
+            },
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "right"
+            }
+          ],
+          "goto": "bonfire:s694"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Знаете, вместо историй, может, споём? Что угодно. Хоть про кузнечика.",
+          "id": "s689",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_polina",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "sym_violetta",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Вот это по-нашему! Виолетта, у тебя есть мелодия?",
+          "id": "s690",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "Я… только на пианино. Тут без него…",
+          "id": "s691",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Давайте хором! Я знаю слова!",
+          "id": "s692",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left"
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "center"
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы тянем простую песню, у каждого свой голос и свой ритм. Выходит нестройно, но так тепло, что огонь будто горит ярче.",
+          "id": "s693",
+          "goto": "bonfire:s694"
+        },
+        {
+          "speaker": null,
+          "text": "Костёр постепенно оседает. Кто-то клюёт носом, кто-то подкладывает ветки. Звёзды над поляной медленно плывут к западу, а ночь становится глубже и тише.",
+          "id": "s694",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left"
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Всё. Отбой через полчаса. Расходимся по домикам. Спасибо всем за вечер.",
+          "id": "s695",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Уже? Но самое интересное только началось!",
+          "id": "s696"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Милана. Спать.",
+          "id": "s697",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "valeriya",
+              "sprite": "strogost",
+              "pos": "right"
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Ладно, ладно.",
+          "id": "s698",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "smushchenie",
+              "pos": "left"
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center"
+            },
+            {
+              "char": "valeriya",
+              "sprite": "strogost",
+              "pos": "right"
+            }
+          ]
+        }
+      ],
+      "act": "День первый · Костёр"
+    },
+    {
+      "id": "nightpath",
+      "name": "Ночная тропа",
+      "bg": "assets/backgrounds/bg_024.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Ночная тропа светится янтарными огоньками. Светлячки зависают между кустами, как маленькие лампы, а над лесом поднимается тонкий месяц. Воздух прохладный, пахнет влажной хвоей.",
+          "id": "s699"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Ты идёшь не туда. Домик вожатой левее.",
+          "id": "s700",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А, точно. Спасибо. Я ещё не освоился.",
+          "id": "s701"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Я провожу. Мне по дороге.",
+          "id": "s702",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Алиса идёт рядом, держа книгу под мышкой. Очки отражают огоньки, и на секунду кажется, что в них горят маленькие лампочки.",
+          "id": "s703"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Слушай, можно вопрос?",
+          "id": "s704"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Один. Остальные письменно.",
+          "id": "s705",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты правда веришь в то, что читаешь? Ну, про сны, про миры, где всё как хочется?",
+          "id": "s706"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Верить — слишком сильно. Но я допускаю. Что если человек хочет, чтобы мир был таким, то мир иногда идёт навстречу.",
+          "id": "s707",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хотя… звучит красиво. Но разве это не обман?",
+          "id": "s708"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Любая мечта — немного обман. Но обман, который делает день лучше, мне не страшен.",
+          "id": "s709",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center"
+            }
+          ],
+          "choices": [
+            {
+              "text": "Согласиться: «Жить в мечте неплохо, если знаешь, что это мечта».",
+              "goto": "nightpath:s710"
+            },
+            {
+              "text": "Возразить: «Неплохо, пока не проснёшься. А потом хуже».",
+              "goto": "nightpath:s714"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Знаешь, я думаю так. Жить в мечте неплохо, если ты понимаешь, что это мечта. Тогда ты не обманут, а просто выбираешь.",
+          "id": "s710",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_alisa",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Интересно. Я думала, ты скажешь что-то банальное.",
+          "id": "s711",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "udivlenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я иногда удивляю. Редко. Но метко.",
+          "id": "s712"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Запишу. Хотя от меня «запишу» — это почти комплимент.",
+          "id": "s713",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            }
+          ],
+          "goto": "nightpath:s719"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Неплохо, пока не проснёшься. А потом бывает так больно, что лучше бы не просыпался.",
+          "id": "s714",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_alisa",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Значит, тебе есть с чем сравнивать.",
+          "id": "s715",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Возможно. Но это уже слишком личное для ночной тропы.",
+          "id": "s716"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Принято. Не буду.",
+          "id": "s717",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Но спасибо, что сказал.",
+          "id": "s718",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "center"
+            }
+          ],
+          "goto": "nightpath:s719"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Вот твой домик. Спокойной ночи, Илья.",
+          "id": "s719",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спокойной, Алиса. И спасибо за сопровождение.",
+          "id": "s720"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Не за что. Я проверяла, что ты не потеряешься. Профессиональное.",
+          "id": "s721",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Алиса уходит в темноту, и вскоре её силуэт теряется между стволами. Остаются только светлячки и далёкий шорох ветра.",
+          "id": "s722",
+          "cast": []
+        }
+      ],
+      "act": "День первый · Ночь"
+    },
+    {
+      "id": "night",
+      "name": "Ночь в домике",
+      "bg": "assets/backgrounds/bg_061.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "В домике горит одна лампа. Её свет тёплый, ровный и мягко ложится на стол и стены. Занавеска посередине слегка колышется от сквозняка. За ней слышен шелест страниц.",
+          "id": "s723"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Ты пришёл? Хорошо. Умывайся и ложись. Через пять минут я выключу свет.",
+          "id": "s724",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Принято. Пять минут — это почти вечность по лагерным меркам.",
+          "id": "s725"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Не язви. Я устала.",
+          "id": "s726",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я ополаскиваюсь у рукомойника, потом падаю на кровать. Матрас жёсткий, подушка пахнет хвоей, но после такого дня это кажется роскошью.",
+          "id": "s727"
+        },
+        {
+          "speaker": null,
+          "text": "(Так. Подведём итоги. День первый. Приехал, познакомился, не умер, поел, даже душ нашёл. Для первого дня неплохо.)",
+          "id": "s728"
+        },
+        {
+          "speaker": null,
+          "text": "Свет гаснет. Темнота ложится плотно, но не пугает. Сквозь тюль в окно пробивается лунный свет, и на потолке дрожит тонкая светлая полоска.",
+          "id": "s729"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Илья. Ты спишь?",
+          "id": "s730",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Нет. Слушаю потолок.",
+          "id": "s731"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Он что-нибудь рассказывает?",
+          "id": "s732",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Говорит, что я слишком много думаю.",
+          "id": "s733"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Потолок мудрый.",
+          "id": "s734",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Валерия. Можно вопрос?",
+          "id": "s735"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Опять? Ладно. Только один.",
+          "id": "s736"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты давно вожатая?",
+          "id": "s737"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Это… первая смена. Я всё боюсь что-то забыть. Или сделать не так. Утром выписала себе двадцать пунктов и до сих пор проверяю.",
+          "id": "s738",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "trevoga",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Двадцать пунктов?",
+          "id": "s739"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Ну… тридцать два. Если честно. Только не смейся.",
+          "id": "s740",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Не смеюсь. Просто слушаю. Знаешь, а у меня было похоже. Чем больше боялся, тем длиннее были списки.",
+          "id": "s741"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "И что помогло?",
+          "id": "s742",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ],
+          "choices": [
+            {
+              "text": "Сказать честно: «Ничего. Просто привыкаешь жить с ними».",
+              "goto": "night:s743"
+            },
+            {
+              "text": "Пошутить: «Помог шоколад. Увы, местный не нашёл».",
+              "goto": "night:s748"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Не знаю. Наверно, ничего. Просто привыкаешь жить со страхом. И с самими списками.",
+          "id": "s743",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_valeriya",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Спасибо. Это честно. Я, наверно, тоже привыкну.",
+          "id": "s744"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Привыкнешь. Тем более ты неплохо держишься. Сегодняшняя линейка была отличной.",
+          "id": "s745"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Правда?",
+          "id": "s746",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Максим даже встал на метр левее. Это серьёзная победа.",
+          "id": "s747",
+          "goto": "night:s753"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Помог шоколад. Но тут его, кажется, нет.",
+          "id": "s748",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ],
+          "set": [
+            {
+              "var": "sym_valeriya",
+              "op": "add",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Есть. В нижнем ящике. Но это секрет.",
+          "id": "s749",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "rasteryannost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ого. Вожатая-контрабандист. Ты опасный человек.",
+          "id": "s750"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Только никому.",
+          "id": "s751",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Могила. Но с долей.",
+          "id": "s752",
+          "goto": "night:s753"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Слушай, Илья. Сегодня ты был… странный. Но хороший. Я рада, что ты у меня в отряде.",
+          "id": "s753",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "В смысле — странный?",
+          "id": "s754"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Ты говоришь, будто знаешь больше, чем рассказываешь. И смотришь на всё, как будто видишь это не в первый раз.",
+          "id": "s755",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Блин. Заметила. Умная. Или я совсем плохо притворяюсь.)",
+          "id": "s756"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это возрастное. Старею быстро.",
+          "id": "s757"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "В семнадцать? Смешно.",
+          "id": "s758",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хотя… бывает.",
+          "id": "s759"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Спокойной ночи, Илья.",
+          "id": "s760",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center"
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спокойной, Валерия.",
+          "id": "s761"
+        },
+        {
+          "speaker": null,
+          "text": "Лунная полоска на потолке чуть заметно ползёт к стене. За окном стрекочут кузнечики, и далеко-далеко, словно из другого мира, кричит ночная птица.",
+          "id": "s762"
+        },
+        {
+          "speaker": null,
+          "text": "(Так. Что я знаю? Это лагерь «Совёнок». Это игра, которую я проходил, но версия другая. Диалоги другие, люди другие, события другие. Спойлеры бесполезны. Значит, придётся просто жить.)",
+          "id": "s763"
+        },
+        {
+          "speaker": null,
+          "text": "(За: тут тепло, спокойно, никто не требует отчётов, и люди, кажется, настоящие. Против: непонятно, как я сюда попал и можно ли выйти. Хотя… а надо ли?)",
+          "id": "s764"
+        },
+        {
+          "speaker": null,
+          "text": "(Жить в мечте — неплохо. Пока не доказано обратное. А доказывать никто не торопится.)",
+          "id": "s765"
+        },
+        {
+          "speaker": null,
+          "text": "Я закрываю глаза. Матрас под спиной уже не такой жёсткий. Где-то за стеной слышится ровное дыхание Валерии. Лагерь затихает.",
+          "id": "s766"
+        }
+      ],
+      "act": "День первый · Ночь"
+    },
+    {
+      "id": "summary",
+      "name": "Итоги дня",
+      "bg": "assets/backgrounds/bg_043.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "День первый подошёл к концу. Над воротами «Совёнка» висит тонкий месяц, лагерь спит, и только где-то на кухне едва слышно гудит холодильник.",
+          "id": "s767"
+        },
+        {
+          "speaker": null,
+          "text": "Вот как сложились отношения за этот день.",
+          "id": "s768"
+        },
+        {
+          "speaker": null,
+          "text": "Валерия — {sym_valeriya}\nАлиса — {sym_alisa}\nКира — {sym_kira}\nМилана — {sym_milana}\nПолина — {sym_polina}\nВиолетта — {sym_violetta}",
+          "id": "s769"
+        },
+        {
+          "speaker": null,
+          "text": "Светлана — {sym_svetlana}\nТамара — {sym_tamara}\nАртём — {sym_artyom}\nКирилл — {sym_kirill}\nМаксим — {sym_maksim}",
+          "id": "s770"
+        },
+        {
+          "speaker": null,
+          "text": "Это только начало. Завтра будет новый день, и новые разговоры.",
+          "id": "s771",
+          "end": true,
+          "endTitle": "День первый завершён"
+        }
+      ],
+      "act": "День первый · Итоги"
     }
   ],
   "vars": [
