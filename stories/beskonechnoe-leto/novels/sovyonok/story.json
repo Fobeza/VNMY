@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "sovyonok",
+  "universe": "beskonechnoe-leto",
+  "title": "Совёнок",
+  "description": "Подготовка материалов. Сюжет и диалоги будут написаны позже.",
+  "lang": "ru",
+  "characters": [],
+  "scenes": [
+    {
+      "id": "assets-preview",
+      "name": "Материалы новеллы",
+      "bg": "",
+      "cast": [],
+      "steps": [
+        {
+          "id": "pending",
+          "speaker": null,
+          "text": "Сюжет пока не написан.",
+          "end": true
+        }
+      ]
+    }
+  ]
+}
