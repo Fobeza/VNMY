@@ -229,7 +229,7 @@ export function duplicateStory(story, titleSuffix = ' (копия)') {
   copy.updatedAt = Date.now();
   copy.baseUrl = story.baseUrl || '';
   // встроенная история ссылается на файлы — при копировании пути остаются рабочими,
-  // пока папка stories на месте; иначе импортируем ассеты как data URL (см. editor.exportAssetsTo).
+  // пока папка stories на месте; иначе импортируем ассеты как data URL.
   return saveStory(copy, { touch: false });
 }
 

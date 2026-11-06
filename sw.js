@@ -6,7 +6,7 @@
  *  - картинки, иконки, манифест — cache-first (они неизменяемые);
  *  - stories/index.json и story.json — network-first: новые истории видны сразу.
  */
-const VERSION = 'vnmy-2.4.0';
+const VERSION = 'vnmy-2.4.1';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
@@ -15,12 +15,10 @@ const SHELL_FILES = [
   './index.html',
   './css/base.css',
   './css/player.css',
-  './css/editor.css',
   './js/app.js',
   './js/engine.js',
   './js/session.js',
   './js/persistence.js',
-  './js/navigation.js',
   './js/format.js',
   './js/expr.js',
   './js/store.js',
@@ -33,9 +31,6 @@ const SHELL_FILES = [
   './js/weather.js',
   './js/icons.js',
   './js/version.js',
-  './js/editor.js',
-  './js/editor-tabs.js',
-  './js/editor-ui.js',
   './bundle.js',
   './stories/builtin.js',
   './manifest.webmanifest',

@@ -257,7 +257,7 @@ export async function buildStandalone(scan) {
     fs.readFile(path.join(ROOT, 'index.html'), 'utf8'),
   ]);
 
-  const cssFiles = ['css/base.css', 'css/player.css', 'css/editor.css'];
+  const cssFiles = ['css/base.css', 'css/player.css'];
   const css = (await Promise.all(cssFiles.map((file) => fs.readFile(path.join(ROOT, file), 'utf8')))).join('\n');
 
   const universes = [];

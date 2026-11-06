@@ -16,7 +16,7 @@ function manageModal(node, onClose) {
     document.dispatchEvent(new CustomEvent('vnmy:modal', { detail: modals.length }));
   };
   const focusables = () => [...node.querySelectorAll('button, input, textarea, select, a[href], [tabindex="0"]')]
-    .filter(el => !el.disabled && !el.closest('[hidden]') && (!el.classList.contains('author-only') || document.body.classList.contains('author-mode')));
+    .filter(el => !el.disabled && !el.closest('[hidden]'));
   const onKey = e => {
     if (modals.at(-1) !== item) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); onClose(); }
@@ -89,7 +89,7 @@ export function openSheet({ title, subtitle, content, rows } = {}) {
         el('span', {}, el('span', { class: 'sheet-label', text: row.label }), row.hint ? el('small', { text: row.hint }) : null),
       );
       list.append(el('button', {
-        class: `sheet-row${row.danger ? ' danger' : ''}${row.authorOnly ? ' author-only' : ''}`,
+        class: `sheet-row${row.danger ? ' danger' : ''}`,
         type: 'button',
         onclick: () => { if (row.keepOpen !== true) close(); row.onSelect?.(); },
       },

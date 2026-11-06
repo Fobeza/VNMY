@@ -653,9 +653,6 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
   .universe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* Reading comes first; author controls remain available in a separate mode. */
-body:not(.author-mode) .author-only { display: none !important; }
-.mode-switch { display: flex; gap: 8px; margin-top: 22px; }
 .continue-card { display: grid; grid-template-columns: 84px 1fr; gap: 18px; padding: 20px; margin: 0 0 28px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 20px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--bg-soft)), var(--bg-soft)); }
 .continue-cover { width: 84px; height: 128px; object-fit: cover; border-radius: 10px; }
 .continue-card h2 { font: 24px/1.2 var(--font-display); margin: 6px 0; }

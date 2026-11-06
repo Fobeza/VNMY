@@ -1,19 +1,18 @@
 /* VNMY — экран «Новеллы вселенной»: второй шаг выбора.
  *
  * Здесь живой список новелл одной вселенной: карточки, меню истории
- * (играть / редактировать / копировать / экспорт / удалить) и импорт файла.
+ * (играть / начать сначала / удалить) и импорт файла.
  * Новеллы группируются по полю story.universe (см. js/universe.js).
  */
 import {
-  loadLibrary, duplicateStory, deleteStory, exportStory, progressOf, getSaves,
-  importStoryFile, clearSaves, exportStoryPortable, universeCatalog,
-  deleteUniverse, exportUniversePortable, moveStoryToUniverse, getSettings,
+  loadLibrary, deleteStory, progressOf, getSaves,
+  importStoryFile, clearSaves,
+  deleteUniverse, exportUniversePortable, moveStoryToUniverse,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
-import { promptUniverse } from './library.js';
 
 let hooks = {};
 let current = null;
@@ -41,8 +40,6 @@ export async function renderUniverse(universeId, nextHooks) {
   document.documentElement.style.setProperty('--accent', universe?.accent || '#e0b072');
 
   const novels = universe?.novels || [];
-  const newBtn = $('#btn-new-story');
-  if (newBtn) newBtn.hidden = !universe;
   const importBtn = $('#btn-import-novel');
   if (importBtn) importBtn.hidden = !universe;
   const menuBtn = $('#uni-menu');
@@ -50,8 +47,8 @@ export async function renderUniverse(universeId, nextHooks) {
 
   if (!novels.length) {
     list.append(el('p', { class: 'lib-note', text: universe?.builtin
-      ? 'В этой вселенной пока нет новелл. Создайте новую — она появится здесь и в списке своих новелл.'
-      : 'Пока пусто. Нажмите «Новая новелла» — или положите папку stories/<вселенная>/novels/<имя>/ в проект и соберите (npm run build).' }));
+      ? 'В этой вселенной пока нет новелл. Можно импортировать новеллу из JSON.'
+      : 'Пока пусто. Нажмите «Импорт» — или положите папку stories/<вселенная>/novels/<имя>/ в проект и соберите (npm run build).' }));
   }
   for (const story of novels) list.append(storyCard(story));
 
@@ -59,7 +56,7 @@ export async function renderUniverse(universeId, nextHooks) {
   if (note) {
     note.innerHTML = '';
     if (universe?.builtin) {
-      note.append(el('span', { text: 'Встроенные новеллы читаются только для просмотра: «Редактировать» создаёт вашу копию. Свои новеллы этой вселенной хранятся в этом браузере.' }));
+      note.append(el('span', { text: 'Импортированные новеллы этой вселенной хранятся в этом браузере.' }));
     }
     if (!universe?.builtin && universe) {
       note.append(el('span', { text: 'Ваша вселенная: новеллы и правки хранятся в этом браузере. Экспорт вселенной — в меню «⋯» сверху.' }));
@@ -73,7 +70,6 @@ function countNovels(n) {
 }
 
 function storyCard(story) {
-  const { steps } = countWords(story);
   const cover = story.cover ? resolveUrl(story, story.cover) : '';
   const progress = progressOf(story.id);
   const charCount = story.characters.length;
@@ -116,7 +112,6 @@ function storyCard(story) {
 function openStoryMenu(story) {
   const saves = getSaves(story.id);
   const hasProgress = !!(saves.auto || saves.slots.length);
-  const universes = universeCatalog().filter((u) => u.id !== story.universe);
   openSheet({
     title: story.title,
     subtitle: story.readOnly ? 'Встроенная новелла · только для чтения' : `Изменена ${formatDate(story.updatedAt)}`,
@@ -133,39 +128,6 @@ function openStoryMenu(story) {
           hooks.onPlay(story, { fresh: true });
         },
       } : null,
-      {
-        authorOnly: true, label: story.readOnly ? 'Редактировать копию' : 'Редактировать',
-        icon: ICONS.edit,
-        hint: story.readOnly ? 'оригинал останется в папке stories' : 'изменения сохранятся в браузере',
-        onSelect: async () => {
-          const target = story.readOnly ? duplicateStory(story) : story;
-          if (story.readOnly) toast('Создана ваша копия новеллы');
-          hooks.onEdit(target);
-        },
-      },
-      universes.length ? {
-        authorOnly: true, label: 'Перенести в другую вселенную',
-        icon: ICONS.book,
-        hint: universes.map((u) => u.title).join(', ').slice(0, 60),
-        onSelect: () => pickUniverseFor(story),
-      } : null,
-      {
-        authorOnly: true, label: 'Дублировать',
-        icon: ICONS.copy,
-        onSelect: () => { duplicateStory(story); toast('Копия создана'); renderUniverse(current?.id ?? '', hooks); },
-      },
-      {
-        authorOnly: true, label: 'Экспорт с картинками',
-        icon: ICONS.download,
-        hint: 'один файл, откроется на любом устройстве',
-        onSelect: () => runPortableExport(story),
-      },
-      {
-        authorOnly: true, label: 'Экспорт JSON',
-        icon: ICONS.download,
-        hint: 'только сценарий, картинки — путями из stories/',
-        onSelect: () => exportStory(story),
-      },
       !story.readOnly ? {
         label: 'Удалить новеллу',
         icon: ICONS.trash,
@@ -180,45 +142,6 @@ function openStoryMenu(story) {
       } : null,
     ],
   });
-}
-
-/** Перенос новеллы в другую вселенную — шторка со списком. */
-function pickUniverseFor(story) {
-  const rows = [
-    ...universeCatalog().filter((u) => u.id !== story.universe).map((u) => ({
-      label: u.title,
-      value: countNovels(u.novels?.length || 0),
-      onSelect: () => {
-        moveStoryToUniverse(story, u.id);
-        toast(`Новелла теперь в «${u.title}»`);
-        renderUniverse(current?.id ?? '', hooks);
-      },
-    })),
-    {
-      label: 'Без вселенной',
-      onSelect: () => {
-        moveStoryToUniverse(story, '');
-        toast('Новелла вынесена из вселенной');
-        renderUniverse(current?.id ?? '', hooks);
-      },
-    },
-  ];
-  openSheet({ title: 'Куда перенести?', subtitle: story.title, rows });
-}
-
-async function runPortableExport(story) {
-  toast('Собираю картинки…', 8000);
-  try {
-    const result = await exportStoryPortable(story);
-    if (result.skipped) {
-      toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, ${result.images} картинок. ${result.skipped} не удалось вшить.`);
-    } else {
-      toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, картинок: ${result.images}`);
-    }
-  } catch (err) {
-    console.error(err);
-    toast('Не получилось собрать файл');
-  }
 }
 
 /** Импорт новеллы прямо в эту вселенную. */
@@ -258,7 +181,7 @@ async function runImport(file, universeId) {
   }
 }
 
-/** Меню вселенной: переименовать / экспорт / удалить. */
+/** Меню вселенной: экспорт / удалить. */
 function openUniverseMenu() {
   const universe = current;
   if (!universe) return;
@@ -269,14 +192,6 @@ function openUniverseMenu() {
       ? 'Новеллы без вселенной'
       : `${countNovels(universe.novels?.length || 0)}${universe.builtin ? ' · из папки stories' : ''}`,
     rows: [
-      canEdit ? {
-        label: 'Название и описание',
-        icon: ICONS.edit,
-        onSelect: () => promptUniverse({
-          universe,
-          onSave: () => { renderUniverse(universe.id, hooks); },
-        }),
-      } : null,
       {
         label: 'Экспорт вселенной',
         icon: ICONS.download,
@@ -319,7 +234,6 @@ export function wireUniverse() {
   wired = true;
 
   $('#uni-back')?.addEventListener('click', () => hooks.onBack?.());
-  $('#btn-new-story')?.addEventListener('click', () => hooks.onNew?.(current?.id || ''));
   $('#uni-menu')?.addEventListener('click', openUniverseMenu);
 
   const fileInput = el('input', { type: 'file', class: 'js-import-novel', accept: 'application/json,.json', style: { display: 'none' } });
