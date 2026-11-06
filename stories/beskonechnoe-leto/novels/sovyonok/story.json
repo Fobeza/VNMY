@@ -3674,6 +3674,16 @@
               "text": "Посмотреть, как рисуют стенгазету",
               "goto": "goto_wallnews",
               "if": "not w_wallnews and free0 < 3"
+            },
+            {
+              "text": "Сходить на почту",
+              "goto": "goto_post",
+              "if": "not w_post and free0 < 3"
+            },
+            {
+              "text": "Помочь с дровами",
+              "goto": "goto_woodpile",
+              "if": "not w_woodpile and free0 < 3"
             }
           ],
           "gotoIf": [
@@ -6970,6 +6980,869 @@
       "act": "День первый · Вечер ближе"
     },
     {
+      "id": "snack",
+      "name": "Полдник",
+      "bg": "assets/backgrounds/bg_054.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "К четырём часам столовая оживает снова. На длинных столах стоят кружки с молоком, на блюдах горкой лежат румяные булочки с изюмом, а у окна на подносе остывает целая гора печенья. Тамара ходит между рядами и считает, как заведующая складом.",
+          "id": "s2334"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Молоко пить, булку есть. Кто не доест, будет мыть противни.",
+          "id": "s2335",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я доем! Я всегда доедаю!",
+          "id": "s2336",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "tamara",
+          "text": "Знаю. Но смотри у меня.",
+          "id": "s2337",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Здрасьте. А что, полдник обязателен?",
+          "id": "s2338"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Обязателен. Иначе до ужина ноги протянете.",
+          "id": "s2339",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я беру кружку, чуть тёплую и густую, с тонкой пенкой. Рядом на тарелке лежит булочка с блестящей корочкой. Стоит откусить, как рот наполняется сладкой, мягкой нежностью.",
+          "id": "s2340"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это же… Это очень вкусно.",
+          "id": "s2341"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Для вас пеку! С утра ещё тесто ставила!",
+          "id": "s2342",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Тётя Тамара всегда с утра ставит. Говорит, что в булочках должна быть любовь.",
+          "id": "s2343",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "tamara",
+          "text": "Не болтай, Полина. Ешь.",
+          "id": "s2344",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ем! Ой, как вкусно!",
+          "id": "s2345",
+          "cast": [
+            {
+              "char": "tamara",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "За соседним столом сидят Алиса с книгой и Милана с банкой краски. Они обе молча жуют булочки и время от времени переглядываются.",
+          "id": "s2346"
+        },
+        {
+          "speaker": "milana",
+          "text": "Алиса, ну скажи уже, что вкусно!",
+          "id": "s2347",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Вкусно.",
+          "id": "s2348",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Вот! А я сразу поняла, что тебе нравится!",
+          "id": "s2349",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Милана, не навязывай мне эмоции.",
+          "id": "s2350",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Я не навязываю! Я просто подтверждаю!",
+          "id": "s2351",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Они всегда так?",
+          "id": "s2352"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Всегда. Привыкай.",
+          "id": "s2353",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Рядом, держа в руках блокнот, сидит Валерия. Она тоже пьёт молоко, но делает это методично, мелкими глотками, продолжая что-то записывать.",
+          "id": "s2354"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Валерия, ты и за полдником работаешь?",
+          "id": "s2355"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Это график на завтра. Если не составлю сейчас, потом будет некогда.",
+          "id": "s2356",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Тебя это не утомляет?",
+          "id": "s2357"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Нет. Наоборот. Когда всё записано, мне спокойнее.",
+          "id": "s2358",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Понимаю. Мне, наверно, не хватает такого.",
+          "id": "s2359"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Хочешь, научу?",
+          "id": "s2360",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Научишь составлять графики?",
+          "id": "s2361"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Да. Это легко: нужно просто выписать всё, что нужно сделать, и поставить рядом время.",
+          "id": "s2362",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А если не хочется ничего делать?",
+          "id": "s2363"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Тогда выписываешь «ничего». И ставишь время. Это тоже пункт.",
+          "id": "s2364",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Гениально.",
+          "id": "s2365"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Позвольте присоединиться. Я как раз подготовил таблицу распределения булочек по столам.",
+          "id": "s2366",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Кирилл ставит поднос на край стола, кладёт перед собой тетрадь и аккуратно разворачивает схему. Колонки, стрелочки, цифры, всё выведено твёрдым, чётким почерком.",
+          "id": "s2367"
+        },
+        {
+          "speaker": "milana",
+          "text": "Кирилл, это же булочки!",
+          "id": "s2368",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Булочки — тоже ресурс. Их нужно распределять справедливо.",
+          "id": "s2369",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Справедливо — это когда каждому поровну?",
+          "id": "s2370",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Нет. Справедливо — это когда каждому достаточно.",
+          "id": "s2371",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хорошая формулировка.",
+          "id": "s2372"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Правда? Я над ней долго работал.",
+          "id": "s2373",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "right",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "На другом конце зала Артём пытается проглотить сразу две булочки, а Максим, наоборот, жуёт одну так медленно, будто решает уравнение. Кира сидит между ними и комментирует обоих.",
+          "id": "s2374"
+        },
+        {
+          "speaker": "kira",
+          "text": "Артём! Ты как удав! А Максим как улитка! Мне бы золотую середину!",
+          "id": "s2375",
+          "cast": [
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center",
+              "scale": 1.12
+            },
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Я не удав! Я быстро питаюсь!",
+          "id": "s2376",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Улитка тоже кушает.",
+          "id": "s2377",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 0.98
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Ха! Ты согласился!",
+          "id": "s2378",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 0.98
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Нет.",
+          "id": "s2379",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 0.98
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Нормальный полдник. Булочки, молоко, шумные разговоры. Никто никуда не спешит, никто ничего не доказывает. Вот бы всё время так.)",
+          "id": "s2380"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Допили? Давайте кружки на раздачу. Кто не донесёт, на кухне останется.",
+          "id": "s2381",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я донесу!",
+          "id": "s2382",
+          "cast": [
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 0.95
+            },
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "kira",
+              "sprite": "trevoga",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Скрипят лавки, звякают кружки. Через окна в зал вливается тёплый вечерний свет. Ребята расходятся по делам, оставляя после себя запах молока и изюма.",
+          "id": "s2383"
+        }
+      ],
+      "act": "День первый · Полдник"
+    },
+    {
       "id": "shower",
       "name": "Летний душ",
       "bg": "assets/backgrounds/bg_052.webp",
@@ -9316,67 +10189,87 @@
             {
               "text": "Пойти на кухню помочь Тамаре",
               "goto": "goto_kitchen",
-              "if": "not v_kitchen and free < 6"
+              "if": "not v_kitchen and free < 8"
             },
             {
               "text": "Зайти в библиотеку",
               "goto": "goto_library",
-              "if": "not v_library and free < 6"
+              "if": "not v_library and free < 8"
             },
             {
               "text": "Заглянуть на репетицию",
               "goto": "goto_stage",
-              "if": "not v_stage and free < 6"
+              "if": "not v_stage and free < 8"
             },
             {
               "text": "Зайти в радиомастерскую",
               "goto": "goto_radio",
-              "if": "not v_radio and free < 6"
+              "if": "not v_radio and free < 8"
             },
             {
               "text": "Выйти на стадион",
               "goto": "goto_stadium",
-              "if": "not v_stadium and free < 6"
+              "if": "not v_stadium and free < 8"
             },
             {
               "text": "Навестить Светлану в медпункте",
               "goto": "goto_med",
-              "if": "not v_med and free < 6"
+              "if": "not v_med and free < 8"
             },
             {
               "text": "Сходить на пляж",
               "goto": "goto_beach",
-              "if": "not v_beach and free < 6"
+              "if": "not v_beach and free < 8"
             },
             {
               "text": "Вернуться в домик к Валерии",
               "goto": "goto_home",
-              "if": "not v_home and free < 6"
+              "if": "not v_home and free < 8"
             },
             {
               "text": "Сходить на лодочную станцию",
               "goto": "goto_boathouse",
-              "if": "not v_boathouse and free < 6"
+              "if": "not v_boathouse and free < 8"
             },
             {
               "text": "Зайти в фотокружок",
               "goto": "goto_photo",
-              "if": "not v_photo and free < 6"
+              "if": "not v_photo and free < 8"
             },
             {
               "text": "Заглянуть в музыкальную комнату",
               "goto": "goto_musicroom",
-              "if": "not v_musicroom and free < 6"
+              "if": "not v_musicroom and free < 8"
             },
             {
               "text": "Помочь с посудой в столовой",
               "goto": "goto_dishes",
-              "if": "not v_dishes and free < 6"
+              "if": "not v_dishes and free < 8"
+            },
+            {
+              "text": "Посидеть на скамейке в лесу",
+              "goto": "goto_bench",
+              "if": "not v_bench and free < 8"
+            },
+            {
+              "text": "Пойти за малиной",
+              "goto": "goto_berries",
+              "if": "not v_berries and free < 8"
+            },
+            {
+              "text": "Сыграть в шашки",
+              "goto": "goto_checkers",
+              "if": "not v_checkers and free < 8"
+            },
+            {
+              "text": "Прокатиться на велосипеде",
+              "goto": "goto_bikes",
+              "if": "not v_bikes and free < 8"
             }
           ],
           "gotoIf": [
             {
-              "when": "free >= 6",
+              "when": "free >= 8",
               "goto": "walk_supper"
             }
           ],
@@ -13828,67 +14721,87 @@
             {
               "text": "Пойти на кухню помочь Тамаре",
               "goto": "goto_kitchen",
-              "if": "not v_kitchen and free < 12"
+              "if": "not v_kitchen and free < 16"
             },
             {
               "text": "Зайти в библиотеку",
               "goto": "goto_library",
-              "if": "not v_library and free < 12"
+              "if": "not v_library and free < 16"
             },
             {
               "text": "Заглянуть на репетицию",
               "goto": "goto_stage",
-              "if": "not v_stage and free < 12"
+              "if": "not v_stage and free < 16"
             },
             {
               "text": "Зайти в радиомастерскую",
               "goto": "goto_radio",
-              "if": "not v_radio and free < 12"
+              "if": "not v_radio and free < 16"
             },
             {
               "text": "Выйти на стадион",
               "goto": "goto_stadium",
-              "if": "not v_stadium and free < 12"
+              "if": "not v_stadium and free < 16"
             },
             {
               "text": "Навестить Светлану в медпункте",
               "goto": "goto_med",
-              "if": "not v_med and free < 12"
+              "if": "not v_med and free < 16"
             },
             {
               "text": "Сходить на пляж",
               "goto": "goto_beach",
-              "if": "not v_beach and free < 12"
+              "if": "not v_beach and free < 16"
             },
             {
               "text": "Вернуться в домик к Валерии",
               "goto": "goto_home",
-              "if": "not v_home and free < 12"
+              "if": "not v_home and free < 16"
             },
             {
               "text": "Сходить на лодочную станцию",
               "goto": "goto_boathouse",
-              "if": "not v_boathouse and free < 12"
+              "if": "not v_boathouse and free < 16"
             },
             {
               "text": "Зайти в фотокружок",
               "goto": "goto_photo",
-              "if": "not v_photo and free < 12"
+              "if": "not v_photo and free < 16"
             },
             {
               "text": "Заглянуть в музыкальную комнату",
               "goto": "goto_musicroom",
-              "if": "not v_musicroom and free < 12"
+              "if": "not v_musicroom and free < 16"
             },
             {
               "text": "Помочь с посудой в столовой",
               "goto": "goto_dishes",
-              "if": "not v_dishes and free < 12"
+              "if": "not v_dishes and free < 16"
+            },
+            {
+              "text": "Посидеть на скамейке в лесу",
+              "goto": "goto_bench",
+              "if": "not v_bench and free < 16"
+            },
+            {
+              "text": "Пойти за малиной",
+              "goto": "goto_berries",
+              "if": "not v_berries and free < 16"
+            },
+            {
+              "text": "Сыграть в шашки",
+              "goto": "goto_checkers",
+              "if": "not v_checkers and free < 16"
+            },
+            {
+              "text": "Прокатиться на велосипеде",
+              "goto": "goto_bikes",
+              "if": "not v_bikes and free < 16"
             }
           ],
           "gotoIf": [
             {
-              "when": "free >= 12",
+              "when": "free >= 16",
               "goto": "boys"
             }
           ],
@@ -16467,6 +17380,743 @@
         }
       ],
       "act": "День первый · Костёр"
+    },
+    {
+      "id": "stars",
+      "name": "Под звёздами",
+      "bg": "assets/backgrounds/bg_041.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "После костра лагерь постепенно затихает. Только на площади ещё горят фонарики, да из окон кое-где пробивается свет. В небе над соснами рассыпаны звёзды, густые, как мука на тёмной скатерти.",
+          "id": "s2384"
+        },
+        {
+          "speaker": "kira",
+          "text": "Илья! Иди к нам! Мы звёзды разглядываем!",
+          "id": "s2385",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "На площади прямо на асфальте лежат Кира и Полина, подложив под головы свёрнутые кофты. Рядом на траве сидит Виолетта, обхватив колени руками.",
+          "id": "s2386"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Лежать на асфальте? Он же холодный.",
+          "id": "s2387"
+        },
+        {
+          "speaker": "kira",
+          "text": "Не холодный! Он ещё тёплый от солнца! Ложись!",
+          "id": "s2388",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Только осторожно, Илья. Тут камешки.",
+          "id": "s2389",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я опускаюсь на асфальт, и он правда отдаёт ладони слабое дневное тепло. Над головой раскинулось огромное небо, в котором, кажется, звёзд больше, чем темноты.",
+          "id": "s2390"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Афигеть. Столько звёзд я давно не видел.",
+          "id": "s2391"
+        },
+        {
+          "speaker": "kira",
+          "text": "А вон та большая, это Ковш! Видишь? Семь звёзд!",
+          "id": "s2392",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Вижу. Большая Медведица.",
+          "id": "s2393"
+        },
+        {
+          "speaker": "polina",
+          "text": "А мне больше нравится Малая. Она как ковшик для маленьких.",
+          "id": "s2394",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "…А вот эта яркая — Вега. Она в созвездии Лиры.",
+          "id": "s2395",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "zadumchivost",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Откуда ты знаешь?",
+          "id": "s2396"
+        },
+        {
+          "speaker": "violetta",
+          "text": "В библиотеке нашла книгу про звёзды. Читаю по вечерам.",
+          "id": "s2397",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "А я знаю только Ковш и Полярную!",
+          "id": "s2398",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой, а я Полярную всегда ищу. Она как друг: всегда на месте.",
+          "id": "s2399",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы лежим молча, разглядывая небо. Вдали у леса тихо ухает ночная птица, а у соседнего корпуса кто-то негромко смеётся. Фонарики дрожат на ветру и бросают на асфальт мягкие жёлтые пятна.",
+          "id": "s2400"
+        },
+        {
+          "speaker": "kira",
+          "text": "Знаете, я иногда думаю: а вдруг там тоже кто-то лежит и смотрит на нас?",
+          "id": "s2401",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой, кто?",
+          "id": "s2402",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Ну, какие-нибудь девчонки с другой планеты! Тоже в лагере, тоже вечером!",
+          "id": "s2403",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "…Красивая мысль.",
+          "id": "s2404",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Мне нравится. Особенно часть про лагерь. Значит, везде есть кому оставаться по вечерам.",
+          "id": "s2405"
+        },
+        {
+          "speaker": "kira",
+          "text": "Ага! Они, наверно, тоже ждут полдника!",
+          "id": "s2406",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой, и у них булочки с изюмом!",
+          "id": "s2407",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Если нет, им нужно срочно изобрести.",
+          "id": "s2408"
+        },
+        {
+          "speaker": null,
+          "text": "Вдруг по небу прочерчивается тонкая светящаяся линия. Она вспыхивает, мелькает над соснами и гаснет.",
+          "id": "s2409"
+        },
+        {
+          "speaker": "kira",
+          "text": "Звезда упала! Загадывайте желание!",
+          "id": "s2410",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Быстро, быстро!",
+          "id": "s2411",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "…Загадала.",
+          "id": "s2412",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "zadumchivost",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "И я.",
+          "id": "s2413"
+        },
+        {
+          "speaker": "kira",
+          "text": "А я загадала, чтобы завтра была пасмурная погода и тихий час длился дольше!",
+          "id": "s2414",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "zadumchivost",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Я загадала, чтобы мама была здорова.",
+          "id": "s2415",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "zadumchivost",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "violetta",
+          "text": "…Свою не скажу.",
+          "id": "s2416",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А я скажу: чтобы завтра у Тамары остались булочки.",
+          "id": "s2417"
+        },
+        {
+          "speaker": "kira",
+          "text": "Вот это желание! Достойное!",
+          "id": "s2418",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "right",
+              "scale": 1.08
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы смеёмся вполголоса, чтобы не разбудить соседей. Где-то далеко ещё раз взвивается падающая звезда. На этот раз никто не загадывает желание: просто лежим и смотрим.",
+          "id": "s2419"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Ребята, пора. Отбой.",
+          "id": "s2420",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.08
+            },
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Валерия подходит с фонариком, останавливается рядом и тоже поднимает голову. Луч гаснет, и в наступившей темноте звёзды вспыхивают ещё ярче.",
+          "id": "s2421"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Красиво. Я давно не смотрела на небо просто так.",
+          "id": "s2422",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.08
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Присоединяйся. Асфальт тёплый.",
+          "id": "s2423"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Не могу. Мне нужно проследить, чтобы все легли.",
+          "id": "s2424",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.08
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Валерия Андреевна, ну пять минут! Пожалуйста!",
+          "id": "s2425",
+          "cast": [
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 1.08
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Хорошо. Пять минут.",
+          "id": "s2426",
+          "cast": [
+            {
+              "char": "violetta",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 1.08
+            },
+            {
+              "char": "valeriya",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Валерия осторожно ложится рядом с Полиной, поджав колени. Так мы лежим впятером на тёплом асфальте и смотрим вверх: пять голов, одно небо.",
+          "id": "s2427"
+        },
+        {
+          "speaker": null,
+          "text": "(Странный день. Я проснулся в автобусе, потерялся, нашёл людей и вот лежу под звёздами с теми, кого утром не знал. Если это сон, то лучший из тех, что мне снились.)",
+          "id": "s2428"
+        },
+        {
+          "speaker": null,
+          "text": "Через пять минут Валерия поднимается первой, отряхивает юбку и командует отбой. Мы расходимся по домикам, тихо переговариваясь, а небо над площадью продолжает горсть за горстью высыпать звёзды.",
+          "id": "s2429"
+        }
+      ],
+      "act": "День первый · Поздний вечер"
     },
     {
       "id": "nightpath",
@@ -30745,6 +32395,4304 @@
           "goto": "hubA:ask"
         }
       ]
+    },
+    {
+      "id": "loc_post",
+      "name": "Почта",
+      "bg": "assets/backgrounds/bg_053.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "У клубного крыльца, на раскладном столике, лежит стопка писем и газет. Рядом стоит кожаная сумка с вытертым ремнём, а над столиком наклонилась Валерия с блокнотом: она сверяет фамилии на конвертах со списком. Вокруг уже собрались несколько ребят.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free0",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "w_post",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Так. Кира, тебе письмо. Полина, тебе два. Тамара Васильевна, тебе открытка.",
+          "id": "s2256",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Мне?! Давайте скорее! Это от брата? Ой, это от брата!",
+          "id": "s2257",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "От него. Не рви конверт, аккуратно.",
+          "id": "s2258",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я аккуратно! Я просто быстро!",
+          "id": "s2259",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Здрасьте. Это что, почта?",
+          "id": "s2260"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Она самая. Привозят раз в три дня. Всё, что за это время придёт, я раздаю после обеда.",
+          "id": "s2261",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "И письма всегда приходят?",
+          "id": "s2262"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Не всегда. Но когда приходят, это маленький праздник.",
+          "id": "s2263",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Кира уже уселась на ступеньку и разрывает конверт, а Полина прижимает к груди два письма, словно боится, что их сдует. Тамара держит открытку обеими руками, будто она хрупкая.",
+          "id": "s2264"
+        },
+        {
+          "speaker": "polina",
+          "text": "Это от мамы! И от бабушки! Ой, Илья, смотрите, там марка с самолётом!",
+          "id": "s2265",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Красивая. Ты их собираешь?",
+          "id": "s2266"
+        },
+        {
+          "speaker": "polina",
+          "text": "Конечно! Это целая коллекция. Вот уже семнадцать штук.",
+          "id": "s2267",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "«Дорогая Кира. Служба идёт нормально, кормят хорошо, друзей нашёл. Скучаю по твоим шуткам. Береги себя». Ой. Он помнит про шутки!",
+          "id": "s2268",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ещё бы. Такие шутки забыть нельзя.",
+          "id": "s2269"
+        },
+        {
+          "speaker": "kira",
+          "text": "Правда?!",
+          "id": "s2270",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Правда. Ты у нас громкий источник оптимизма.",
+          "id": "s2271"
+        },
+        {
+          "speaker": "kira",
+          "text": "Ха! Запишу в дневник!",
+          "id": "s2272",
+          "cast": [
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "tamara",
+          "text": "Ну вот. Мой Вася пишет: «Не волнуйся, мама, я питаюсь нормально». Как же, питаюсь! Я его знаю: у него на ужин сухарь и чай.",
+          "id": "s2273",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Тамара Васильевна, не волнуйтесь. Он взрослый.",
+          "id": "s2274",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "teplaya_ulybka",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "tamara",
+          "text": "Взрослый! Ему двадцать, а я до сих пор ему носки вяжу.",
+          "id": "s2275",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это очень милая мама.",
+          "id": "s2276"
+        },
+        {
+          "speaker": "tamara",
+          "text": "Спасибо, милок. Только не говори ему.",
+          "id": "s2277",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Валерия складывает пустые конверты, подшивает отдельные листочки в тонкую папку. Я смотрю, как она тщательно записывает фамилии, и не могу отделаться от мысли, что это тоже своего рода забота.",
+          "id": "s2278"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Илья, тебе пока ничего. Но если хочешь, возьми бумагу и конверт. Напиши кому-нибудь.",
+          "id": "s2279",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спасибо. А почтовый ящик где?",
+          "id": "s2280"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Вон там, у ворот. Синий.",
+          "id": "s2281",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Понял. Если решусь написать, брошу туда.",
+          "id": "s2282"
+        },
+        {
+          "speaker": "valeriya",
+          "text": "Решайся. Писать — это полезно.",
+          "id": "s2283",
+          "cast": [
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 1.05
+            },
+            {
+              "char": "tamara",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "valeriya",
+              "sprite": "nezhnost",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Конверт, чистый лист, ящик у ворот. Раньше я бы просто набрал сообщение, не думая. Здесь каждая фраза проходит несколько километров и несколько дней. Наверно, поэтому слова ценятся иначе.)",
+          "id": "s2284",
+          "goto": "hub0:ask"
+        }
+      ]
+    },
+    {
+      "id": "loc_woodpile",
+      "name": "Дровяной склад",
+      "bg": "assets/backgrounds/bg_006.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "За хозяйственным корпусом, в тени сосен, высится огромная поленница. Рядом лежат колоды, на пне торчит топор с тёмным обухом, а в воздухе висят смоляные запахи, от которых щиплет в носу. Артём, расставив ноги, замахивается над чурбаком.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free0",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "w_woodpile",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "О, Илья! Хорошо, что пришёл! Мне как раз нужен помощник!",
+          "id": "s2286",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "center",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Помощник по чему?",
+          "id": "s2287"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Складывать! Я рублю, ты таскаешь. Идеальная пара!",
+          "id": "s2288",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "center",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Прошу обратить внимание: топор должен находиться в рабочей зоне только одного человека. Остальные — на безопасном расстоянии не менее двух метров.",
+          "id": "s2289",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Кирилл, ты откуда взялся?",
+          "id": "s2290",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Я измеряю объём поленницы. Это для хозяйственного плана.",
+          "id": "s2291",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "right",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Занудство.",
+          "id": "s2292",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Это точность!",
+          "id": "s2293",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Максим сидит на низком чурбаке, облокотившись о ствол, и жуёт соломинку. Он выглядит так, будто занят очень важным делом: наблюдением.",
+          "id": "s2294"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты тоже работаешь?",
+          "id": "s2295"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Я контролирую.",
+          "id": "s2296",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Контролёр! Иди лучше поколи!",
+          "id": "s2297",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Не моя специальность.",
+          "id": "s2298",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Артём ловко ставит чурбан на колоду, выдыхает и опускает топор. Раздаётся громкий хруст, и полено расходится на две ровные половинки. Он делает это с такой лёгкостью, будто рубит не дерево, а масло.",
+          "id": "s2299"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Афигеть. Ты где этому научился?",
+          "id": "s2300"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Дома. Дед учил. Говорил: «Рубить надо не силой, а дыханием».",
+          "id": "s2301",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Опять дыхание. Все в лагере про него говорят.",
+          "id": "s2302"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Потому что оно главное! Вдох — замах, выдох — удар.",
+          "id": "s2303",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Дай попробую.",
+          "id": "s2304"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Серьёзно?",
+          "id": "s2305",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Серьёзно. Только не смейтесь.",
+          "id": "s2306"
+        },
+        {
+          "speaker": null,
+          "text": "Артём протягивает мне топор. Он тяжелее, чем выглядит, и рукоять слегка влажная от ладоней. Я ставлю полено, вдыхаю, замахиваюсь и бью. Топор отскакивает, оставляя на колоде крошечную зарубку, а полено кувыркается в сторону.",
+          "id": "s2307"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Это называется «неэффективный удар». Угол наклона слишком острый.",
+          "id": "s2308",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Красиво.",
+          "id": "s2309",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Для первого раза отлично! Давай ещё!",
+          "id": "s2310",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ещё раз так отлетит, и нам понадобится Светлана.",
+          "id": "s2311"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Не отлетит! Смотри: ноги шире, спина прямая, топор не отпускай, а сопровождай.",
+          "id": "s2312",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я повторяю движение. На третий раз топор попадает ровно по центру, и полено раскалывается пополам. Я замираю, глядя на две белые половинки, пахнущие смолой.",
+          "id": "s2313"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Получилось.",
+          "id": "s2314"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Получилось! Видишь?! Я же говорил!",
+          "id": "s2315",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Поздравляю. Это был статистически нетипичный результат.",
+          "id": "s2316"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спасибо. Я это ценю.",
+          "id": "s2317"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Ништяк.",
+          "id": "s2318"
+        },
+        {
+          "speaker": null,
+          "text": "(Простая работа, простые движения. Что-то в этом есть: ты бьёшь, и мир отвечает тебе чётким хрустом. В нём нет двойного дна.)",
+          "id": "s2319"
+        },
+        {
+          "speaker": null,
+          "text": "Мы работаем около часа. Артём рубит, я таскаю поленья к поленнице, Кирилл раскладывает их с точностью ювелира, а Максим, не вставая, комментирует каждый слой.",
+          "id": "s2320"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Левее.",
+          "id": "s2321",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Максим, это не левее, это перпендикулярно.",
+          "id": "s2322",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Тебе виднее.",
+          "id": "s2323",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Всё, молодцы! Хватит на неделю!",
+          "id": "s2324",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хорошо. А то у меня уже руки гудят.",
+          "id": "s2325"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Это хороший гул! Значит, работал.",
+          "id": "s2326",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "К слову, я рассчитал, что мы сложили ровно сорок три полена.",
+          "id": "s2327",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Сорок четыре.",
+          "id": "s2328",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Откуда ты знаешь?!",
+          "id": "s2329",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Я считал.",
+          "id": "s2330",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты же говорил, что не считаешь.",
+          "id": "s2331"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Только поленья.",
+          "id": "s2332",
+          "cast": [
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "left",
+              "scale": 0.98
+            },
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "center",
+              "scale": 1.03
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы падаем на траву рядом с поленницей, глядя в небо. Облака лениво плывут над соснами, а где-то у кухни перекликаются голоса. От нас пахнет смолой, потом и свежей хвоей.",
+          "id": "s2333",
+          "goto": "hub0:ask"
+        }
+      ]
+    },
+    {
+      "id": "loc_bench",
+      "name": "Скамейка в лесу",
+      "bg": "assets/backgrounds/bg_027.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Лесная тропа здесь делает поворот, и на самом изгибе стоит старая деревянная скамейка с резной спинкой. Вокруг растут сосны, между ними пробиваются косые золотые лучи, а на скамейке сидит Алиса с раскрытой книгой на коленях. Рядом лежит соломенная шляпа.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "v_bench",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Ты один из тех, кто не умеет проходить мимо?",
+          "id": "s2431",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Только когда на скамейке интересный человек. Можно?",
+          "id": "s2432"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Можно. Но не мешай читать.",
+          "id": "s2433",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "center",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Не буду. Я просто посижу.",
+          "id": "s2434"
+        },
+        {
+          "speaker": null,
+          "text": "Я присаживаюсь на край. Доски тёплые, чуть шершавые. Слышно, как в вышине перекликаются птицы, а в стороне журчит едва заметный ручей. Пахнет хвоей и сухой травой.",
+          "id": "s2435"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Ты нарушаешь тишину дыханием.",
+          "id": "s2436",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "center",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Постараюсь дышать тише.",
+          "id": "s2437"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Шучу. Дыши как хочешь.",
+          "id": "s2438",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "center",
+              "scale": 1.12
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "А, вот вы где. Здравствуйте.",
+          "id": "s2439",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "По тропинке идёт Светлана, в светлом платье, с плетёной корзинкой в руках. В корзинке пучки трав: мята, зверобой, ромашка. Она остановилась, поправила волосы и улыбнулась.",
+          "id": "s2440"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Здравствуйте, Светлана.",
+          "id": "s2441",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Добрый вечер. Вы по траве?",
+          "id": "s2442"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Собираю для чая. Мята заканчивается, а ромашка нужна на вечер.",
+          "id": "s2443",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А это что? Жёлтенькое?",
+          "id": "s2444"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Зверобой. От простуды и для настроения. Старики говорят, что он на девяносто девять недугов.",
+          "id": "s2445",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Есть научные данные?",
+          "id": "s2446"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Есть опыт. А опыт тоже данные.",
+          "id": "s2447",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Опыт субъективен.",
+          "id": "s2448",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Зато проверен.",
+          "id": "s2449",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Предлагаю ничью. Опыт — это данные, которым повезло дожить до проверки.",
+          "id": "s2450"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Хорошо сказано.",
+          "id": "s2451",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Принимается.",
+          "id": "s2452",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Светлана ставит корзинку на землю и садится на другой край скамейки. Втроём мы смотрим на тропу, по которой тянутся длинные закатные тени. Вдали кто-то поёт, но слов не разобрать.",
+          "id": "s2453"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Алиса, ты опять всю ночь читала?",
+          "id": "s2454",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Не всю. До трёх.",
+          "id": "s2455",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "До трёх! Тебе нужно спать.",
+          "id": "s2456",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "strogost",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Не получается. Сначала дочитать главу, потом ещё одну, потом ещё.",
+          "id": "s2457",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "strogost",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Знакомо. Я тоже так делал. Только с другими вещами.",
+          "id": "s2458"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "С какими?",
+          "id": "s2459",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Неважно. Скучными.",
+          "id": "s2460"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Вот и ответ. С интересными такое бывает.",
+          "id": "s2461",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Свет в окне книгу не виноват.",
+          "id": "s2462",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Ты сильно устаёшь, потом бываешь капризной.",
+          "id": "s2463",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Я не капризная!",
+          "id": "s2464",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "svetlana",
+          "text": "А вчера ты ругала кошку за то, что она села на твою книгу.",
+          "id": "s2465",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "alisa",
+          "text": "Она села на мою книгу.",
+          "id": "s2466",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Звучит как преступление.",
+          "id": "s2467"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Именно.",
+          "id": "s2468",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы замолкаем. Свет между сосен постепенно становится медовым, затем розоватым. На соседнем стволе стучит дятел: сначала быстро, потом осторожнее, будто проверяет, не мешает ли.",
+          "id": "s2469"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Знаешь, Илья. Я люблю такие минуты. Когда ничего не надо делать.",
+          "id": "s2470",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "teplaya_ulybka",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я тоже. Правда, я только сейчас об этом узнал.",
+          "id": "s2471"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Поздно открыл. Но хорошо, что открыл.",
+          "id": "s2472",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "skepsis",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Лучше поздно, чем никогда. Хотя это банальность.",
+          "id": "s2473"
+        },
+        {
+          "speaker": "alisa",
+          "text": "Банальности тоже бывают правдой.",
+          "id": "s2474",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Светлана берёт корзинку, поднимается и протягивает мне веточку мяты.",
+          "id": "s2475"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Держи. Положи под подушку. Лучше спится.",
+          "id": "s2476",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спасибо. А если не сработает?",
+          "id": "s2477"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Тогда придёшь ко мне.",
+          "id": "s2478",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это уже схема.",
+          "id": "s2479"
+        },
+        {
+          "speaker": "svetlana",
+          "text": "Это забота.",
+          "id": "s2480",
+          "cast": [
+            {
+              "char": "alisa",
+              "sprite": "strogost",
+              "pos": "left",
+              "scale": 1.12
+            },
+            {
+              "char": "svetlana",
+              "sprite": "ulybka",
+              "pos": "right",
+              "scale": 1.0
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Забота. Такой вот странный обмен: мне мяту, ей поддержка. Никто не считает. Если бы я мог вернуть прошлую жизнь и вставить туда пару таких вечеров, она бы сильно переменилась.)",
+          "id": "s2481",
+          "gotoIf": [
+            {
+              "when": "phase == 0",
+              "goto": "hubA:ask"
+            },
+            {
+              "when": "phase >= 1",
+              "goto": "hubB:ask"
+            }
+          ],
+          "goto": "hubA:ask"
+        }
+      ]
+    },
+    {
+      "id": "loc_berries",
+      "name": "За малиной",
+      "bg": "assets/backgrounds/bg_044.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "За лагерным забором, где заканчивается утоптанная тропа, начинается малинник. Ветки склонились под тяжестью ягод, в траве лежат красные пятна упавшей малины, а в воздухе пахнет сладостью, нагретой листвой и немного дымом. Вокруг гудят шмели и пчёлы.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "v_berries",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Илья! Давай сюда! Тут самая крупная!",
+          "id": "s2483",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А мне говорили, что за забор нельзя без разрешения.",
+          "id": "s2484"
+        },
+        {
+          "speaker": "polina",
+          "text": "Валерия Андреевна разрешила. Мы идём с корзиной. Для компота.",
+          "id": "s2485",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Тогда я с вами. Что делать?",
+          "id": "s2486"
+        },
+        {
+          "speaker": "kira",
+          "text": "Срывай аккуратно. Не мни. Не клади в рот каждую вторую.",
+          "id": "s2487",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Кира, а ты сама?",
+          "id": "s2488",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я… проверяю качество!",
+          "id": "s2489",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 1.05
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Узнаю знакомый приём.",
+          "id": "s2490"
+        },
+        {
+          "speaker": "artyom",
+          "text": "О, малина! Люблю! Давайте я возьму ведро!",
+          "id": "s2491",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Из-за кустов вылезает Артём с огромной жестяной бадейкой. Лоб у него в поту, на щеке царапина от веток, а в глазах счастье человека, которому разрешили собирать сладкое.",
+          "id": "s2492"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Я как раз с утра думал про малину! Чувствовал!",
+          "id": "s2493",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Ты всегда чувствуешь, когда рядом еда!",
+          "id": "s2494",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Это талант!",
+          "id": "s2495",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы расходимся по малиннику. Я нахожу куст, обсыпанный ягодами, и осторожно срываю одну. Она мягкая, почти без усилия отделяется от ножки. Кладу в корзину, срываю вторую, третью.",
+          "id": "s2496"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ощущение, что я что-то делаю правильно.",
+          "id": "s2497"
+        },
+        {
+          "speaker": "polina",
+          "text": "Правда! Вы очень ровно складываете! Ой, смотрите, ещё одна, огромная!",
+          "id": "s2498",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это не ягода. Это малина-великан.",
+          "id": "s2499"
+        },
+        {
+          "speaker": "kira",
+          "text": "Дай посмотреть! Ого! Она в два раза больше моей!",
+          "id": "s2500",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Хочешь, обменяемся? Моя большая на твою маленькую.",
+          "id": "s2501"
+        },
+        {
+          "speaker": "kira",
+          "text": "Нет! Я свою не отдам!",
+          "id": "s2502",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "polina",
+          "text": "Ой, а я вашу попробую!",
+          "id": "s2503",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Полина тянется, осторожно берёт у меня ягоду, надкусывает уголок и закрывает глаза.",
+          "id": "s2504"
+        },
+        {
+          "speaker": "polina",
+          "text": "Сладкая… Как конфета. Как лето в банке.",
+          "id": "s2505",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "smushchenie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Звучит как реклама.",
+          "id": "s2506"
+        },
+        {
+          "speaker": "polina",
+          "text": "Как что?",
+          "id": "s2507",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ничего. Это я так, мыслю вслух.",
+          "id": "s2508"
+        },
+        {
+          "speaker": "kira",
+          "text": "Вслух мыслить полезно. А то в голове запутается!",
+          "id": "s2509",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Я вот никогда не мыслю вслух. Я сразу действую!",
+          "id": "s2510",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Вот потому у тебя ведро уже наполовину пустое!",
+          "id": "s2511",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Это не я! Это кто-то из кустов!",
+          "id": "s2512",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты уверен?",
+          "id": "s2513"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Ну… почти.",
+          "id": "s2514",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы собираем почти час. Корзины наполняются, в воздухе густеет запах малины, а на пальцах остаются красные пятна, как будто мы все нарисовали чьи-то портреты. Кира приносит с обочины пучок крапивы и пытается подкинуть его Артёму.",
+          "id": "s2515"
+        },
+        {
+          "speaker": "kira",
+          "text": "Держи, закуска!",
+          "id": "s2516",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Я обожаю крапиву! Из неё суп варят!",
+          "id": "s2517",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Ты что, ел?",
+          "id": "s2518",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Конечно! У нас дома варят!",
+          "id": "s2519",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Звучит как вызов вкусу.",
+          "id": "s2520"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Попробуешь — понравится!",
+          "id": "s2521",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "trevoga",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Когда корзины наполнены до краёв, мы присаживаемся на траву у края малинника. Ребята делятся водой из фляжки, кто-то достаёт кусок хлеба. Над нами мерно шелестит листва.",
+          "id": "s2522"
+        },
+        {
+          "speaker": "polina",
+          "text": "Знаете, я всегда люблю такие минуты. Когда все вместе, и каждый занят простым.",
+          "id": "s2523",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А я только недавно понял, что простое и есть главное.",
+          "id": "s2524"
+        },
+        {
+          "speaker": "kira",
+          "text": "Это мы тебя научили!",
+          "id": "s2525",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "polina",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 1.05
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Вы. И малина.",
+          "id": "s2526"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Малина — лучший учитель!",
+          "id": "s2527"
+        },
+        {
+          "speaker": null,
+          "text": "(Малина, друзья, пот и пыль на ладонях. Всё, чего мне не хватало в других местах. Так просто и так трудно было это увидеть.)",
+          "id": "s2528",
+          "gotoIf": [
+            {
+              "when": "phase == 0",
+              "goto": "hubA:ask"
+            },
+            {
+              "when": "phase >= 1",
+              "goto": "hubB:ask"
+            }
+          ],
+          "goto": "hubA:ask"
+        }
+      ]
+    },
+    {
+      "id": "loc_checkers",
+      "name": "Шашечная партия",
+      "bg": "assets/backgrounds/bg_053.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "На площади, под старым клёном, стоит деревянный стол с врезанной шахматной доской. Вокруг стола три табурета и скамейка. На доске уже расставлены чёрные и белые шашки, а над ней сосредоточенно нависли Максим и Кирилл. Рядом, подперев щёку рукой, сидит Милана.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "v_checkers",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Прошу не мешать. Партия на стадии миттельшпиля.",
+          "id": "s2530",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "center",
+              "scale": 1.03
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Это шашки, а не шахматы. У них нет миттельшпиля.",
+          "id": "s2531",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Любая игра имеет фазы развития.",
+          "id": "s2532",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Ход.",
+          "id": "s2533",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Привет. Можно посмотреть?",
+          "id": "s2534"
+        },
+        {
+          "speaker": "milana",
+          "text": "Садись! Только молча. Они очень серьёзные.",
+          "id": "s2535",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я присаживаюсь на край скамейки. На доске шашки расставлены хитро: белые тянутся к левому краю, чёрные подбираются к центру. Кирилл слегка щурится, Максим сидит расслабленно, словно его это не касается.",
+          "id": "s2536"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Ход шашкой с c3 на d4. Угроза взятия.",
+          "id": "s2537",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Не угроза.",
+          "id": "s2538"
+        },
+        {
+          "speaker": null,
+          "text": "Максим не торопясь переставляет шашку. В следующую секунду он бьёт сразу две, и доска пустеет ровно на половину.",
+          "id": "s2539"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Это невозможно. Я не предусмотрел такую комбинацию.",
+          "id": "s2540",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Он всегда так! Лежит, молчит, а потом одним ходом всё решает.",
+          "id": "s2541",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Привычка.",
+          "id": "s2542",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ты прямо мастер.",
+          "id": "s2543"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Не мастер. Просто не тороплюсь.",
+          "id": "s2544",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Строго говоря, спешка действительно ухудшает качество решений. Но у меня расчёт был верный.",
+          "id": "s2545",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Расчёт — это скучно. Игра — это интуиция.",
+          "id": "s2546",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Интуиция — это расчёт, который не осознан.",
+          "id": "s2547",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "nedovolstvo",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Предлагаю сыграть с победителем. Кто победил?",
+          "id": "s2548"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Я.",
+          "id": "s2549"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Значит, со мной.",
+          "id": "s2550"
+        },
+        {
+          "speaker": "milana",
+          "text": "Ты умеешь?",
+          "id": "s2551",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Играл когда-то. Давно. Надеюсь, вспомню.",
+          "id": "s2552"
+        },
+        {
+          "speaker": null,
+          "text": "Мы расставляем шашки заново. Максим берёт белые, мне достаются чёрные. Первые несколько ходов проходят молча, в тишине слышен только скрип табурета и далёкий шелест листьев.",
+          "id": "s2553"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Так. Я хожу сюда.",
+          "id": "s2554"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Угу.",
+          "id": "s2555",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А ты сюда?",
+          "id": "s2556"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Не скажу.",
+          "id": "s2557",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "udivlenie",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Илья, не делай так! Он сейчас тебя сожрёт!",
+          "id": "s2558",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "nedovolstvo",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я уже понял. Но надо же когда-нибудь проиграть.",
+          "id": "s2559"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Позволю себе заметить: твоя шашка на e5 находится под ударом.",
+          "id": "s2560",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это ловушка!",
+          "id": "s2561"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Нет. Это ошибка.",
+          "id": "s2562"
+        },
+        {
+          "speaker": "milana",
+          "text": "Ха-ха! Прямо в точку!",
+          "id": "s2563",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Максим бьёт мою шашку, потом ещё одну. Через десять минут я остаюсь с двумя, а он с шестью. Но игра продолжается, и в самый последний момент мне удаётся пройти в дамки.",
+          "id": "s2564"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Вот! Дамка!",
+          "id": "s2565"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Красиво.",
+          "id": "s2566",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Ого! Илья вырвал дамку!",
+          "id": "s2567"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Невероятно. Вероятность составляла не более двух процентов.",
+          "id": "s2568"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Зато я потерял всё остальное.",
+          "id": "s2569"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Согласен. Ничья.",
+          "id": "s2570",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Ничья? У тебя же больше шашек.",
+          "id": "s2571"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Дамка за тебя. Значит, ничья.",
+          "id": "s2572",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Спасибо, что не добил.",
+          "id": "s2573"
+        },
+        {
+          "speaker": "maksim",
+          "text": "Был перекус.",
+          "id": "s2574",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "milana",
+          "text": "Перекус?",
+          "id": "s2575",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "maksim",
+          "text": "Хочу есть. Поэтому закончил.",
+          "id": "s2576",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "spokoystvie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Логика железная.",
+          "id": "s2577"
+        },
+        {
+          "speaker": "kirill",
+          "text": "У меня есть для вас сухарики.",
+          "id": "s2578",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ukazyvaet",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Кирилл достаёт из кармана газетный кулёк, высыпает на ладонь горсть аккуратных квадратиков и протягивает по кругу. Сухарики пахнут чесноком и хрустят на зубах.",
+          "id": "s2579"
+        },
+        {
+          "speaker": "milana",
+          "text": "Вкусные! Откуда?",
+          "id": "s2580",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "kirill",
+          "text": "Сам готовил. По собственному рецепту. Температура сорок пять градусов, время двадцать минут.",
+          "id": "s2581",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "rasteryannost",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Кирилл, ты универсал.",
+          "id": "s2582"
+        },
+        {
+          "speaker": "kirill",
+          "text": "Просто люблю точность.",
+          "id": "s2583",
+          "cast": [
+            {
+              "char": "kirill",
+              "sprite": "smushchenie",
+              "pos": "left",
+              "scale": 1.03
+            },
+            {
+              "char": "milana",
+              "sprite": "ulybka",
+              "pos": "center",
+              "scale": 0.95
+            },
+            {
+              "char": "maksim",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.95
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Шашки, сухарики, ничья. Мирный вечер. Никто никому ничего не доказывает, кроме одного: что играть бывает приятнее, чем побеждать.)",
+          "id": "s2584",
+          "gotoIf": [
+            {
+              "when": "phase == 0",
+              "goto": "hubA:ask"
+            },
+            {
+              "when": "phase >= 1",
+              "goto": "hubB:ask"
+            }
+          ],
+          "goto": "hubA:ask"
+        }
+      ]
+    },
+    {
+      "id": "loc_bikes",
+      "name": "Велосипедный сарай",
+      "bg": "assets/backgrounds/bg_008.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "На обочине дороги, у самой кромки леса, стоит дощатый сарайчик с косой дверью. На гвозде у входа висит жестяная табличка «Транспорт». Рядом, прислонённые к стене, стоят три велосипеда: один синий с ржавой цепью, один жёлтый с корзинкой и один зелёный без седла.",
+          "id": "in",
+          "set": [
+            {
+              "var": "free",
+              "op": "add",
+              "value": 1
+            },
+            {
+              "var": "v_bikes",
+              "op": "set",
+              "value": true
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Илья! Ты как раз вовремя! У нас тут показательные выступления!",
+          "id": "s2586",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "privetstvie",
+              "pos": "center",
+              "scale": 0.9
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Какие выступления?",
+          "id": "s2587"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Велосипедные! Смотри, как я умею!",
+          "id": "s2588",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "privetstvie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Артём разбегается, прыгает на жёлтый велосипед, вихляет на камешках и, к собственному удивлению, всё-таки удерживает равновесие. Корзинка при этом жалобно звякает, как колокольчик.",
+          "id": "s2589"
+        },
+        {
+          "speaker": "kira",
+          "text": "Тормози! Тормози! Ай!",
+          "id": "s2590",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Не могу! Тормоза нет!",
+          "id": "s2591",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "udivlenie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Велосипед с шумом въезжает в куст шиповника. Артём, растопырив руки, замирает и тихо произносит:",
+          "id": "s2592"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Приехали.",
+          "id": "s2593",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "smushchenie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Живой?",
+          "id": "s2594"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Живой! Колется только!",
+          "id": "s2595",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Это называется «шиповничное торможение».",
+          "id": "s2596",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Научный термин?",
+          "id": "s2597"
+        },
+        {
+          "speaker": "kira",
+          "text": "Конечно!",
+          "id": "s2598",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Мы вытаскиваем Артёма из куста, отряхиваем. Он смеётся, потирая царапину на локте. Потом берёт жёлтый велосипед за руль, ставит ровно и поворачивается ко мне.",
+          "id": "s2599"
+        },
+        {
+          "speaker": "artyom",
+          "text": "А теперь ты! Прокатись!",
+          "id": "s2600",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я? Я давно не катался. Лет двадцать.",
+          "id": "s2601"
+        },
+        {
+          "speaker": "kira",
+          "text": "Лет двадцать?! Тебе же семнадцать!",
+          "id": "s2602",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Это образно. Давно.",
+          "id": "s2603"
+        },
+        {
+          "speaker": "kira",
+          "text": "Образно или нет, садись!",
+          "id": "s2604",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Я осторожно сажусь на седло. Велосипед шатается, руль живёт своей жизнью, а ноги не сразу находят педали.",
+          "id": "s2605"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я упаду.",
+          "id": "s2606"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Не упадёшь! Я держу!",
+          "id": "s2607"
+        },
+        {
+          "speaker": null,
+          "text": "Артём придерживает багажник и толкает меня вперёд. Колёса скрипят по гравию, и вот я уже еду сам: сначала дрожа, потом всё увереннее. Ветер бьёт в лицо, пахнет хвоей, и на секунду я забываю, что боялся.",
+          "id": "s2608"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Еду! Я еду!",
+          "id": "s2609"
+        },
+        {
+          "speaker": "kira",
+          "text": "Ты едешь! Ура!",
+          "id": "s2610"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Молодец! Теперь рулить!",
+          "id": "s2611"
+        },
+        {
+          "speaker": "ilya",
+          "text": "Я рулю! Но куда?!",
+          "id": "s2612"
+        },
+        {
+          "speaker": "kira",
+          "text": "Не туда! Не в кювет!",
+          "id": "s2613",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "trevoga",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "Руль резко тянет вправо, и я с грохотом въезжаю в мягкую траву. Велосипед падает набок, а я катаюсь по земле и хохочу.",
+          "id": "s2614"
+        },
+        {
+          "speaker": "kira",
+          "text": "Живой?!",
+          "id": "s2615",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Живой! Лучше, чем когда-либо!",
+          "id": "s2616"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Это был самый красивый падёж!",
+          "id": "s2617",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "udivlenie",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "kira",
+          "text": "Я тоже так хочу! Дай мне синий!",
+          "id": "s2618",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Синий с ржавой цепью! Осторожно!",
+          "id": "s2619",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ukazyvaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "А зелёный без седла кому?",
+          "id": "s2620"
+        },
+        {
+          "speaker": "kira",
+          "text": "Это для самых смелых. Но никто не катался.",
+          "id": "s2621",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Один раз Максим пробовал.",
+          "id": "s2622",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "obyasnyaet",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "И что?",
+          "id": "s2623"
+        },
+        {
+          "speaker": "kira",
+          "text": "Он проехал круг и сказал: «Не моё».",
+          "id": "s2624",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "spokoystvie",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Мудрое решение.",
+          "id": "s2625"
+        },
+        {
+          "speaker": null,
+          "text": "Через полчаса мы все в пыли, с ссадинами и красными щеками. Сидим на траве около сарайчика, пьём воду из жестяной кружки по очереди.",
+          "id": "s2626"
+        },
+        {
+          "speaker": "kira",
+          "text": "Это лучший день недели!",
+          "id": "s2627"
+        },
+        {
+          "speaker": "artyom",
+          "text": "Согласен!",
+          "id": "s2628",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "ulybka",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "ilya",
+          "text": "Присоединяюсь. И рекомендую не повторять шиповничное торможение.",
+          "id": "s2629"
+        },
+        {
+          "speaker": "kira",
+          "text": "А я, наоборот, запомнила. Оно красивое.",
+          "id": "s2630",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "radost",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": "artyom",
+          "text": "Тогда ты следующая!",
+          "id": "s2631",
+          "cast": [
+            {
+              "char": "kira",
+              "sprite": "zadumchivost",
+              "pos": "left",
+              "scale": 0.9
+            },
+            {
+              "char": "artyom",
+              "sprite": "teplaya_ulybka",
+              "pos": "right",
+              "scale": 0.98
+            }
+          ]
+        },
+        {
+          "speaker": null,
+          "text": "(Падать смешно, когда никто не смеётся над тобой, а смеётся вместе. Это, наверно, и есть настоящая дружба: можно упасть, и тебя не осудят.)",
+          "id": "s2632",
+          "gotoIf": [
+            {
+              "when": "phase == 0",
+              "goto": "hubA:ask"
+            },
+            {
+              "when": "phase >= 1",
+              "goto": "hubB:ask"
+            }
+          ],
+          "goto": "hubA:ask"
+        }
+      ]
+    },
+    {
+      "id": "goto_post",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_011.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Площадь днём тихая и нагретая. У клубного крыльца суетятся ребята, кто-то машет конвертом, кто-то читает, развернув листок на солнце.",
+          "id": "s2633"
+        },
+        {
+          "speaker": null,
+          "text": "(Письма. Конверты. Марки. Что-то в этом тёплое и старое, как запах бумаги.)",
+          "id": "s2634",
+          "goto": "loc_post:in"
+        }
+      ]
+    },
+    {
+      "id": "goto_woodpile",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_006.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "За хозяйственным корпусом стучит топор: сухо, ритмично, будто кто-то отсчитывает время. Запах смолы и опилок тянется вдоль дорожки.",
+          "id": "s2635"
+        },
+        {
+          "speaker": null,
+          "text": "(Дрова. Топор. Это, наверно, самое честное из занятий.)",
+          "id": "s2636",
+          "goto": "loc_woodpile:in"
+        }
+      ]
+    },
+    {
+      "id": "goto_bench",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_027.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Тропа к опушке пахнет смолой и нагретой хвоей. Через просветы между соснами пробиваются косые золотые лучи, а на дорожке пляшут пятна света.",
+          "id": "s2637"
+        },
+        {
+          "speaker": null,
+          "text": "(Где-то здесь должна быть скамейка, о которой говорила Алиса. Хочется просто посидеть и ничего не делать.)",
+          "id": "s2638",
+          "goto": "loc_bench:in"
+        }
+      ]
+    },
+    {
+      "id": "goto_berries",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_044.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "За забором начинается узкая тропа, по обеим сторонам которой растёт густой малинник. Над ягодами жужжат пчёлы, а воздух такой сладкий, что хочется его пить.",
+          "id": "s2639"
+        },
+        {
+          "speaker": null,
+          "text": "(Малина. Корзины. Красные пальцы. Можно ли придумать лучшее занятие на закате?)",
+          "id": "s2640",
+          "goto": "loc_berries:in"
+        }
+      ]
+    },
+    {
+      "id": "goto_checkers",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_053.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "На площади под клёном стоит деревянный стол. Сегодня он окружён людьми: кто-то спорит, кто-то подсказывает, кто-то делает вид, что не следит за игрой.",
+          "id": "s2641"
+        },
+        {
+          "speaker": null,
+          "text": "(Шашки. Доска. Простая игра, в которой каждый ход хочется обдумать. Давно этого не делал.)",
+          "id": "s2642",
+          "goto": "loc_checkers:in"
+        }
+      ]
+    },
+    {
+      "id": "goto_bikes",
+      "name": "Дорога",
+      "bg": "assets/backgrounds/bg_008.webp",
+      "cast": [],
+      "steps": [
+        {
+          "speaker": null,
+          "text": "Дорога у забора пустая и пыльная. На обочине, у кромки леса, виден низкий дощатый сарайчик, а перед ним раздаётся весёлый звонок.",
+          "id": "s2643"
+        },
+        {
+          "speaker": null,
+          "text": "(Велосипеды. Дорога. Ветер. Если упасть, то красиво.)",
+          "id": "s2644",
+          "goto": "loc_bikes:in"
+        }
+      ]
     }
   ],
   "vars": [
@@ -30874,6 +36822,26 @@
       "initial": false
     },
     {
+      "name": "v_bench",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "v_berries",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "v_checkers",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "v_bikes",
+      "type": "bool",
+      "initial": false
+    },
+    {
       "name": "free0",
       "type": "number",
       "initial": 0
@@ -30900,6 +36868,16 @@
     },
     {
       "name": "w_wallnews",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "w_post",
+      "type": "bool",
+      "initial": false
+    },
+    {
+      "name": "w_woodpile",
       "type": "bool",
       "initial": false
     }
