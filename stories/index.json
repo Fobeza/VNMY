@@ -2,5 +2,23 @@
   "schema": 2,
   "generated": "npm run build",
   "note": "Создаётся автоматически по папкам stories/. Руками не правим.",
-  "universes": []
+  "universes": [
+    {
+      "id": "beskonechnoe-leto",
+      "dir": "beskonechnoe-leto",
+      "title": "Бесконечное лето",
+      "author": "",
+      "description": "Вселенная визуальных новелл. Истории будут добавлены позже.",
+      "cover": "",
+      "accent": "#9ecf9a",
+      "order": 10,
+      "novels": [
+        {
+          "id": "sovyonok",
+          "dir": "sovyonok",
+          "title": "Совёнок"
+        }
+      ]
+    }
+  ]
 }
