@@ -1,4 +1,4 @@
 /* VNMY — встроенные вселенные и новеллы для открытия с диска (file://).
  * Не правим руками: npm run build
  */
-window.__VNMY_BUILTIN_LIBRARY__ = {"schema":2,"universes":[]};
+window.__VNMY_BUILTIN_LIBRARY__ = {"schema":2,"universes":[{"schema":1,"id":"beskonechnoe-leto","title":"Бесконечное лето","description":"Вселенная визуальных новелл. Истории будут добавлены позже.","accent":"#9ecf9a","order":10,"baseUrl":"","novels":[{"schema":1,"id":"sovyonok","universe":"beskonechnoe-leto","title":"Совёнок","description":"Подготовка материалов. Сюжет и диалоги будут написаны позже.","lang":"ru","characters":[],"scenes":[{"id":"assets-preview","name":"Материалы новеллы","bg":"","cast":[],"steps":[{"id":"pending","speaker":null,"text":"Сюжет пока не написан.","end":true}]}],"baseUrl":"stories/beskonechnoe-leto/novels/sovyonok/","_builtin":"beskonechnoe-leto/novels/sovyonok"}]}]};
