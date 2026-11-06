@@ -13,7 +13,6 @@
 <meta name="apple-mobile-web-app-title" content="VNMY" />
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/player.css" />
-<link rel="stylesheet" href="css/editor.css" />
 </head>
 <body>
 <div class="ambient" aria-hidden="true"></div>
@@ -25,18 +24,10 @@
       <header class="lib-head">
         <div class="wordmark">VNMY<span class="dot">.</span></div>
         <p class="lib-sub">истории, в которых выбираешь ты</p>
-        <div class="mode-switch" role="group" aria-label="Режим библиотеки">
-          <button class="pill is-active" id="mode-read" type="button" aria-pressed="true">Читать</button>
-          <button class="pill" id="mode-author" type="button" aria-pressed="false">Создавать</button>
-        </div>
       </header>
 
       <div id="continue-reading"></div>
-      <div class="lib-actions author-only">
-        <button class="ghost-btn is-primary" id="btn-new-universe" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Новая вселенная
-        </button>
+      <div class="lib-actions">
         <div class="lib-actions-row">
           <button class="ghost-btn" id="btn-import-story" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
@@ -85,11 +76,7 @@
       </header>
       <p class="uni-desc" id="uni-desc"></p>
 
-      <div class="lib-actions author-only">
-        <button class="ghost-btn is-primary" id="btn-new-story" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Новая новелла
-        </button>
+      <div class="lib-actions">
         <div class="lib-actions-row">
           <button class="ghost-btn" id="btn-import-novel" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
@@ -106,45 +93,6 @@
   <!-- ─────────────────────────── ИГРА ─────────────────────────── -->
   <section id="screen-player" class="screen" data-screen="player" hidden>
     <div id="player-host" class="player-host"></div>
-  </section>
-
-  <!-- ─────────────────────────── РЕДАКТОР ─────────────────────────── -->
-  <section id="screen-editor" class="screen" data-screen="editor" hidden>
-    <header class="ed-head">
-      <button class="icon-btn" id="ed-close" type="button" aria-label="Закрыть редактор">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-      </button>
-      <div class="ed-title">
-        <span id="ed-story-title">История</span>
-        <small id="ed-save-state">сохранено</small>
-      </div>
-      <button class="icon-btn" id="ed-menu" type="button" aria-label="Меню редактора">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
-      </button>
-    </header>
-
-    <div class="ed-body">
-      <div class="ed-preview-wrap">
-        <div class="ed-preview" id="ed-preview"></div>
-        <div class="ed-vars-bar" id="ed-vars-bar" hidden></div>
-        <div class="ed-preview-bar">
-          <button class="pill" id="ed-preview-collapse" type="button" aria-label="Свернуть превью">▾</button>
-          <button class="pill" id="ed-preview-restart" type="button">с печатью</button>
-          <button class="pill" id="ed-play-toggle" type="button">Просмотр</button>
-          <span class="ed-hint" id="ed-hint">нажмите на сцену, чтобы перейти к шагу</span>
-        </div>
-      </div>
-
-      <div class="ed-panel">
-        <nav class="ed-tabs" id="ed-tabs">
-          <button type="button" data-tab="step" class="active">Шаг</button>
-          <button type="button" data-tab="scene">Сцена</button>
-          <button type="button" data-tab="story">История</button>
-          <button type="button" data-tab="media">Медиа</button>
-        </nav>
-        <div class="ed-tab-body" id="ed-tab-body"></div>
-      </div>
-    </div>
   </section>
 
   <div id="overlay-root" class="overlay-root"></div>

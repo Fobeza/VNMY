@@ -1,17 +1,16 @@
 /* VNMY — точка входа и переключение экранов.
  *
- * Экраны: вселенные → новеллы вселенной → игра / редактор.
+ * Экраны: вселенные → новеллы вселенной → игра.
  * currentUniverseId: null — открыт список вселенных; '' — «Без вселенной».
  */
 import { renderLibrary, wireLibrary, markBuiltinWarning } from './library.js';
 import { renderUniverse, wireUniverse } from './novels.js';
 import { openPlayer, closePlayer } from './player.js';
-import { openEditor, closeEditor } from './editor.js';
-import { createStory, saveStory, loadBuiltinUniverses, builtinIsBroken, initializeStorage } from './store.js';
+import { loadBuiltinUniverses, builtinIsBroken, initializeStorage } from './store.js';
 import { $ } from './util.js';
 import { toast } from './ui.js';
 
-const SCREENS = ['library', 'universe', 'player', 'editor'];
+const SCREENS = ['library', 'universe', 'player'];
 let current = 'library';
 let currentUniverseId = null;
 let guardInstalled = false;
@@ -28,7 +27,6 @@ function show(name) {
 
 async function backToLibrary() {
   closePlayer();
-  closeEditor({ silent: true });
   currentUniverseId = null;
   document.documentElement.lang = 'ru';
   document.documentElement.style.removeProperty('--accent');
@@ -38,14 +36,13 @@ async function backToLibrary() {
 
 async function openUniverseScreen(universeId) {
   closePlayer();
-  closeEditor({ silent: true });
   currentUniverseId = universeId;
   show('universe');
   await renderUniverse(universeId, hooks);
   pushScreen('universe');
 }
 
-/** Назад: игра/редактор → вселенная, вселенная → список вселенных. */
+/** Назад: игра → вселенная, вселенная → список вселенных. */
 async function goBack() {
   if (current === 'universe') return backToLibrary();
   if (currentUniverseId !== null) return openUniverseScreen(currentUniverseId);
@@ -54,41 +51,18 @@ async function goBack() {
 
 function playStory(story, opts = {}) {
   currentUniverseId = story.universe || '';
-  closeEditor({ silent: true });
   show('player');
   openPlayer(story, {
     ...opts,
     onExit: () => { goBack(); },
-    onEdit: (target) => editStory(target),
   });
   pushScreen('player');
 }
 
-function editStory(story, opts = {}) {
-  closePlayer();
-  show('editor');
-  openEditor(story, {
-    ...opts,
-    onExit: () => goBack(),
-    onPlay: (target) => {
-      saveStory(target);
-      playStory(target, { fresh: true });
-    },
-  });
-  pushScreen('editor');
-}
-
 const hooks = {
   onPlay: (story, opts) => playStory(story, opts),
-  onEdit: (story, opts) => editStory(story, opts),
   onOpenUniverse: (universeId) => openUniverseScreen(universeId),
   onBack: () => goBack(),
-  onNew: (universeId = '') => {
-    const story = createStory({ title: 'Новая новелла', universe: universeId || '' });
-    saveStory(story);
-    editStory(story, { isNew: true });
-    return story;
-  },
 };
 
 function pushScreen(screen) {

@@ -406,7 +406,6 @@ function openPlayerMenu(story, opts) {
           openPlayer(story, { ...opts, fresh: true });
         },
       },
-      !story.readOnly ? { label: 'Редактировать', icon: ICONS.edit, hint: 'откроется редактор этой истории', onSelect: () => opts.onEdit?.(story) } : null,
       { label: 'В библиотеку', icon: ICONS.back, onSelect: () => opts.onExit?.() },
     ],
     content,

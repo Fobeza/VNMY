@@ -1,7 +1,7 @@
 /* VNMY — экран «Вселенные»: первый шаг выбора.
  *
  * Вселенная — это мир, внутри которого несколько новелл (js/universe.js).
- * Здесь: карточки вселенных, создание/правка своей вселенной, импорт и бэкап.
+ * Здесь: карточки вселенных, импорт и бэкап.
  * Список новелл вселенной — js/novels.js.
  *
  * Источники вселенных (складываются в один список, см. store.loadLibrary):
@@ -10,13 +10,11 @@
  *   3) «Без вселенной» — новеллы, у которых story.universe пустой.
  */
 import {
-  loadLibrary, saveUniverse, deleteUniverse, uniqueUniverseId, universeCatalog,
-  importStoryFile, exportBackup, listLocalStoryIds, storageUsage, exportUniversePortable, progressOf, getSettings, saveSettings,
+  loadLibrary, deleteUniverse,
+  importStoryFile, exportBackup, listLocalStoryIds, storageUsage, exportUniversePortable, progressOf,
 } from './store.js';
-import { createUniverse, universeData, slugId } from './universe.js';
 import { resolveUrl } from './format.js';
 import { el, $, plural } from './util.js';
-import { imageControl } from './editor-ui.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
 import { APP_VERSION } from './version.js';
@@ -37,13 +35,6 @@ export async function renderLibrary(nextHooks) {
   if (request !== renderSequence) return;
   list.replaceChildren();
   universes = lib.universes;
-  const author = !!getSettings().authorMode;
-  document.body.classList.toggle('author-mode', author);
-  for (const [id, selected] of [['mode-read', !author], ['mode-author', author]]) {
-    const button = document.getElementById(id);
-    button?.classList.toggle('is-active', selected);
-    button?.setAttribute('aria-pressed', String(selected));
-  }
   const resumeHost = document.getElementById('continue-reading');
   resumeHost?.replaceChildren();
   const latest = universes.flatMap(u => u.novels || []).map(story => ({ story, save: progressOf(story.id) }))
@@ -59,14 +50,14 @@ export async function renderLibrary(nextHooks) {
   }
 
   if (!universes.length) {
-    list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной вселенной. Создайте свою кнопкой выше — или положите папку в stories/ (см. docs/ai-guide.md) и соберите проект.' }));
+    list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной вселенной. Импортируйте новеллу в формате JSON или добавьте её в stories/ и соберите проект.' }));
   }
   for (const universe of universes) list.append(universeCard(universe));
 
   const note = $('#library-note');
   note.innerHTML = '';
   note.append(
-    el('span', { text: author ? 'Свои истории и изменения хранятся на этом устройстве. Скачайте бэкап, чтобы перенести их вместе с прогрессом.' : 'Выберите вселенную и откройте историю. Ваше место сохраняется автоматически.' }),
+    el('span', { text: 'Выберите вселенную и откройте историю. Ваше место сохраняется автоматически.' }),
   );
   if (location.protocol === 'file:') {
     note.append(el('br'), el('br'), el('span', {
@@ -79,7 +70,7 @@ export async function renderLibrary(nextHooks) {
   const usedMb = usage.used / 1024 / 1024;
   if (usedMb > 0.2) {
     note.append(el('br'), el('br'), el('span', {
-      text: `На устройстве: ${usedMb.toFixed(1)} МБ${usage.limit ? ' из примерно 5 МБ' : ''}. Полная копия — кнопка «Бэкап» в режиме создания.`,
+      text: `На устройстве: ${usedMb.toFixed(1)} МБ${usage.limit ? ' из примерно 5 МБ' : ''}. Полная копия — кнопка «Бэкап» на главном экране.`,
     }));
   }
   if (builtinWarning) {
@@ -135,11 +126,6 @@ function openUniverseMenu(universe) {
     subtitle: `${novelCount((universe.novels || []).length)}${universe.builtin ? ' · из папки stories' : ''}`,
     rows: [
       { label: 'Открыть', icon: ICONS.play, onSelect: () => hooks.onOpenUniverse?.(universe.id) },
-      canEdit ? {
-        label: 'Название и описание',
-        icon: ICONS.edit,
-        onSelect: () => promptUniverse({ universe, onSave: () => renderLibrary(hooks) }),
-      } : null,
       {
         label: 'Экспорт вселенной',
         icon: ICONS.download,
@@ -178,104 +164,11 @@ async function runUniverseExport(universe) {
   }
 }
 
-/**
- * Шторка «Новая вселенная» / «Название и описание».
- * У вселенной из файлов id = имя папки, поэтому здесь правим только свои.
- */
-export function promptUniverse({ universe = null, onSave } = {}) {
-  const isNew = !universe;
-  const titleInput = el('input', {
-    class: 'input',
-    type: 'text',
-    value: universe?.title || '',
-    placeholder: 'например, Тихие пути',
-    autocomplete: 'off',
-  });
-  const descInput = el('textarea', { class: 'input', rows: 3, placeholder: 'о чём этот мир — одна строка' });
-  descInput.value = universe?.description || '';
-  const hint = el('p', { class: 'field-hint' });
-
-  // обложка: картинка сжимается в WebP и хранится прямо во вселенной
-  let cover = universe?.cover || '';
-  const pseudoStory = { baseUrl: '', cover, media: [], scenes: [], characters: [] };
-  const coverWrap = el('div', { class: 'uni-cover' });
-  const renderCover = () => {
-    coverWrap.innerHTML = '';
-    pseudoStory.cover = cover;
-    coverWrap.append(imageControl({
-      story: pseudoStory,
-      value: cover,
-      label: 'Обложка вселенной',
-      ratio: '4 / 5',
-      onPick: (url) => { cover = url || ''; renderCover(); },
-    }));
-    if (cover) {
-      coverWrap.append(el('button', {
-        type: 'button',
-        class: 'text-btn',
-        onclick: () => { cover = ''; renderCover(); },
-      }, 'убрать обложку'));
-    }
-  };
-  renderCover();
-
-  const updateHint = () => {
-    const id = isNew ? uniqueUniverseId(slugId(titleInput.value || 'world')) : universe.id;
-    hint.textContent = isNew
-      ? `Папка на диске: stories/${id}/ — можно завести её позже и перенести новеллы файлами.`
-      : 'Название можно менять свободно: новеллы остаются внутри.';
-  };
-  titleInput.addEventListener('input', updateHint);
-  updateHint();
-
-  openSheet({
-    title: isNew ? 'Новая вселенная' : 'Вселенная',
-    subtitle: isNew ? 'Мир, в котором будут жить новеллы' : universe.title,
-    content: (close) => el('div', { class: 'uni-form' },
-      el('label', { class: 'field-label', text: 'Название' }),
-      titleInput,
-      el('label', { class: 'field-label', text: 'Описание' }),
-      descInput,
-      el('label', { class: 'field-label', text: 'Обложка' }),
-      coverWrap,
-      hint,
-      el('button', {
-        class: 'ghost-btn is-primary',
-        type: 'button',
-        style: { width: '100%', marginTop: '14px' },
-        onclick: () => {
-          const title = titleInput.value.trim();
-          if (!title) { titleInput.focus(); return; }
-          let saved;
-          if (isNew) {
-            const draft = createUniverse({ title, description: descInput.value.trim(), cover });
-            draft.id = uniqueUniverseId(draft.id);
-            saved = saveUniverse(draft);
-            toast(`Вселенная «${saved.title}» создана`);
-          } else {
-            saved = saveUniverse({ ...universeData(universe), title, description: descInput.value.trim(), cover });
-            toast('Сохранено');
-          }
-          close();
-          onSave?.(saved);
-        },
-      }, isNew ? 'Создать вселенную' : 'Сохранить'),
-    ),
-  });
-}
-
 let wired = false;
 
 export function wireLibrary() {
   if (wired) return;
   wired = true;
-
-  for (const [id, value] of [['mode-read', false], ['mode-author', true]]) {
-    document.getElementById(id)?.addEventListener('click', () => { saveSettings({ authorMode: value }); renderLibrary(hooks); });
-  }
-  $('#btn-new-universe')?.addEventListener('click', () => {
-    promptUniverse({ onSave: (universe) => hooks.onOpenUniverse?.(universe.id) });
-  });
 
   const fileInput = el('input', { type: 'file', class: 'js-import-library', accept: 'application/json,.json', style: { display: 'none' } });
   document.body.append(fileInput);
@@ -328,9 +221,4 @@ export function wireLibrary() {
 
 export function markBuiltinWarning(value) {
   builtinWarning = value;
-}
-
-/** Сколько всего вселенных сейчас известно (для редактора и подсказок). */
-export function universeCount() {
-  return universeCatalog().length;
 }

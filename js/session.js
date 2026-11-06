@@ -1,4 +1,4 @@
-/* Narrative state has no DOM dependencies: the player and editor render it. */
+/* Narrative state has no DOM dependencies: the player renders it. */
 import { findScene, defaultVars, varByName, bareId, stateAt } from './format.js';
 import { deepClone } from './util.js';
 import { applyOperation } from './expr.js';
