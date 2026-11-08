@@ -534,7 +534,12 @@ export class Stage extends NarrativeState {
     for (const timer of this._timers) clearTimeout(timer);
     this._timers.clear();
     this.bgUrl = this._paintedBgUrl ?? null;
-    for (const img of this.spriteLayer?.querySelectorAll('img') || []) delete img.dataset.src;
+    // Timers may have cancelled an expression change. Keep the URL that is
+    // actually painted, rather than invalidating an unchanged sprite each line.
+    for (const img of this.spriteLayer?.querySelectorAll('img') || []) {
+      img.dataset.src = img.getAttribute('src') || '';
+      img.classList.remove('is-swapping');
+    }
     this.node?.querySelectorAll('.sprite.is-leaving, .chapter-card').forEach(n => n.remove());
     this.node?.classList.remove('fx-shake', 'fx-flash', 'fx-zoom', 'fx-blush', 'fx-dim');
   }
@@ -857,3 +862,4 @@ export function parseRich(text) {
   });
   return segments.filter((s) => s.tag || s.text.length);
 }
+

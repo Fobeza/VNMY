@@ -3,6 +3,7 @@ import { checkRoutes } from './check-routes.mjs';
 import { validateStories } from './validate.mjs';
 import assert from 'node:assert/strict';
 import { stabilizeCast } from '../js/format.js';
+import { checkSprites } from './check-sprites.mjs';
 
 // staging "stable": оставшиеся не сдвигаются, новичок занимает свободное место
 const cast = (list) => list.map(([char, pos, move]) => ({ char, pos, ...(move ? { move } : {}) }));
@@ -23,3 +24,5 @@ const result = await validateStories(scan);
 console.log(`Проверено новелл: ${result.novels}; предупреждений: ${result.warnings}`);
 const { smoke, routes } = await checkRoutes(scan);
 console.log(`Самопроверки движка: ${smoke}; маршрутов новелл: ${routes}`);
+console.log(`Проверок спрайтов: ${await checkSprites()}`);
+

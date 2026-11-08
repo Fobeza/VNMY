@@ -6,7 +6,7 @@
  *  - картинки, иконки, манифест — cache-first (они неизменяемые);
  *  - stories/index.json и story.json — network-first: новые истории видны сразу.
  */
-const VERSION = 'vnmy-2.4.1';
+const VERSION = 'vnmy-2.4.2';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
@@ -104,3 +104,4 @@ self.addEventListener('fetch', (event) => {
     }
   })());
 });
+
