@@ -363,19 +363,32 @@ export class Stage extends NarrativeState {
       }
 
       const img = node.querySelector('img');
-      if (img.dataset.src !== src) {
-        img.dataset.src = src;
-        const token = this._renderToken;
+      if (img.dataset.requested !== src) {
+        img.dataset.requested = src;
+        const sequence = img._swapSequence = (img._swapSequence || 0) + 1;
         const swap = () => {
-          if (token !== this._renderToken || img.dataset.src !== src) return;
+          // A new dialogue beat must not cancel an image that is still loading.
+          // A different pose, removed actor or destroyed stage must cancel it.
+          if (!this.mounted || this.spriteNodes.get(charId) !== node ||
+              img._swapSequence !== sequence || img.dataset.requested !== src) return;
           img.src = src;
-          img.classList.remove('is-swapping');
+          img.dataset.src = src;
         };
-        if (img.getAttribute('src') && !instant) {
-          img.classList.add('is-swapping');
-          this.later(swap, 180);
-        } else {
+        if (!src) {
           swap();
+        } else {
+          // Keep the painted sprite visible until the next pose is decoded.
+          const next = new Image();
+          next.onload = () => {
+            if (typeof next.decode === 'function') next.decode().then(swap, swap);
+            else swap();
+          };
+          next.onerror = () => {
+            if (img._swapSequence === sequence && img.dataset.requested === src) {
+              img.dataset.requested = img.dataset.src || '';
+            }
+          };
+          next.src = src;
         }
       }
 
@@ -534,7 +547,9 @@ export class Stage extends NarrativeState {
     for (const timer of this._timers) clearTimeout(timer);
     this._timers.clear();
     this.bgUrl = this._paintedBgUrl ?? null;
-    for (const img of this.spriteLayer?.querySelectorAll('img') || []) delete img.dataset.src;
+    for (const img of this.spriteLayer?.querySelectorAll('img') || []) {
+      img.dataset.src = img.getAttribute('src') || '';
+    }
     this.node?.querySelectorAll('.sprite.is-leaving, .chapter-card').forEach(n => n.remove());
     this.node?.classList.remove('fx-shake', 'fx-flash', 'fx-zoom', 'fx-blush', 'fx-dim');
   }

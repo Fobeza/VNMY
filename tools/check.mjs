@@ -3,6 +3,9 @@ import { checkRoutes } from './check-routes.mjs';
 import { validateStories } from './validate.mjs';
 import assert from 'node:assert/strict';
 import { stabilizeCast } from '../js/format.js';
+import { checkRendering } from './check-rendering.mjs';
+
+await checkRendering();
 
 // staging "stable": оставшиеся не сдвигаются, новичок занимает свободное место
 const cast = (list) => list.map(([char, pos, move]) => ({ char, pos, ...(move ? { move } : {}) }));
