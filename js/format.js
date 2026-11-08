@@ -4,11 +4,12 @@
  * {
  *   id, title, author, description, cover, accent,
  *   universe,                       // id вселенной (js/universe.js) или ''
+ *   staging,                        // 'stable' (по умолчанию) | 'manual' — см. stabilizeCast
  *   baseUrl,                        // откуда грузить относительные пути к картинкам
  *   vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
  *   characters: [{ id, name, color, sprites: { neutral: 'assets/anya-neutral.webp' } }],
  *   scenes: [{
- *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim } ],
+ *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim, move } ],
  *     steps: [ Step ]
  *   }]
  * }
@@ -130,6 +131,8 @@ export function normalizeStory(input) {
   story.universe = typeof story.universe === 'string' ? story.universe.trim() : '';
   story.lang = typeof story.lang === 'string' && story.lang ? story.lang : 'ru';
   story.baseUrl = story.baseUrl || '';
+  // расстановка: stable — персонажи не сдвигаются при новом говорящем
+  story.staging = story.staging === 'manual' ? 'manual' : 'stable';
   story.createdAt = story.createdAt || Date.now();
   story.updatedAt = story.updatedAt || Date.now();
   if (!Array.isArray(story.vars)) story.vars = [];
@@ -202,7 +205,34 @@ function normalizeCast(entry) {
     scale: Number.isFinite(+entry.scale) ? +entry.scale : 1,
     dim: !!entry.dim,
     hidden: !!entry.hidden,
+    ...(entry.move ? { move: true } : {}),
   };
+}
+
+/** Порядок запасных позиций, если желаемая занята. */
+const FALLBACK = { left: ['left', 'center', 'right'], center: ['center', 'right', 'left'], right: ['right', 'center', 'left'] };
+
+/**
+ * Режим staging: "stable" — без «конвейера». Персонаж, который уже стоит
+ * на сцене, остаётся на своей позиции, даже если в новом cast указана
+ * другая; новичок встаёт на указанную позицию или ближайшую свободную.
+ * Перейти на другое место можно явно: { "move": true }.
+ */
+export function stabilizeCast(prev = [], next = []) {
+  const before = new Map(prev.filter((c) => c && !c.hidden).map((c) => [c.char, c.pos]));
+  const taken = new Set();
+  const placed = new Map();
+  const claim = (entry, wish) => {
+    const pos = FALLBACK[wish]?.find((p) => !taken.has(p)) || entry.pos;
+    taken.add(pos);
+    placed.set(entry, pos);
+  };
+  const visible = next.filter((c) => c && !c.hidden);
+  // явные перемещения, затем оставшиеся на месте, затем новички
+  for (const c of visible) if (c.move) claim(c, c.pos);
+  for (const c of visible) if (!c.move && before.has(c.char)) claim(c, before.get(c.char));
+  for (const c of visible) if (!c.move && !before.has(c.char)) claim(c, c.pos);
+  return next.map((c) => (placed.has(c) && placed.get(c) !== c.pos ? { ...c, pos: placed.get(c) } : { ...c }));
 }
 
 function normalizeStep(t) {
@@ -317,7 +347,7 @@ export function stateAt(story, sceneId, stepIndex, vars = null) {
     if (vars && step.if && !evalCondition(step.if, vars)) continue;
     if (step.bg) state.bg = step.bg;
     if (step.weather) state.weather = step.weather;
-    if (step.cast) state.cast = step.cast.map((c) => ({ ...c }));
+    if (step.cast) state.cast = story.staging === 'manual' ? step.cast.map((c) => ({ ...c })) : stabilizeCast(state.cast, step.cast);
   }
   return state;
 }
