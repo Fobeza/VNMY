@@ -1,0 +1,37 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Built files are committed
+        run: |
+          if ! git diff --exit-code --stat -- bundle.js vnmy.html stories/index.json stories/builtin.js; then
+            echo "::error::Собранные файлы устарели: выполните npm run build и закоммитьте результат"
+            exit 1
+          fi
+      - name: No novels or large files
+        run: |
+          novels=$(git ls-files 'stories/*/*' '*.vnmy')
+          if [ -n "$novels" ]; then
+            echo "::error::Новеллы не хранятся в репозитории:"; echo "$novels"; exit 1
+          fi
+          large=$(git ls-files -z | xargs -0 du -b | awk '$1 > 1048576 {print}')
+          if [ -n "$large" ]; then
+            echo "::error::Файлы больше 1 МБ:"; echo "$large"; exit 1
+          fi
+      - name: Check
+        run: npm run check
