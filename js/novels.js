@@ -6,7 +6,7 @@
  */
 import {
   loadLibrary, deleteStory, progressOf, getSaves,
-  importStoryFile, clearSaves,
+  importStoryFile, deleteSave,
   deleteUniverse, exportUniversePortable, moveStoryToUniverse,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
@@ -122,9 +122,9 @@ function openStoryMenu(story) {
         icon: ICONS.restart,
         hint: 'прогресс будет сброшен',
         onSelect: async () => {
-          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Сохранённый прогресс этой новеллы удалится.', confirmText: 'Начать сначала', danger: false });
+          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Автосохранение сбросится. Ручные слоты и отметки «прочитано» останутся.', confirmText: 'Начать сначала', danger: false });
           if (!ok) return;
-          clearSaves(story.id);
+          deleteSave(story.id, 'auto');
           hooks.onPlay(story, { fresh: true });
         },
       } : null,

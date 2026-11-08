@@ -644,7 +644,8 @@ export function writeSave(storyId, slot, payload) {
 /** Удаляет один слот (автосейв не трогает). */
 export function deleteSave(storyId, slot) {
   const saves = getSaves(storyId);
-  saves.slots = saves.slots.filter((entry) => entry.slot !== slot);
+  if (slot === 'auto') saves.auto = null;
+  else saves.slots = saves.slots.filter((entry) => entry.slot !== slot);
   lsSet(K.saves(storyId), JSON.stringify(saves));
   return saves;
 }

@@ -15,6 +15,8 @@ import { WeatherLayer } from './weather.js';
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
 /** Сколько реплик держим в журнале: дальше старые просто уходят. */
 const HISTORY_LIMIT = 150;
+/** Через сколько шагов молчания персонаж на сцене считается «фоном». */
+const STALE_BEATS = 7;
 
 export class Stage extends NarrativeState {
   constructor(host, opts = {}) {
@@ -37,6 +39,11 @@ export class Stage extends NarrativeState {
     this._pauseToken = 0;
     this._renderToken = 0;
     this.paused = false;
+    /* Кто участвует в разговоре: номер «такта» (перехода на шаг), когда
+     * персонаж последний раз говорил и когда появился на сцене. */
+    this._beat = 0;
+    this._spokeAt = new Map();
+    this._enteredAt = new Map();
   }
 
   /* ─────────────────────────── жизненный цикл ─────────────────────────── */
@@ -99,7 +106,7 @@ export class Stage extends NarrativeState {
     menuBtn.addEventListener('click', (e) => { e.stopPropagation(); this.opts.onMenu?.(); });
 
     this.mounted = true;
-    if (this.opts.resuming) this.renderInstance(this.index, { instant: true });
+    if (this.opts.resuming) this.renderInstance(this.index, { instant: true, replay: true });
     else this.enter(this.sceneId, this.index, { instant: this.opts.instantFirst !== false });
     return this;
   }
@@ -172,6 +179,8 @@ export class Stage extends NarrativeState {
     const sceneChanged = sceneId !== this.sceneId;
     this.invalidateRender();
     this.moveTo(sceneId, index);
+    this._beat++;
+    if (this.step.speaker) this._spokeAt.set(this.step.speaker, this._beat);
     this.ended = false;
     this.hideEnding();
     if (sceneChanged) this.showChapterCard(scene);
@@ -215,7 +224,8 @@ export class Stage extends NarrativeState {
     return step.choices.filter((choice) => !choice.if || evalCondition(choice.if, this.vars));
   }
 
-  renderInstance(index, { instant = false } = {}) {
+  /** replay — перерисовка того же шага (после меню, загрузки): без эффектов. */
+  renderInstance(index, { instant = false, replay = false } = {}) {
     const scene = this.scene;
     const step = scene.steps[index];
     if (!step) return;
@@ -236,7 +246,7 @@ export class Stage extends NarrativeState {
     if (pause && step.text) {
       const token = ++this._pauseToken;
       this.waitingPause = true;
-      this.dialogueLayer.classList.add('is-hidden');
+      this.dialogue.classList.add('is-hidden');
       this.cancelTyping();
       // не оставляем в разметке текст прошлой реплики
       this.textEl.textContent = '';
@@ -250,9 +260,8 @@ export class Stage extends NarrativeState {
       this.renderDialogue(step, { instant });
     }
 
-    if (!this.mode || this.mode === 'play') {
-      if (step.mood) this.playMood(step.mood);
-    }
+    // эффект играет при входе в шаг, а не при перерисовке после меню
+    if (!replay && (!this.mode || this.mode === 'play') && step.mood) this.playMood(step.mood);
 
     this.seen.add(`${scene.id}:${bareId(step.id)}`);
     this.opts.onPosition?.(this.position, step);
@@ -325,13 +334,17 @@ export class Stage extends NarrativeState {
     for (const [charId, node] of this.spriteNodes) {
       if (!wanted.has(charId)) {
         node.classList.add('is-leaving');
-        node.classList.remove('is-active');
+        node.classList.remove('is-active', 'is-speaking', 'is-listening', 'is-idle', 'is-background');
+        node.style.zIndex = '0';
         this.spriteNodes.delete(charId);
-        this.later(() => node.remove(), instant ? 0 : 380);
+        this._enteredAt.delete(charId);
+        this._spokeAt.delete(charId);
+        this.later(() => node.remove(), instant ? 0 : 480);
       }
     }
 
-    let order = 0;
+    const focus = this.conversationFocus(wanted, speaker);
+    const created = [];
     for (const [charId, entry] of wanted) {
       const char = characterById(this.story, charId);
       let node = this.spriteNodes.get(charId);
@@ -342,10 +355,11 @@ export class Stage extends NarrativeState {
           el('div', { class: 'sprite-inner' }, el('img', { alt: char?.name || '', draggable: false })),
           el('div', { class: 'sprite-shadow' }),
         );
-        node.style.setProperty('--enter-delay', `${instant ? 0 : order * 90}ms`);
         layer.append(node);
         this.spriteNodes.set(charId, node);
+        if (!this._enteredAt.has(charId)) this._enteredAt.set(charId, this._beat);
         if (instant) node.classList.add('no-anim');
+        created.push(node);
       }
 
       const img = node.querySelector('img');
@@ -356,7 +370,6 @@ export class Stage extends NarrativeState {
           if (token !== this._renderToken || img.dataset.src !== src) return;
           img.src = src;
           img.classList.remove('is-swapping');
-          requestAnimationFrame(() => img.classList.add('is-ready'));
         };
         if (img.getAttribute('src') && !instant) {
           img.classList.add('is-swapping');
@@ -366,17 +379,63 @@ export class Stage extends NarrativeState {
         }
       }
 
+      const role = focus.get(charId);
       node.dataset.pos = entry.pos || 'center';
+      node.dataset.role = role;
       node.style.setProperty('--scale', String(entry.scale || 1));
-      node.style.zIndex = String(entry.pos === 'center' ? 3 : entry.pos === 'left' ? 2 : 1);
+      // говорящий всегда поверх соседей, остальные — центр над краями
+      node.style.zIndex = String(role === 'speaking' ? 5 : role === 'listening' ? 4 : entry.pos === 'center' ? 3 : entry.pos === 'left' ? 2 : 1);
       node.classList.toggle('is-dim', !!entry.dim);
-      node.classList.toggle('is-speaking', !!speaker && speaker === charId);
-      node.classList.toggle('is-idle', !!speaker && speaker !== charId);
-      node.classList.add('is-active');
-      // перезапуск enter-анимации для новых
-      if (!instant && node.dataset.fresh !== 'no') node.dataset.fresh = 'no';
-      order++;
+      node.classList.toggle('is-speaking', role === 'speaking');
+      node.classList.toggle('is-listening', role === 'listening');
+      node.classList.toggle('is-idle', role === 'idle' || role === 'background');
+      node.classList.toggle('is-background', role === 'background');
     }
+
+    if (created.length && !instant) {
+      // новый спрайт должен сначала отрисоваться прозрачным — иначе
+      // переход opacity не запустится и персонаж просто «выскочит»
+      void layer.offsetWidth;
+    }
+    for (const node of this.spriteNodes.values()) node.classList.add('is-active');
+    if (instant && created.length) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        for (const node of created) node.classList.remove('no-anim');
+      }));
+    }
+  }
+
+  /**
+   * Роль каждого персонажа на сцене в текущей реплике:
+   *  speaking   — говорит сейчас;
+   *  listening  — собеседник: говорит герой без спрайта (или рассказчик
+   *               сразу после его реплики), а этот персонаж говорил последним;
+   *  idle       — участвует в разговоре, но сейчас молчит;
+   *  background — давно молчит (STALE_BEATS шагов) — стоит фоном;
+   *  neutral    — реплика рассказчика, персонаж в разговоре.
+   */
+  conversationFocus(wanted, speaker) {
+    const roles = new Map();
+    const onStage = (id) => wanted.has(id);
+    const lastActive = (id) => Math.max(this._spokeAt.get(id) ?? -Infinity, this._enteredAt.get(id) ?? this._beat);
+    let listener = null;
+    if (!speaker || !onStage(speaker)) {
+      let best = -Infinity;
+      for (const id of wanted.keys()) {
+        const at = this._spokeAt.get(id);
+        if (at != null && at > best) { best = at; listener = id; }
+      }
+      // рассказчик: собеседник подсвечен, только если он говорил совсем недавно
+      if (!speaker && (best < this._beat - 2)) listener = null;
+    }
+    for (const id of wanted.keys()) {
+      const stale = this._beat - lastActive(id) >= STALE_BEATS;
+      if (speaker && id === speaker) roles.set(id, 'speaking');
+      else if (id === listener) roles.set(id, 'listening');
+      else if (stale) roles.set(id, 'background');
+      else roles.set(id, speaker || listener ? 'idle' : 'neutral');
+    }
+    return roles;
   }
 
   /* ─────────────────────────── реплика ─────────────────────────── */
@@ -386,7 +445,7 @@ export class Stage extends NarrativeState {
     this.renderAsk(step);
     // у финального шага текст показывается на самом экране финала
     const hasText = !!step.text && !step.end;
-    this.dialogueLayer.classList.toggle('is-hidden', !hasText);
+    this.dialogue.classList.toggle('is-hidden', !hasText);
     const char = step.speaker ? characterById(this.story, step.speaker) : null;
     this.speakerEl.textContent = char ? interpolate(char.name || '', this.vars) : '';
     this.speakerEl.style.color = char?.color || 'var(--accent)';
@@ -483,7 +542,7 @@ export class Stage extends NarrativeState {
   setPaused(value) {
     this.paused = value;
     if (value) { this.invalidateRender(); this.cancelTyping(); }
-    else if (this.mounted && !this.ended) this.renderInstance(this.index, { instant: true });
+    else if (this.mounted && !this.ended) this.renderInstance(this.index, { instant: true, replay: true });
   }
 
   finishTyping(step = this.step) {
@@ -617,6 +676,13 @@ export class Stage extends NarrativeState {
     if (this.node.classList.contains('ui-hidden')) { this.node.classList.remove('ui-hidden'); return; }
     this.opts.onTap?.();
     if (this.awaitingChoices) return;
+    if (this.waitingPause) {
+      // тап во время паузы показывает реплику сразу, а не пропускает её
+      this._pauseToken++;
+      this.waitingPause = false;
+      this.renderDialogue(this.step, { instant: true });
+      return;
+    }
     if (this.isTyping()) {
       this.finishTyping();
       return;
@@ -763,6 +829,8 @@ export class Stage extends NarrativeState {
     this.index = 0;
     this.spriteLayer.innerHTML = '';
     this.spriteNodes.clear();
+    this._spokeAt.clear();
+    this._enteredAt.clear();
     this.visual = stateAt(this.story, this.sceneId, -1, this.vars);
     this.enter(this.sceneId, 0, { instant: false });
   }
