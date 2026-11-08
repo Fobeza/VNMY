@@ -131,6 +131,7 @@ export function normalizeStory(input) {
   story.universe = typeof story.universe === 'string' ? story.universe.trim() : '';
   story.lang = typeof story.lang === 'string' && story.lang ? story.lang : 'ru';
   story.baseUrl = story.baseUrl || '';
+  if (story.packaged) story.packaged = true; else delete story.packaged;
   // расстановка: stable — персонажи не сдвигаются при новом говорящем
   story.staging = story.staging === 'manual' ? 'manual' : 'stable';
   story.createdAt = story.createdAt || Date.now();
@@ -352,8 +353,25 @@ export function stateAt(story, sceneId, stepIndex, vars = null) {
   return state;
 }
 
+/* Картинки новелл, загруженных из файла .vnmy: id новеллы → (путь → blob: URL).
+ * Заполняет persistence.js; сама история хранит обычные относительные пути. */
+const assetUrlTable = new Map();
+
+export function registerAssetUrls(storyId, urls) {
+  dropAssetUrls(storyId);
+  assetUrlTable.set(storyId, urls);
+}
+
+export function dropAssetUrls(storyId) {
+  const old = assetUrlTable.get(storyId);
+  if (old && typeof URL !== 'undefined' && URL.revokeObjectURL) for (const url of old.values()) URL.revokeObjectURL(url);
+  assetUrlTable.delete(storyId);
+}
+
 export function resolveUrl(story, url) {
   if (!url) return '';
+  const packaged = story?.packaged && assetUrlTable.get(story.id)?.get(url);
+  if (packaged) return packaged;
   if (/^(https?:|data:|blob:|\/)/.test(url)) return url;
   return (story.baseUrl || '') + url;
 }
