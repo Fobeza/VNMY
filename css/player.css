@@ -95,34 +95,44 @@
   width: max-content;
   max-width: none;
   left: 50%;
-  transform: translateX(-50%) translateY(4%) scale(var(--scale, 1));
+  /* положение складывается из переменных: роли меняют их, а transition
+   * плавно ведёт transform при любой комбинации классов */
+  --lift: 4%;
+  --focus: 1;
+  transform: translateX(-50%) translateY(var(--lift)) scale(calc(var(--scale, 1) * var(--focus)));
   transform-origin: bottom center;
   opacity: 0;
   transition:
     left .65s var(--ease),
     transform .55s var(--ease),
-    opacity .45s var(--ease),
-    filter .35s var(--ease);
+    opacity .45s var(--ease);
   will-change: transform, opacity;
 }
-.sprite.is-active { opacity: 1; transform: translateX(-50%) translateY(0) scale(var(--scale, 1)); }
+.sprite.is-active { opacity: 1; --lift: 0%; }
 .sprite[data-pos="left"] { left: 23%; }
 .sprite[data-pos="center"] { left: 50%; }
 .sprite[data-pos="right"] { left: 77%; }
-.sprite.is-leaving { opacity: 0; transform: translateX(-50%) translateY(2%) scale(calc(var(--scale, 1) * .98)); }
-.sprite.no-anim { transition: none; }
 .sprite-inner { height: 100%; width: max-content; }
 .sprite img {
   height: 100%;
   width: auto;
   max-width: none;
-  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
-  transition: opacity .18s linear, filter .35s var(--ease), transform .5s var(--ease);
+  filter: brightness(1) saturate(1) drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
+  transition: opacity .18s linear, filter .4s var(--ease);
 }
 .sprite img.is-swapping { opacity: 0; }
-.sprite.is-idle img { filter: brightness(.72) saturate(.9) drop-shadow(0 18px 30px rgba(0,0,0,.4)); }
-.sprite.is-dim img { filter: brightness(.5) saturate(.75); }
-.sprite.is-speaking { transform: translateX(-50%) translateY(0) scale(calc(var(--scale, 1) * 1.012)); }
+
+/* Роли в разговоре (engine.js → conversationFocus):
+ * говорящий — ярко и чуть крупнее; собеседник героя — почти ярко;
+ * молчащие участники — приглушены; давно молчащие — «фон»: темнее и ниже. */
+.sprite.is-speaking { --focus: 1.015; }
+.sprite.is-listening img { filter: brightness(.92) saturate(.97) drop-shadow(0 18px 30px rgba(0, 0, 0, .42)); }
+.sprite.is-idle img { filter: brightness(.72) saturate(.9) drop-shadow(0 18px 30px rgba(0, 0, 0, .4)); }
+.sprite.is-background { --lift: 1.2%; --focus: .985; }
+.sprite.is-background img { filter: brightness(.55) saturate(.75) drop-shadow(0 18px 30px rgba(0, 0, 0, .35)); }
+.sprite.is-dim img { filter: brightness(.5) saturate(.75) drop-shadow(0 18px 30px rgba(0, 0, 0, .35)); }
+.sprite.is-leaving { opacity: 0; --lift: 2%; --focus: .98; pointer-events: none; }
+.sprite.no-anim, .sprite.no-anim img { transition: none; }
 .sprite-shadow {
   position: absolute;
   left: 50%;

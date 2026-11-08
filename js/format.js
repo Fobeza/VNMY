@@ -393,15 +393,50 @@ export function lintStory(story) {
     }
   };
 
+  // Расстановка: одна позиция — один персонаж, эмоция существует,
+  // говорящий со спрайтами стоит на сцене (по линейному порядку шагов).
+  const checkCast = (cast, where, sceneId, stepId) => {
+    const visible = cast.filter((c) => !c.hidden);
+    const seenChars = new Set();
+    const seenPos = new Map();
+    for (const c of visible) {
+      const char = characterById(story, c.char);
+      if (seenChars.has(c.char)) issues.push({ level: 'error', sceneId, stepId, text: `${where}: персонаж «${c.char}» указан в составе дважды` });
+      seenChars.add(c.char);
+      if (seenPos.has(c.pos)) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: «${seenPos.get(c.pos)}» и «${c.char}» стоят в одной позиции «${c.pos}»` });
+      else seenPos.set(c.pos, c.char);
+      const keys = Object.keys(char?.sprites || {});
+      // без sprite движок подставит 'neutral', а при его отсутствии — первую эмоцию
+      if (char && keys.length && !char.sprites[c.sprite]) issues.push({ level: c.sprite === 'neutral' ? 'warn' : 'error', sceneId, stepId, text: `${where}: у «${c.char}» нет эмоции «${c.sprite}» (есть: ${keys.join(', ')})` });
+    }
+    if (visible.length > POSITIONS.length) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: на сцене ${visible.length} персонажей, а позиций ${POSITIONS.length}` });
+  };
+
   const ids = new Set();
   for (let i = 0; i < story.scenes.length; i++) {
     const scene = story.scenes[i];
     if (!scene.bg) issues.push({ level: 'warn', sceneId: scene.id, text: `Сцена «${scene.name}» без фона` });
+    checkCast(scene.cast, `Сцена «${scene.name}»`, scene.id);
+    let linearCast = scene.cast;
     for (const c of scene.cast) {
       if (!characterById(story, c.char)) issues.push({ level: 'error', sceneId: scene.id, text: `В сцене «${scene.name}» есть неизвестный персонаж` });
     }
     for (let j = 0; j < scene.steps.length; j++) {
       const step = scene.steps[j];
+      if (step.cast) {
+        linearCast = step.cast;
+        checkCast(step.cast, `Шаг #${j + 1}: состав`, scene.id, step.id);
+      }
+      const speakerChar = step.speaker ? characterById(story, step.speaker) : null;
+      if (step.speaker && !speakerChar) {
+        issues.push({ level: 'error', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: говорит неизвестный персонаж «${step.speaker}»` });
+      } else if (speakerChar && Object.keys(speakerChar.sprites || {}).length
+        && !linearCast.some((c) => c.char === step.speaker && !c.hidden)) {
+        issues.push({ level: 'warn', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: «${speakerChar.name}» говорит, но его нет в составе сцены` });
+      }
+      if (step.spriteOverride && speakerChar && !speakerChar.sprites?.[step.spriteOverride]) {
+        issues.push({ level: 'error', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: у «${step.speaker}» нет эмоции «${step.spriteOverride}»` });
+      }
       if (!step.text && !step.ask && !step.choices?.length && !step.end) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Пустая реплика #${j + 1}` });
       checkCondition(step.if, `Шаг #${j + 1}: условие показа`, scene.id, step.id);
       checkText(step.text, `Шаг #${j + 1}`, scene.id, step.id);
