@@ -54,54 +54,73 @@ async function readJSON(file) {
  * Обходит stories/ и возвращает вселенные с новеллами:
  * [{ dir, universe, novels: [{ dir, story }] }]
  */
-export async function scanStories() {
+export async function scanStories(root = STORIES) {
   const universes = [];
   let entries = [];
   try {
-    entries = await fs.readdir(STORIES, { withFileTypes: true });
+    entries = await fs.readdir(root, { withFileTypes: true });
   } catch {
     return universes;
   }
 
   for (const entry of entries) {
     if (!entry.isDirectory() || isTemplate(entry.name)) continue;
-    const dir = entry.name;
-    let universe;
-    try {
-      const file = await resolveContainedFile(`stories/${dir}`, 'universe.json', 'Universe');
-      universe = await readJSON(file);
-    } catch {
-      console.warn(`[vnmy] пропускаю «stories/${dir}»: нет universe.json`);
-      continue;
-    }
-    universe.id = String(universe.id || dir);
-    universe.title = String(universe.title || dir);
-
-    const novels = [];
-    let novelDirs = [];
-    try {
-      novelDirs = (await fs.readdir(path.join(STORIES, dir, 'novels'), { withFileTypes: true }))
-        .filter((d) => d.isDirectory() && !isTemplate(d.name))
-        .map((d) => d.name)
-        .sort();
-    } catch {
-      /* у вселенной пока нет новелл */
-    }
-    for (const novelDir of novelDirs) {
-      try {
-        const file = await resolveContainedFile(`stories/${dir}/novels/${novelDir}`, 'story.json', 'Story');
-        const story = await readJSON(file);
-        novels.push({ dir: novelDir, story });
-      } catch (err) {
-        throw new Error(`stories/${dir}/novels/${novelDir}: ${err.message}`, { cause: err });
-      }
-    }
-    universes.push({ dir, universe, novels });
+    const item = await scanUniverse(path.join(root, entry.name));
+    if (item) universes.push(item);
   }
 
   universes.sort((a, b) => (Number(a.universe.order) || 100) - (Number(b.universe.order) || 100)
     || a.dir.localeCompare(b.dir));
   return universes;
+}
+
+/** Одна вселенная: папка с universe.json и novels/<новелла>/story.json. */
+export async function scanUniverse(base) {
+  const dir = path.basename(base);
+  let universe;
+  try {
+    universe = await readJSON(await resolveContainedFile(base, 'universe.json', 'Universe'));
+  } catch {
+    console.warn(`[vnmy] пропускаю «${path.relative(ROOT, base) || base}»: нет universe.json`);
+    return null;
+  }
+  universe.id = String(universe.id || dir);
+  universe.title = String(universe.title || dir);
+  let novelDirs = [];
+  try {
+    novelDirs = (await fs.readdir(path.join(base, 'novels'), { withFileTypes: true }))
+      .filter((d) => d.isDirectory() && !isTemplate(d.name))
+      .map((d) => d.name)
+      .sort();
+  } catch {
+    /* у вселенной пока нет новелл */
+  }
+  const novels = [];
+  for (const novelDir of novelDirs) {
+    const novelPath = path.join(base, 'novels', novelDir);
+    try {
+      novels.push({ dir: novelDir, path: novelPath, story: await readJSON(await resolveContainedFile(novelPath, 'story.json', 'Story')) });
+    } catch (err) {
+      throw new Error(`${novelPath}: ${err.message}`, { cause: err });
+    }
+  }
+  return { dir, path: base, universe, novels };
+}
+
+/**
+ * Папка, которую передали в check/pack: вселенная (universe.json),
+ * одна новелла (story.json) или каталог со вселенными, как stories/.
+ */
+export async function scanSource(source) {
+  const base = path.resolve(source);
+  const has = async (name) => fs.access(path.join(base, name)).then(() => true, () => false);
+  if (await has('universe.json')) return [await scanUniverse(base)].filter(Boolean);
+  if (await has('story.json')) {
+    const story = await readJSON(await resolveContainedFile(base, 'story.json', 'Story'));
+    const id = String(story.universe || '');
+    return [{ dir: id, path: base, single: true, universe: { id, title: id }, novels: [{ dir: path.basename(base), path: base, story }] }];
+  }
+  return scanStories(base);
 }
 
 /** Манифест библиотеки: его читает приложение при запуске через сервер. */
@@ -165,7 +184,7 @@ function isWithinDirectory(directory, candidate) {
     && !relative.startsWith(`..${path.sep}`));
 }
 
-async function resolveContainedFile(base, value, kind = 'Asset') {
+export async function resolveContainedFile(base, value, kind = 'Asset') {
   const sourceDirectory = path.resolve(ROOT, base);
   const file = path.resolve(sourceDirectory, value);
   if (!isWithinDirectory(sourceDirectory, file)) {
@@ -173,12 +192,15 @@ async function resolveContainedFile(base, value, kind = 'Asset') {
   }
 
   // Lexical containment is not enough if a file or directory is a symlink.
+  // Inside the repository the folder itself must not be a symlink either;
+  // an external novel folder (npm run check -- <папка>) is taken as given.
   const realRoot = await fs.realpath(ROOT);
-  const expectedDirectory = path.resolve(realRoot, base);
+  const inRepo = isWithinDirectory(ROOT, sourceDirectory);
   const [realDirectory, realFile] = await Promise.all([
     fs.realpath(sourceDirectory),
     fs.realpath(file),
   ]);
+  const expectedDirectory = inRepo ? path.resolve(realRoot, path.relative(ROOT, sourceDirectory)) : realDirectory;
   if (realDirectory !== expectedDirectory || !isWithinDirectory(realDirectory, realFile)) {
     throw new Error(`${kind} symlink escapes its source directory: ${value}`);
   }
@@ -283,7 +305,12 @@ export async function buildStandalone(scan) {
 }
 
 async function main() {
-  const scan = await scanStories();
+  // По умолчанию собираем только движок: новеллы в репозиторий не попадают
+  // и импортируются в приложении из файла .vnmy (npm run pack).
+  // --with-stories встраивает папки из stories/ — для своей сборки, не для коммита.
+  const withStories = process.argv.includes('--with-stories');
+  const scan = withStories ? await scanStories() : [];
+  if (withStories && scan.length) console.warn('[vnmy] сборка с новеллами из stories/ — не коммитьте vnmy.html и stories/*.js из неё');
   await validateStories(scan);
   const [bundle, builtin, standalone, manifest] = await Promise.all([
     buildBundle(),

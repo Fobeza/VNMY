@@ -1,6 +1,6 @@
 /* VNMY — экран прохождения: мост между движком, сохранениями и меню */
 import { Stage } from './engine.js';
-import { getSettings, saveSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, clearSaves } from './store.js';
+import { getSettings, saveSettings, getSaves, writeSave, deleteSave, getSeen, markSeen } from './store.js';
 import { findScene, bareId, resolveUrl } from './format.js';
 import { $, debounce, el, plural, deepClone } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
@@ -400,9 +400,9 @@ function openPlayerMenu(story, opts) {
         label: 'Начать сначала',
         icon: ICONS.restart,
         onSelect: async () => {
-          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Текущий прогресс этой истории сбросится.', confirmText: 'Начать сначала', danger: false });
+          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Автосохранение сбросится. Ручные слоты и отметки «прочитано» останутся.', confirmText: 'Начать сначала', danger: false });
           if (!ok) return;
-          clearSaves(story.id);
+          deleteSave(story.id, 'auto');
           openPlayer(story, { ...opts, fresh: true });
         },
       },

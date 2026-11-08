@@ -4,11 +4,12 @@
  * {
  *   id, title, author, description, cover, accent,
  *   universe,                       // id вселенной (js/universe.js) или ''
+ *   staging,                        // 'stable' (по умолчанию) | 'manual' — см. stabilizeCast
  *   baseUrl,                        // откуда грузить относительные пути к картинкам
  *   vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
  *   characters: [{ id, name, color, sprites: { neutral: 'assets/anya-neutral.webp' } }],
  *   scenes: [{
- *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim } ],
+ *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim, move } ],
  *     steps: [ Step ]
  *   }]
  * }
@@ -130,6 +131,9 @@ export function normalizeStory(input) {
   story.universe = typeof story.universe === 'string' ? story.universe.trim() : '';
   story.lang = typeof story.lang === 'string' && story.lang ? story.lang : 'ru';
   story.baseUrl = story.baseUrl || '';
+  if (story.packaged) story.packaged = true; else delete story.packaged;
+  // расстановка: stable — персонажи не сдвигаются при новом говорящем
+  story.staging = story.staging === 'manual' ? 'manual' : 'stable';
   story.createdAt = story.createdAt || Date.now();
   story.updatedAt = story.updatedAt || Date.now();
   if (!Array.isArray(story.vars)) story.vars = [];
@@ -202,7 +206,34 @@ function normalizeCast(entry) {
     scale: Number.isFinite(+entry.scale) ? +entry.scale : 1,
     dim: !!entry.dim,
     hidden: !!entry.hidden,
+    ...(entry.move ? { move: true } : {}),
   };
+}
+
+/** Порядок запасных позиций, если желаемая занята. */
+const FALLBACK = { left: ['left', 'center', 'right'], center: ['center', 'right', 'left'], right: ['right', 'center', 'left'] };
+
+/**
+ * Режим staging: "stable" — без «конвейера». Персонаж, который уже стоит
+ * на сцене, остаётся на своей позиции, даже если в новом cast указана
+ * другая; новичок встаёт на указанную позицию или ближайшую свободную.
+ * Перейти на другое место можно явно: { "move": true }.
+ */
+export function stabilizeCast(prev = [], next = []) {
+  const before = new Map(prev.filter((c) => c && !c.hidden).map((c) => [c.char, c.pos]));
+  const taken = new Set();
+  const placed = new Map();
+  const claim = (entry, wish) => {
+    const pos = FALLBACK[wish]?.find((p) => !taken.has(p)) || entry.pos;
+    taken.add(pos);
+    placed.set(entry, pos);
+  };
+  const visible = next.filter((c) => c && !c.hidden);
+  // явные перемещения, затем оставшиеся на месте, затем новички
+  for (const c of visible) if (c.move) claim(c, c.pos);
+  for (const c of visible) if (!c.move && before.has(c.char)) claim(c, before.get(c.char));
+  for (const c of visible) if (!c.move && !before.has(c.char)) claim(c, c.pos);
+  return next.map((c) => (placed.has(c) && placed.get(c) !== c.pos ? { ...c, pos: placed.get(c) } : { ...c }));
 }
 
 function normalizeStep(t) {
@@ -317,13 +348,30 @@ export function stateAt(story, sceneId, stepIndex, vars = null) {
     if (vars && step.if && !evalCondition(step.if, vars)) continue;
     if (step.bg) state.bg = step.bg;
     if (step.weather) state.weather = step.weather;
-    if (step.cast) state.cast = step.cast.map((c) => ({ ...c }));
+    if (step.cast) state.cast = story.staging === 'manual' ? step.cast.map((c) => ({ ...c })) : stabilizeCast(state.cast, step.cast);
   }
   return state;
 }
 
+/* Картинки новелл, загруженных из файла .vnmy: id новеллы → (путь → blob: URL).
+ * Заполняет persistence.js; сама история хранит обычные относительные пути. */
+const assetUrlTable = new Map();
+
+export function registerAssetUrls(storyId, urls) {
+  dropAssetUrls(storyId);
+  assetUrlTable.set(storyId, urls);
+}
+
+export function dropAssetUrls(storyId) {
+  const old = assetUrlTable.get(storyId);
+  if (old && typeof URL !== 'undefined' && URL.revokeObjectURL) for (const url of old.values()) URL.revokeObjectURL(url);
+  assetUrlTable.delete(storyId);
+}
+
 export function resolveUrl(story, url) {
   if (!url) return '';
+  const packaged = story?.packaged && assetUrlTable.get(story.id)?.get(url);
+  if (packaged) return packaged;
   if (/^(https?:|data:|blob:|\/)/.test(url)) return url;
   return (story.baseUrl || '') + url;
 }
@@ -393,15 +441,50 @@ export function lintStory(story) {
     }
   };
 
+  // Расстановка: одна позиция — один персонаж, эмоция существует,
+  // говорящий со спрайтами стоит на сцене (по линейному порядку шагов).
+  const checkCast = (cast, where, sceneId, stepId) => {
+    const visible = cast.filter((c) => !c.hidden);
+    const seenChars = new Set();
+    const seenPos = new Map();
+    for (const c of visible) {
+      const char = characterById(story, c.char);
+      if (seenChars.has(c.char)) issues.push({ level: 'error', sceneId, stepId, text: `${where}: персонаж «${c.char}» указан в составе дважды` });
+      seenChars.add(c.char);
+      if (seenPos.has(c.pos)) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: «${seenPos.get(c.pos)}» и «${c.char}» стоят в одной позиции «${c.pos}»` });
+      else seenPos.set(c.pos, c.char);
+      const keys = Object.keys(char?.sprites || {});
+      // без sprite движок подставит 'neutral', а при его отсутствии — первую эмоцию
+      if (char && keys.length && !char.sprites[c.sprite]) issues.push({ level: c.sprite === 'neutral' ? 'warn' : 'error', sceneId, stepId, text: `${where}: у «${c.char}» нет эмоции «${c.sprite}» (есть: ${keys.join(', ')})` });
+    }
+    if (visible.length > POSITIONS.length) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: на сцене ${visible.length} персонажей, а позиций ${POSITIONS.length}` });
+  };
+
   const ids = new Set();
   for (let i = 0; i < story.scenes.length; i++) {
     const scene = story.scenes[i];
     if (!scene.bg) issues.push({ level: 'warn', sceneId: scene.id, text: `Сцена «${scene.name}» без фона` });
+    checkCast(scene.cast, `Сцена «${scene.name}»`, scene.id);
+    let linearCast = scene.cast;
     for (const c of scene.cast) {
       if (!characterById(story, c.char)) issues.push({ level: 'error', sceneId: scene.id, text: `В сцене «${scene.name}» есть неизвестный персонаж` });
     }
     for (let j = 0; j < scene.steps.length; j++) {
       const step = scene.steps[j];
+      if (step.cast) {
+        linearCast = step.cast;
+        checkCast(step.cast, `Шаг #${j + 1}: состав`, scene.id, step.id);
+      }
+      const speakerChar = step.speaker ? characterById(story, step.speaker) : null;
+      if (step.speaker && !speakerChar) {
+        issues.push({ level: 'error', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: говорит неизвестный персонаж «${step.speaker}»` });
+      } else if (speakerChar && Object.keys(speakerChar.sprites || {}).length
+        && !linearCast.some((c) => c.char === step.speaker && !c.hidden)) {
+        issues.push({ level: 'warn', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: «${speakerChar.name}» говорит, но его нет в составе сцены` });
+      }
+      if (step.spriteOverride && speakerChar && !speakerChar.sprites?.[step.spriteOverride]) {
+        issues.push({ level: 'error', sceneId: scene.id, stepId: step.id, text: `Шаг #${j + 1}: у «${step.speaker}» нет эмоции «${step.spriteOverride}»` });
+      }
       if (!step.text && !step.ask && !step.choices?.length && !step.end) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Пустая реплика #${j + 1}` });
       checkCondition(step.if, `Шаг #${j + 1}: условие показа`, scene.id, step.id);
       checkText(step.text, `Шаг #${j + 1}`, scene.id, step.id);

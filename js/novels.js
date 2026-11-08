@@ -6,7 +6,7 @@
  */
 import {
   loadLibrary, deleteStory, progressOf, getSaves,
-  importStoryFile, clearSaves,
+  importStoryFile, deleteSave,
   deleteUniverse, exportUniversePortable, moveStoryToUniverse,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
@@ -122,9 +122,9 @@ function openStoryMenu(story) {
         icon: ICONS.restart,
         hint: 'прогресс будет сброшен',
         onSelect: async () => {
-          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Сохранённый прогресс этой новеллы удалится.', confirmText: 'Начать сначала', danger: false });
+          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Автосохранение сбросится. Ручные слоты и отметки «прочитано» останутся.', confirmText: 'Начать сначала', danger: false });
           if (!ok) return;
-          clearSaves(story.id);
+          deleteSave(story.id, 'auto');
           hooks.onPlay(story, { fresh: true });
         },
       } : null,
@@ -152,6 +152,7 @@ async function runImport(file, universeId) {
       toast('В файле не нашлось новелл', 4000);
       return;
     }
+    if (imported.missing?.length) toast(`Не хватает картинок: ${imported.missing.length}. Подробности в консоли`, 5000);
     if (imported.universe) {
       toast(`Вселенная «${imported.universe.title}»: новелл ${imported.length}`, 4000);
     } else {
@@ -170,6 +171,10 @@ async function runImport(file, universeId) {
       toast(partial
         ? `Место кончилось: загружено ${partial}. Удалите лишние новеллы или грузите картинки файлами.`
         : 'В браузере мало места для этой новеллы. Удалите что-нибудь или держите картинки в папке stories.', 6000);
+    } else if (code === 'BAD_PACKAGE') {
+      toast('В архиве нет story.json или universe.json — это не новелла VNMY', 5000);
+    } else if (code === 'ZIP_UNSUPPORTED') {
+      toast('Архив сжат способом, который этот браузер не читает. Упакуйте его командой npm run pack', 6000);
     } else if (code === 'BAD_JSON') {
       toast('Это не файл истории VNMY: внутри не JSON', 4000);
     } else {
@@ -236,7 +241,7 @@ export function wireUniverse() {
   $('#uni-back')?.addEventListener('click', () => hooks.onBack?.());
   $('#uni-menu')?.addEventListener('click', openUniverseMenu);
 
-  const fileInput = el('input', { type: 'file', class: 'js-import-novel', accept: 'application/json,.json', style: { display: 'none' } });
+  const fileInput = el('input', { type: 'file', class: 'js-import-novel', accept: 'application/json,.json,.vnmy,.zip,application/zip', style: { display: 'none' } });
   document.body.append(fileInput);
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0];

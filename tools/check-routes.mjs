@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const ROOT = path.resolve(import.meta.dirname, '..');
 import { JSDOM } from 'jsdom';
 import { bareId, normalizeStory } from '../js/format.js';
 import { getSaves, saveSettings } from '../js/store.js';
@@ -127,11 +130,12 @@ export async function checkRoutes(scan) {
     const player = await import('../js/player.js');
     await run(fixture, fixtureRoutes, 'Самопроверка движка', player);
     const smoke = passed;
-    for (const { dir, novels } of scan) {
-      for (const { dir: novel, story } of novels) {
-        const label = `stories/${dir}/novels/${novel}/routes.json`;
+    for (const { dir, path: universePath = `stories/${dir}`, novels } of scan) {
+      for (const { dir: novel, path: novelPath = `${universePath}/novels/${novel}`, story } of novels) {
+        const file = path.resolve(ROOT, novelPath, 'routes.json');
+        const label = path.relative(process.cwd(), file) || file;
         let source;
-        try { source = await fs.readFile(new URL(`../${label}`, import.meta.url), 'utf8'); }
+        try { source = await fs.readFile(file, 'utf8'); }
         catch (error) { if (error.code === 'ENOENT') continue; throw error; }
         try { await run(story, JSON.parse(source), label, player); }
         catch (error) { failures.push(`${label}: ${error.message}`); }

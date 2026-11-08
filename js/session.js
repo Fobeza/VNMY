@@ -1,5 +1,5 @@
 /* Narrative state has no DOM dependencies: the player renders it. */
-import { findScene, defaultVars, varByName, bareId, stateAt } from './format.js';
+import { findScene, defaultVars, varByName, bareId, stateAt, stabilizeCast } from './format.js';
 import { deepClone } from './util.js';
 import { applyOperation } from './expr.js';
 
@@ -59,7 +59,11 @@ export class NarrativeState {
     const step = this.step;
     if (step.bg) this.visual.bg = step.bg;
     if (step.weather) this.visual.weather = step.weather;
-    if (step.cast) this.visual.cast = step.cast.map(c => ({ ...c }));
+    if (step.cast) {
+      this.visual.cast = this.story.staging === 'manual'
+        ? step.cast.map(c => ({ ...c }))
+        : stabilizeCast(this.visual.cast, step.cast);
+    }
   }
   applySet(step) {
     for (const op of step?.set || []) {

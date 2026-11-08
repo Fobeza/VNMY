@@ -20,11 +20,13 @@ export async function validateStories(scan) {
     if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) throw new Error(`Картинка вне папки: ${url}`);
     await fs.access(real);
   };
-  for (const { dir, universe, novels } of scan) {
-    if (universe.id !== dir) failures.push(`${dir}: id вселенной должен совпадать с папкой`);
-    try { await checkAsset(`stories/${dir}`, universe.cover); } catch (e) { failures.push(`${dir}: ${e.message}`); }
-    for (const { dir: novelDir, story: raw } of novels) {
-      const label = `${dir}/${novelDir}`;
+  for (const { dir, path: universePath = `stories/${dir}`, single, universe, novels } of scan) {
+    if (!single) {
+      if (universe.id !== dir) failures.push(`${dir}: id вселенной должен совпадать с папкой`);
+      try { await checkAsset(universePath, universe.cover); } catch (e) { failures.push(`${dir}: ${e.message}`); }
+    }
+    for (const { dir: novelDir, path: novelPath = `${universePath}/novels/${novelDir}`, story: raw } of novels) {
+      const label = single ? novelDir : `${dir}/${novelDir}`;
       if (ids.has(raw.id)) failures.push(`${label}: id новеллы повторяется: ${raw.id}`);
       ids.add(raw.id);
       if (!Array.isArray(raw.scenes) || !raw.scenes.length || raw.scenes.some(s => !s || !Array.isArray(s.steps) || !s.steps.length || s.steps.some(t => !t))) {
@@ -43,7 +45,7 @@ export async function validateStories(scan) {
       warnings += issues.filter(i => i.level !== 'error').length;
       for (const issue of issues.filter(i => i.level === 'error')) failures.push(`${label} ${issue.sceneId || ''}:${issue.stepId || ''}: ${issue.text}`);
       for (const url of storyAssets(story)) {
-        try { await checkAsset(`stories/${dir}/novels/${novelDir}`, url); }
+        try { await checkAsset(novelPath, url); }
         catch (e) { failures.push(`${label}: ${e.message}`); }
       }
     }

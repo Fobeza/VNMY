@@ -1,4 +1,5 @@
 import { deepClone } from './util.js';
+import { registerAssetUrls, dropAssetUrls } from './format.js';
 /* Large editable records live in IndexedDB; synchronous reads use a hydrated cache.
  * localStorage remains a fallback for file viewers without IndexedDB support.
  */
@@ -8,10 +9,10 @@ let queue = Promise.resolve();
 const failures = new Map();
 let initialization = null;
 
-function transaction(mode, action) {
+function transaction(mode, action, storeName = 'records') {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('records', mode);
-    action(tx.objectStore('records'));
+    const tx = db.transaction(storeName, mode);
+    action(tx.objectStore(storeName));
     tx.oncomplete = resolve;
     tx.onerror = tx.onabort = () => reject(tx.error || new Error('STORAGE_FAILED'));
   });
@@ -30,8 +31,13 @@ export function initializeStorage() {
     if (!globalThis.indexedDB) return;
     try {
       db = await new Promise((resolve, reject) => {
-        const request = indexedDB.open('vnmy-library', 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('records');
+        const request = indexedDB.open('vnmy-library', 2);
+        request.onupgradeneeded = () => {
+          const names = request.result.objectStoreNames;
+          if (!names.contains('records')) request.result.createObjectStore('records');
+          // картинки новелл из файлов .vnmy: ключ «id новеллы\nпуть»
+          if (!names.contains('assets')) request.result.createObjectStore('assets');
+        };
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
         request.onblocked = () => reject(new Error('STORAGE_BLOCKED'));
@@ -48,6 +54,7 @@ export function initializeStorage() {
         tx.oncomplete = resolve;
         tx.onerror = () => reject(tx.error);
       });
+      await loadAssetUrls();
       // Remove each legacy record only AFTER its IndexedDB transaction commits.
       const legacy = [];
       try {
@@ -109,3 +116,51 @@ export function largeStorageSize() {
 }
 
 export function largeRecordKeys() { return [...records.keys()]; }
+
+/* ─────────────── картинки новелл из файлов .vnmy ───────────────
+ * Хранятся как Blob в отдельном хранилище и не попадают в records:
+ * так история остаётся маленькой, а картинки не копируются в память.
+ */
+const assetKey = (storyId, path) => `${storyId}\n${path}`;
+
+async function loadAssetUrls() {
+  const groups = new Map();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('assets');
+    const request = tx.objectStore('assets').openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      const [storyId, path] = String(cursor.key).split('\n');
+      if (!groups.has(storyId)) groups.set(storyId, new Map());
+      groups.get(storyId).set(path, URL.createObjectURL(cursor.value));
+      cursor.continue();
+    };
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+  for (const [storyId, urls] of groups) registerAssetUrls(storyId, urls);
+}
+
+export function canStoreAssets() { return !!db; }
+
+/** Заменяет все картинки новеллы: entries — Map(путь → Blob). */
+export async function replaceStoryAssets(storyId, entries) {
+  if (!db) throw new Error('NO_ASSET_STORAGE');
+  await queue;
+  const range = IDBKeyRange.bound(assetKey(storyId, ''), assetKey(storyId, '\uffff'));
+  await transaction('readwrite', (store) => {
+    store.delete(range);
+    for (const [path, blob] of entries) store.put(blob, assetKey(storyId, path));
+  }, 'assets');
+  const urls = new Map();
+  for (const [path, blob] of entries) urls.set(path, URL.createObjectURL(blob));
+  registerAssetUrls(storyId, urls);
+}
+
+export function removeStoryAssets(storyId) {
+  dropAssetUrls(storyId);
+  if (!db) return;
+  const range = IDBKeyRange.bound(assetKey(storyId, ''), assetKey(storyId, '\uffff'));
+  enqueue(`assets:${storyId}`, () => transaction('readwrite', (store) => store.delete(range), 'assets'));
+}
