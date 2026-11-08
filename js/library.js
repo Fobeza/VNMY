@@ -50,7 +50,7 @@ export async function renderLibrary(nextHooks) {
   }
 
   if (!universes.length) {
-    list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной вселенной. Импортируйте новеллу в формате JSON или добавьте её в stories/ и соберите проект.' }));
+    list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной новеллы. Нажмите «Импорт» и выберите файл новеллы .vnmy (или .json).' }));
   }
   for (const universe of universes) list.append(universeCard(universe));
 
@@ -170,7 +170,7 @@ export function wireLibrary() {
   if (wired) return;
   wired = true;
 
-  const fileInput = el('input', { type: 'file', class: 'js-import-library', accept: 'application/json,.json', style: { display: 'none' } });
+  const fileInput = el('input', { type: 'file', class: 'js-import-library', accept: 'application/json,.json,.vnmy,.zip,application/zip', style: { display: 'none' } });
   document.body.append(fileInput);
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0];
@@ -182,7 +182,8 @@ export function wireLibrary() {
         toast('В файле не нашлось новелл', 4000);
         return;
       }
-      if (imported.universe) {
+      if (imported.missing?.length) toast(`Не хватает картинок: ${imported.missing.length}. Подробности в консоли`, 5000);
+    if (imported.universe) {
         toast(`Вселенная «${imported.universe.title}»: новелл ${imported.length}`, 3600);
       } else {
         const titles = imported.map((s) => `«${s.title}»`).join(', ');
@@ -195,6 +196,10 @@ export function wireLibrary() {
         toast(partial
           ? `Место кончилось: загружено ${partial} из файла. Удалите лишние новеллы или загружайте картинки файлами.`
           : 'В браузере мало места для этой новеллы. Удалите что-нибудь или держите картинки в папке stories.', 6000);
+      } else if (code === 'BAD_PACKAGE') {
+        toast('В архиве нет story.json или universe.json — это не новелла VNMY', 5000);
+      } else if (code === 'ZIP_UNSUPPORTED') {
+        toast('Архив сжат способом, который этот браузер не читает. Упакуйте его командой npm run pack', 6000);
       } else if (code === 'BAD_JSON') {
         toast('Это не файл истории VNMY: внутри не JSON', 4000);
       } else {

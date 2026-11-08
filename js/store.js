@@ -1,9 +1,13 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
-import { normalizeStory, createStory, findScene, bareId, globalId } from './format.js';
+import { normalizeStory, createStory, findScene, bareId, globalId, resolveUrl } from './format.js';
 import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
 import { uid, download, readFileAsText, deepClone, prefersReducedMotion } from './util.js';
 
-import { initializeStorage, getLargeRecord, putLargeRecord, removeLargeRecord, flushStorage, storageBackend, largeStorageSize, largeRecordKeys } from './persistence.js';
+import {
+  initializeStorage, getLargeRecord, putLargeRecord, removeLargeRecord, flushStorage, storageBackend,
+  largeStorageSize, largeRecordKeys, canStoreAssets, replaceStoryAssets, removeStoryAssets,
+} from './persistence.js';
+import { isZip, readZip } from './zip.js';
 export { initializeStorage, flushStorage, storageBackend };
 
 const K = {
@@ -215,6 +219,7 @@ export function saveStory(story, { touch = true } = {}) {
 
 export function deleteStory(id) {
   removeLargeRecord(K.story(id), () => lsRemove(K.story(id)));
+  removeStoryAssets(id);
   lsSet(K.index, JSON.stringify(listLocalStoryIds().filter((x) => x !== id)));
   lsRemove(K.saves(id));
   lsRemove(K.seen(id));
@@ -305,7 +310,7 @@ async function portableStory(story, { limitMb = 24, used = 0 } = {}) {
       // внешние ссылки оставляем как есть
       continue;
     }
-    const absolute = /^https?:|^\//.test(url) ? url : (data.baseUrl || '') + url;
+    const absolute = resolveUrl(story, url);
     if (spent > budget) { skipped++; continue; }
     const dataUrl = await toDataUrl(absolute);
     if (dataUrl) {
@@ -454,6 +459,7 @@ export function importUniverseBundle(parsed) {
  * или бэкап браузера со списком.
  */
 export async function importStoryFile(file) {
+  if (await isZip(file)) return importPackage(await readZip(file));
   const text = await readFileAsText(file);
   let parsed;
   try {
@@ -715,3 +721,100 @@ export function makeSavePoint(story, sceneId, stepIndex, extra = {}) {
 }
 
 export { createStory, normalizeStory, bareId, globalId };
+
+/* ─────────────────────────── файл новеллы .vnmy ───────────────────────────
+ * Это zip той же папки, что лежала бы в stories/:
+ *   universe.json + novels/<новелла>/story.json + assets/…   — вселенная;
+ *   story.json + assets/…                                    — одна новелла.
+ * id новеллы сохраняется: повторный импорт обновляет её, сохранения остаются.
+ */
+async function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function readJSONBlob(blob) {
+  try { return JSON.parse(await blob.text()); } catch { throw new Error('BAD_JSON'); }
+}
+
+export async function importPackage(files) {
+  // корень пакета — папка с universe.json или story.json, ближайшая к началу
+  const markers = [...files.keys()]
+    .filter((p) => /(^|\/)(universe|story)\.json$/.test(p) && !p.split('/').some((part) => part.startsWith('_') || part.startsWith('.')))
+    .sort((a, b) => a.split('/').length - b.split('/').length);
+  if (!markers.length) throw new Error('BAD_PACKAGE');
+  const root = markers[0].replace(/[^/]*$/, '');
+  const at = (rel) => files.get(root + rel);
+
+  let rawUniverse = null;
+  const novelDirs = [];
+  if (at('universe.json')) {
+    rawUniverse = await readJSONBlob(at('universe.json'));
+    const re = new RegExp(`^${root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}novels/([^/]+)/story\\.json$`);
+    for (const p of files.keys()) {
+      const m = p.match(re);
+      if (m && !m[1].startsWith('_') && !m[1].startsWith('.')) novelDirs.push(`novels/${m[1]}/`);
+    }
+    novelDirs.sort();
+  } else {
+    novelDirs.push('');
+  }
+  if (!novelDirs.length) throw new Error('BAD_PACKAGE');
+
+  // вселенная: из universe.json пакета, иначе по полю universe новеллы
+  let universe = null;
+  const firstStory = await readJSONBlob(at(`${novelDirs[0]}story.json`));
+  const universeId = String(rawUniverse?.id || firstStory.universe || '').trim();
+  if (universeId) {
+    const known = universeCatalog().find((u) => u.id === universeId) || loadLocalUniverse(universeId);
+    const data = rawUniverse ? universeData(normalizeUniverse({ ...rawUniverse, id: universeId })) : null;
+    if (data?.cover && at(data.cover)) data.cover = await blobToDataUrl(at(data.cover));
+    else if (data && data.cover && !/^(data:|https?:)/.test(data.cover)) data.cover = '';
+    if (known && (known.builtin || known.readOnly)) universe = known;
+    else if (known) universe = data ? saveUniverse({ ...known, ...data, id: known.id, createdAt: known.createdAt }) : known;
+    else universe = saveUniverse(createUniverse({ ...(data || { title: universeId }), id: universeId }));
+  }
+
+  const imported = [];
+  const missing = [];
+  for (const dir of novelDirs) {
+    const raw = dir === novelDirs[0] ? firstStory : await readJSONBlob(at(`${dir}story.json`));
+    const story = normalizeStory(raw);
+    story.readOnly = false;
+    story.baseUrl = '';
+    story.universe = universe?.id || '';
+    story.updatedAt = Date.now();
+    const assets = new Map();
+    for (const url of storyAssets(story)) {
+      if (/^(data:|blob:|https?:|\/)/i.test(url)) continue;
+      const blob = at(dir + url);
+      if (blob) assets.set(url, blob); else missing.push(`${dir}${url}`);
+    }
+    if (canStoreAssets()) {
+      story.packaged = true;
+      await replaceStoryAssets(story.id, assets);
+    } else {
+      // без IndexedDB вшиваем картинки прямо в историю (может не хватить места)
+      const map = new Map();
+      for (const [url, blob] of assets) map.set(url, await blobToDataUrl(blob));
+      replaceAssetPaths(story, map);
+    }
+    try {
+      saveStory(story, { touch: false });
+    } catch (err) {
+      if (String(err?.message) === 'STORAGE_FULL') err.imported = imported;
+      throw err;
+    }
+    imported.push(story);
+  }
+  libraryCache = null;
+  await flushStorage();
+  if (missing.length) console.warn('[vnmy] в пакете нет картинок:', missing);
+  const result = Object.assign(imported, { missing });
+  if (rawUniverse && universe) result.universe = universe;
+  return result;
+}
