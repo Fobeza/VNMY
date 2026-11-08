@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "sovyonok",
-  "universe": "beskonechnoe-leto",
+  "universe": "beskonechnoe-leto", "staging": "manual",
   "title": "Совёнок",
   "description": "Илья засыпает в зимнем автобусе и просыпается у ворот лагеря «Совёнок».",
   "lang": "ru",
