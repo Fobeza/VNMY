@@ -13,9 +13,11 @@ function updateSettings(value) {
   document.dispatchEvent(new CustomEvent('vnmy:settings', { detail: settings }));
 }
 
+let zoomControlSequence = 0;
 function spriteZoomControl() {
-  const output = el('output', { htmlFor: 'reader-spriteScale', text: `${Math.round(getSettings().spriteScale * 100)}%` });
-  const input = el('input', { id: 'reader-spriteScale', type: 'range', min: '.5', max: '3', step: '.05', value: String(getSettings().spriteScale), 'aria-label': 'Масштаб персонажей' });
+  const inputId = `reader-spriteScale-${++zoomControlSequence}`;
+  const output = el('output', { htmlFor: inputId, text: `${Math.round(getSettings().spriteScale * 100)}%` });
+  const input = el('input', { id: inputId, type: 'range', min: '.5', max: '3', step: '.05', value: String(getSettings().spriteScale), 'aria-label': 'Масштаб персонажей' });
   const apply = value => { updateSettings({ spriteScale: value }); output.textContent = `${Math.round(getSettings().spriteScale * 100)}%`; input.value = String(getSettings().spriteScale); };
   input.addEventListener('input', () => apply(Number(input.value)));
   return el('div', { class: 'sprite-zoom-control' },

@@ -70,7 +70,7 @@ try {
   assert.equal(stage.paused, false);
   closeTuner(); // idempotent cleanup
   const closeSceneSettings = openSettings('sprites'); await tick();
-  assert.equal(overlay().querySelector('#reader-spriteScale').value, '1.8');
+  assert.equal(overlay().querySelector('[aria-label="Масштаб персонажей"]').value, '1.8');
   click('Сбросить до 100%');
   assert.equal(getSettings().spriteScale, 1);
   assert.equal(getSettings().fontSize, 1.2, 'zoom reset must not reset text');

@@ -74,6 +74,7 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet', on
   const close = () => {
     if (closed) return;
     closed = true;
+    sheet.setAttribute('aria-hidden', 'true');
     onClose?.();
     disposeModal();
     backdrop.classList.remove('is-visible');

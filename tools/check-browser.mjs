@@ -98,15 +98,18 @@ try {
     await page.getByRole('button', { name: 'Не вмешиваться', exact: true }).scrollIntoViewIfNeeded();
   }
   await page.setViewportSize({ width: 390, height: 844 });
+  await geometry();
   await page.getByRole('button', { name: 'Меню игры', exact: true }).click();
+  await page.waitForFunction(() => { const node = document.querySelector('.sheet-pause:not([aria-hidden])'); return node && getComputedStyle(node).opacity === '1'; });
   await page.screenshot({ path: path.join(output, 'pause-390.png') });
   await page.getByRole('button', { name: /Настройки/ }).click();
+  await page.waitForFunction(() => { const node = document.querySelector('.sheet-page:not([aria-hidden])'); return node && getComputedStyle(node).opacity === '1'; });
   await page.screenshot({ path: path.join(output, 'settings-390.png') });
   const rowHeights = await page.locator('.setting-range').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().height));
   assert.ok(rowHeights.every(height => height <= 100), 'settings must not have oversized slider rows');
   await page.getByRole('tab', { name: 'Сцена', exact: true }).click();
   await page.getByRole('button', { name: 'Настроить на сцене', exact: true }).click();
-  await page.getByRole('slider', { name: 'Масштаб персонажей', exact: true }).waitFor();
+  await page.getByRole('dialog', { name: 'Масштаб персонажей', exact: true }).getByRole('slider', { name: 'Масштаб персонажей', exact: true }).waitFor();
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.stage').classList.contains('is-adjusting-sprites'));
   assert.deepEqual(errors, []);
