@@ -77,6 +77,7 @@ try {
   assert.deepEqual(await geometry(), three, 'speaker and emotion changes do not move frames');
   for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 430, height: 932 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport);
+    await geometry(); // viewport-relative CSS units settle on the next animation frame
     const layout = await page.evaluate(() => {
       const r = document.querySelector('.stage').getBoundingClientRect();
       const toolbar = document.querySelector('.quick-actions').getBoundingClientRect();
@@ -88,6 +89,8 @@ try {
         panelFits: panel.getBoundingClientRect().bottom <= toolbar.top + 1,
       };
     });
+    console.log('Viewport geometry', JSON.stringify({ viewport, layout }));
+    await page.screenshot({ path: path.join(output, `scene-${viewport.width}.png`) });
     assert.equal(layout.overflow, false); assert.equal(layout.toolbarFits, true); assert.equal(layout.choiceAfterText, true); assert.equal(layout.panelFits, true);
     if (viewport.width < 760) assert.ok(Math.abs(layout.height - layout.viewportHeight) < 1, 'mobile stage must fill viewport without letterboxing');
     await page.screenshot({ path: path.join(output, `scene-${viewport.width}.png`) });
