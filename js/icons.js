@@ -12,5 +12,13 @@ export const ICONS = {
   "journal": "<path d=\"M5 7h14M5 12h14M5 17h9\"/><path d=\"M3 4h18v16H3z\" opacity=\".45\"/>",
   "save": "<path d=\"M5 4h11l3 3v13H5z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>",
   "book": "<path d=\"M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\"/><path d=\"M17 7a3 3 0 0 1 3 3v10h-9\"/>",
-  "dots": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>"
+  "dots": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>",
+  settings: '<path d="m10 3-1 3-3 1-2 4 2 2v4l4 2 2-1 3 1 4-3v-3l2-2-2-4-3-1-1-3z"/><circle cx="12" cy="12" r="3"/>',
+  home: '<path d="m3 11 9-8 9 8v10h-6v-7H9v7H3z"/>',
+  file: '<path d="M5 3h9l5 5v13H5zM14 3v6h5"/>',
+  hand: '<path d="M9 13V5a2 2 0 0 1 4 0v7-3a2 2 0 0 1 3 0v3-1a2 2 0 0 1 3 0v2a2 2 0 0 1 3 1v3c0 4-3 6-7 6H12l-7-7a2 2 0 0 1 3-3l3 3"/>',
+  swipe: '<path d="M8 18V8m0 0-4 4m4-4 4 4M17 20V5m0 0-4 4m4-4 4 4"/>',
+  hold: '<circle cx="12" cy="8" r="6"/><path d="M10 14V8a2 2 0 0 1 4 0v7l3-2 3 2-3 6h-7l-5-6 2-2 3 3"/>',
+  speaker: '<path d="M4 9h4l5-4v14l-5-4H4zM17 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
+  logo: '<path fill="currentColor" stroke="none" d="M3 4c5-3 13-3 18 0l-9 13z"/><path fill="currentColor" stroke="none" opacity=".65" d="m2 6 8 13-3 2C3 18 1 11 2 6m20 0-8 13 3 2c4-3 6-10 5-15"/>',
 };

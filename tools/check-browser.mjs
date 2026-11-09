@@ -1,12 +1,15 @@
 /* Real layout regression checks. Run: npx playwright install chromium && npm run check:browser */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir, mkdtemp, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { writeZip } from './pack.mjs';
 import { chromium } from 'playwright';
 
 const root = path.resolve(import.meta.dirname, '..');
 const output = path.join(root, 'test-results');
+const temp = await mkdtemp(path.join(tmpdir(), 'vnmy-browser-fixture-'));
 await mkdir(output, { recursive: true });
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
 const server = createServer(async (request, response) => {
@@ -30,7 +33,7 @@ try {
   await page.waitForFunction(() => window.__VNMY_BOOTED && document.body.dataset.screen === 'library');
   await page.evaluate(async () => {
     const { normalizeStory } = await import('/js/format.js');
-    const { saveSettings } = await import('/js/store.js');
+    const { saveSettings, writeSave } = await import('/js/store.js');
     const { openPlayer } = await import('/js/player.js');
     const sprite = color => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="700"><circle cx="150" cy="100" r="65" fill="${color}"/><path d="M90 170h120l30 480H60z" fill="${color}"/></svg>`);
     const bg = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="900"><rect width="500" height="900" fill="#303d54"/><path d="M0 600L500 450V900H0Z" fill="#4a5362"/></svg>');
@@ -41,6 +44,7 @@ try {
       { id: 'three', speaker: 'a', spriteOverride: 'smile', text: 'Как поступить?', choices: [{ text: 'Мы можем сами вещи отнести. Нас хватает.', goto: 'last' }, { text: 'Я пока пешком обучен. До лодки не дошёл.', goto: 'last' }, { text: 'Не вмешиваться', goto: 'last' }] },
       { id: 'last', text: 'Длинная реплика. '.repeat(80) }, { id: 'end', text: 'До встречи!', end: true },
     ] }] });
+    for (const slot of ['1','2']) writeSave(story.id, slot, { scene: 'cafe', step: 0, sceneName: 'Кофейня', visual: { bg }, thumbnail: bg });
     saveSettings({ reduceMotion: true, fontSize: 1, keepAwake: false, spriteScale: 1 });
     document.querySelector('#screen-library').hidden = true;
     document.querySelector('#screen-player').hidden = false;
@@ -108,14 +112,77 @@ try {
   await page.screenshot({ path: path.join(output, 'settings-390.png') });
   const rowHeights = await page.locator('.setting-range').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().height));
   assert.ok(rowHeights.every(height => height <= 100), 'settings must not have oversized slider rows');
-  await page.getByRole('tab', { name: 'Сцена', exact: true }).click();
-  await page.getByRole('button', { name: 'Настроить на сцене', exact: true }).click();
+  await page.getByRole('button', { name: 'Масштаб персонажей', exact: true }).click();
   await page.getByRole('dialog', { name: 'Масштаб персонажей', exact: true }).getByRole('slider', { name: 'Масштаб персонажей', exact: true }).waitFor();
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.stage').classList.contains('is-adjusting-sprites'));
+  // Inspect every reference screen, and import an actual .vnmy before writing to the library.
+  const show = async action => { await page.evaluate(action); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); };
+  const capture = async name => {
+    await page.waitForFunction(() => !document.querySelector('#toast.is-visible'));
+    await page.getByRole('dialog').last().click({ position: { x: 5, y: 5 } });
+    await page.waitForFunction(() => { const node = [...document.querySelectorAll('.sheet')].findLast(n => !n.inert); return node && node.classList.contains('is-visible') && getComputedStyle(node).opacity === '1'; });
+    await page.screenshot({ path: path.join(output, name + '.png') });
+  };
+  const dismiss = async () => { await page.keyboard.press('Escape'); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); };
+  await show(async () => { const { openSettings } = await import('/js/settings.js'); openSettings('sound'); });
+  assert.deepEqual(await page.getByRole('tab').allTextContents(), ['Текст','Звук','Управление']);
+  assert.equal(await page.getByRole('slider').count(), 4);
+  await page.getByRole('slider', { name: 'Общая громкость', exact: true }).evaluate(node => { node.value = '.5'; node.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.equal(await page.evaluate(async () => (await import('/js/store.js')).getSettings().masterVolume), .5);
+  await page.getByRole('button', { name: 'Проверить звук', exact: true }).click();
+  await page.waitForFunction(() => !document.querySelector('.test-sound').disabled);
+  await capture('reference-sound-390');
+  await page.getByRole('tab', { name: 'Управление', exact: true }).click();
+  assert.equal(await page.locator('.gesture-row').count(), 3);
+  await capture('reference-controls-390'); await dismiss();
+  await show(async () => { const { openSaves } = await import('/js/player.js'); openSaves(window.testStage.story); });
+  assert.deepEqual(await page.getByRole('tab').allTextContents(), ['Ручные','Авто','Быстрые']);
+  await page.getByRole('button', { name: 'Слот 3: пустой', exact: true }).click();
+  await capture('reference-save-390');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await page.getByRole('tab', { name: 'Быстрые', exact: true }).click();
+  await page.getByRole('button', { name: 'Быстрое сохранение: пустой', exact: true }).click();
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await page.waitForFunction(async () => !!(await import('/js/store.js')).getSaves('browser-fixture').quick);
+  await dismiss();
+  await show(async () => { const { openSaves } = await import('/js/player.js'); openSaves(window.testStage.story, {}, 'load'); });
+  await page.getByRole('tab', { name: 'Авто', exact: true }).click();
+  await capture('reference-load-390'); await dismiss();
+  await page.getByRole('button', { name: 'Журнал', exact: true }).click(); await capture('reference-journal-390'); await dismiss();
+
+  // Create a small stored ZIP outside the repository. No novels or binary test assets are committed.
+  const wav = Buffer.alloc(44 + 3200); wav.write('RIFF'); wav.writeUInt32LE(wav.length - 8, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(8000, 24); wav.writeUInt32LE(16000, 28); wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(3200, 40);
+  for (let i = 0; i < 1600; i++) wav.writeInt16LE(Math.round(Math.sin(i * 2 * Math.PI * 440 / 8000) * 2000), 44 + i * 2);
+  const poster = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#26334c"/><stop offset="1" stop-color="#a47456"/></linearGradient></defs><rect width="600" height="400" fill="url(#g)"/><path d="M0 300L200 170 400 290 600 120V400H0Z" fill="#182532"/><circle cx="490" cy="100" r="35" fill="#f3c98d"/></svg>';
+  const raw = { id: 'import-ui-fixture', title: 'Проверка импорта', description: 'История с обложкой, сценами и музыкой.', genres: ['Мистика','Повседневность'], cover: 'cover.svg', soundtrack: [{ title: 'Первый вечер', src: 'theme.wav' }], scenes: [{ id: 'cafe', name: 'Вечер', act: 'Глава 1', card: false, bg: 'cover.svg', music: 'theme.wav', steps: [{ id: 'one', text: 'Вечер начинается.' }, { id: 'end', text: 'До встречи!', end: true }] }] };
+  await writeFile(path.join(temp, 'story.json'), JSON.stringify(raw)); await writeFile(path.join(temp, 'cover.svg'), poster); await writeFile(path.join(temp, 'theme.wav'), wav);
+  const packagePath = path.join(temp, 'fixture.vnmy');
+  await writeZip(['story.json','cover.svg','theme.wav'].map(name => ({ name, full: path.join(temp, name) })), packagePath);
+  await show(async () => { const { openImport } = await import('/js/import.js'); openImport({ onImported: stories => { window.importedStories = stories; } }); });
+  await page.locator('.import-file-input').setInputFiles(packagePath);
+  await page.getByText('Готово к импорту', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(async () => (await import('/js/store.js')).listLocalStoryIds().includes('import-ui-fixture')), false);
+  await capture('reference-import-390');
+  await page.getByRole('button', { name: 'Добавить в библиотеку', exact: true }).click();
+  await page.waitForFunction(() => !!window.importedStories?.length);
+  assert.equal(await page.evaluate(async () => (await import('/js/store.js')).listLocalStoryIds().includes('import-ui-fixture')), true);
+  await show(async () => { const { openStoryDetails } = await import('/js/novels.js'); openStoryDetails(window.importedStories[0], { onPlay: async story => { const { openPlayer } = await import('/js/player.js'); window.testStage = openPlayer(story); } }); });
+  await capture('reference-story-390');
+  await page.getByRole('button', { name: 'Начать историю', exact: true }).click();
+  await page.waitForFunction(() => window.testStage.story.id === 'import-ui-fixture');
+  await page.waitForFunction(() => window.testStage.audio.channels.get('music')?.audio.readyState >= 2);
+  assert.equal(await page.evaluate(() => window.testStage.audio.channels.get('music').audio.error), null);
+  await show(async () => { const { openGallery } = await import('/js/gallery.js'); openGallery(window.testStage.story, { audio: window.testStage.audio }); });
+  await capture('reference-gallery-390');
+  await page.getByRole('tab', { name: 'Музыка', exact: true }).click();
+  await page.getByRole('button', { name: 'Первый вечер', exact: true }).click();
+  await page.waitForFunction(() => !!document.querySelector('.music-row[aria-pressed="true"]'));
+  await capture('reference-music-390'); await dismiss();
   assert.deepEqual(errors, []);
   console.log('Browser layout: 4 viewports, sprite zoom/anchors, 3 actors, choices, compact settings, pause and tuner cleanup passed.');
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));
+  await rm(temp, { recursive: true, force: true });
 }

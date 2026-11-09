@@ -58,6 +58,7 @@ export class NarrativeState {
     this.index = index;
     const step = this.step;
     if (step.bg) this.visual.bg = step.bg;
+    if (step.music !== undefined) this.visual.music = step.music;
     if (step.weather) this.visual.weather = step.weather;
     if (step.cast) {
       this.visual.cast = this.story.staging === 'manual'

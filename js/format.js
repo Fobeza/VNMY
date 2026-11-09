@@ -2,14 +2,14 @@
  *
  * История (story.json)
  * {
- *   id, title, author, description, cover, accent,
+ *   id, title, author, description, cover, accent, genres, soundtrack,
  *   universe,                       // id вселенной (js/universe.js) или ''
  *   staging,                        // 'stable' (по умолчанию) | 'manual' — см. stabilizeCast
  *   baseUrl,                        // откуда грузить относительные пути к картинкам
  *   vars: [{ name: 'sympathy', type: 'number', initial: 0 }],
  *   characters: [{ id, name, color, sprites: { neutral: 'assets/anya-neutral.webp' } }],
  *   scenes: [{
- *     id, name, bg, weather, cast: [ { char, sprite, pos, scale, dim, move } ],
+ *     id, name, bg, music, weather, cast: [ { char, sprite, pos, scale, dim, move } ],
  *     steps: [ Step ]
  *   }]
  * }
@@ -19,6 +19,7 @@
  *   id, speaker,      // id персонажа или null (мысли / рассказчик)
  *   text,             // реплика
  *   bg,               // сменить фон (необязательно)
+ *   music, sound, voice, // paths; empty music stops the background track
  *   weather,          // сменить погоду
  *   cast,             // полностью заменить состав на сцене
  *   mood,             // подсказка для эффектов (например, 'shake')
@@ -125,6 +126,8 @@ export function normalizeStory(input) {
   story.id = story.id || uid('story');
   story.title = String(story.title || 'Без названия');
   story.author = String(story.author || '');
+  story.genres = Array.isArray(story.genres) ? story.genres.filter(x => typeof x === 'string' && x.trim()).map(x => x.trim()).slice(0, 6) : [];
+  story.soundtrack = Array.isArray(story.soundtrack) ? story.soundtrack.filter(x => x && typeof x.src === 'string' && x.src).map(x => ({ src: x.src, title: String(x.title || 'Музыка') })) : [];
   story.description = String(story.description || '');
   story.cover = typeof story.cover === 'string' ? story.cover : '';
   story.accent = story.accent || ACCENTS[0];
@@ -177,6 +180,7 @@ export function normalizeStory(input) {
       steps: Array.isArray(s.steps) && s.steps.length ? s.steps : [newStep()],
     };
     // над названием сцены — номер акта: «Акт II · Одежда и улица»
+    if (typeof s.music === 'string') scene.music = s.music;
     if (s.act) scene.act = String(s.act).slice(0, 60);
     // «карточка сцены» (название по центру при входе) — можно выключить
     if (s.card === false) scene.card = false;
@@ -252,6 +256,7 @@ function normalizeStep(t) {
     pause: Number.isFinite(+t.pause) ? +t.pause : 0,
   };
   if (typeof t.bg === 'string' && t.bg) step.bg = t.bg;
+  for (const key of ['music', 'sound', 'voice']) if (typeof t[key] === 'string') step[key] = t[key];
   if (WEATHERS.includes(t.weather)) step.weather = t.weather;
   if (Array.isArray(t.cast)) step.cast = t.cast.map(normalizeCast).filter(Boolean);
   if (t.note) step.note = String(t.note);
@@ -340,13 +345,14 @@ function clampIndex(i, len) {
 export function stateAt(story, sceneId, stepIndex, vars = null) {
   const scene = findScene(story, sceneId);
   if (!scene) return { bg: '', weather: 'none', cast: [] };
-  const state = { bg: scene.bg, weather: scene.weather, cast: scene.cast.map((c) => ({ ...c })) };
+  const state = { ...(scene.music !== undefined ? { music: scene.music } : {}), bg: scene.bg, weather: scene.weather, cast: scene.cast.map((c) => ({ ...c })) };
   const last = Math.min(stepIndex, scene.steps.length - 1);
   for (let i = 0; i <= last; i++) {
     const step = scene.steps[i];
     if (!step) break;
     if (vars && step.if && !evalCondition(step.if, vars)) continue;
     if (step.bg) state.bg = step.bg;
+    if (step.music !== undefined) state.music = step.music;
     if (step.weather) state.weather = step.weather;
     if (step.cast) state.cast = story.staging === 'manual' ? step.cast.map((c) => ({ ...c })) : stabilizeCast(state.cast, step.cast);
   }

@@ -4,7 +4,7 @@ import { openSettings, openSpriteTuner } from './settings.js';
 import { openGallery } from './gallery.js';
 import { getSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, markArtwork } from './store.js';
 import { findScene, bareId, resolveUrl } from './format.js';
-import { $, debounce, el, plural, deepClone } from './util.js';
+import { $, debounce, el, deepClone } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
 import { restorePosition, storyRevision } from './session.js';
@@ -40,7 +40,7 @@ export function openPlayer(story, opts = {}) {
   const settings = getSettings();
   const saves = getSaves(story.id);
   // явно выбранный слот важнее автосейва; «продолжить» берёт автосейв
-  const slotSave = opts.slot ? saves.slots.find((entry) => entry.slot === opts.slot) : null;
+  const slotSave = opts.slot === 'quick' ? saves.quick : opts.slot ? saves.slots.find((entry) => entry.slot === opts.slot) : null;
   const source = slotSave || (!opts.fresh ? saves.auto : null);
   const restored = restorePosition(story, source);
   const canResume = !!restored && (!!slotSave || !source.ended) && !!findScene(story, restored.sceneId);
@@ -82,6 +82,7 @@ export function openPlayer(story, opts = {}) {
     onPosition: (position, step) => {
       markSeen(story.id, `${position.sceneId}:${bareId(step?.id || '')}`);
       markArtwork(story.id, position.visual?.bg, findScene(story, position.sceneId)?.name);
+      if (position.visual?.music) markArtwork(story.id, position.visual.music, story.soundtrack?.find(t => t.src === position.visual.music)?.title || 'Музыка сцены', 'music');
       persist(position, step);
     },
     onJournal: () => openJournal(story),
@@ -176,20 +177,18 @@ function openJournal(story) {
   }
   for (const entry of entries) {
     list.append(el('div', { class: `journal-line${entry.choice ? ' is-choice' : ''}` },
-      entry.name ? el('span', { class: 'journal-name', text: entry.name }) : null,
-      el('span', { class: 'journal-text', text: plainLine(entry.text) }),
+      entry.name || entry.choice ? el('span', { class: `journal-name${entry.choice || entry.name === 'Вы' ? ' is-player' : ''}`, text: entry.choice ? 'Вы' : entry.name }) : null,
+      el('span', { class: 'journal-text', text: plainLine(entry.text).replace(/^→\s*/, '') }),
     ));
   }
   openSheet({
     layout: 'page',
-    title: 'Журнал',
-    subtitle: entries.length
-      ? `${entries.length} ${plural(entries.length, 'реплика', 'реплики', 'реплик')} · ${story.title}`
-      : story.title,
-    content: el('div', { class: 'journal-page' }, list, el('button', { class: 'ghost-btn journal-latest', type: 'button', text: 'К последней реплике', onclick: () => list.lastElementChild?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }) })),
+    title: 'Журнал', header: 'brand', onSettings: () => openSettings(),
+    subtitle: `${stage?.scene?.act ? stage.scene.act + ' • ' : ''}${stage?.scene?.name || story.title}`,
+    content: el('div', { class: 'journal-page' }, list, el('button', { class: 'ghost-btn journal-latest', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.play}</svg> К последней реплике`, onclick: () => list.lastElementChild?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }) })),
   });
   requestAnimationFrame(() => {
-    const sheet = document.querySelector('#overlay-root .sheet');
+    const sheet = list.closest('.sheet');
     if (sheet) sheet.scrollTop = sheet.scrollHeight;
   });
 }
@@ -197,58 +196,64 @@ function openJournal(story) {
 /** Save and load pages share slots, with explicit actions and an auto-save tab. */
 export function openSaves(story, opts = {}, mode = 'save') {
   let category = 'manual';
-  let selected = mode === 'save' ? '1' : null;
+  let selected = mode === 'save' ? SLOT_IDS.find(slot => !getSaves(story.id).slots.some(entry => entry.slot === slot)) || '1' : null;
   let close;
   const content = el('div', { class: 'saves-page' });
   const tabs = el('div', { class: 'reader-tabs', role: 'tablist', 'aria-label': 'Тип сохранения' });
+  const current = el('div', { class: 'current-save-scene' });
   const list = el('div', { class: `save-grid${mode === 'load' ? ' is-load' : ''}`, id: 'save-panel', role: 'tabpanel' });
   const action = el('button', { class: 'solid-btn save-action', type: 'button' });
   function render() {
     const saves = getSaves(story.id);
-    tabs.replaceChildren(); list.replaceChildren();
-    for (const [id, label] of [['manual', 'Ручные'], ['auto', 'Авто']]) {
+    tabs.replaceChildren(); list.replaceChildren(); current.replaceChildren();
+    if (mode === 'save' && stage && currentStory?.id === story.id) {
+      const bg = resolveUrl(story, stage.visual.bg || story.cover);
+      current.append(bg ? el('img', { src: bg, alt: '' }) : null, el('span', { text: stage.scene?.name || 'Текущая сцена' }), el('span', { class: 'chev', text: '›', 'aria-hidden': 'true' }));
+    }
+    current.hidden = !current.childElementCount;
+    for (const [id, label] of [['manual', 'Ручные'], ['auto', 'Авто'], ['quick', 'Быстрые']]) {
       tabs.append(el('button', { class: 'reader-tab', type: 'button', role: 'tab', id: `save-tab-${id}`, 'aria-controls': list.id, 'aria-selected': String(category === id), text: label, onclick: () => { category = id; selected = null; render(); } }));
     }
     list.setAttribute('aria-labelledby', `save-tab-${category}`);
-    const entries = category === 'auto' ? [['auto', saves.auto]] : SLOT_IDS.map(slot => [slot, saves.slots.find(item => item.slot === slot)]);
+    const entries = category === 'auto' ? [['auto', saves.auto]] : category === 'quick' ? [['quick', saves.quick]] : SLOT_IDS.map(slot => [slot, saves.slots.find(item => item.slot === slot)]);
     for (const [slot, entry] of entries) {
       if (mode === 'load' && !entry) continue;
-      const title = slot === 'auto' ? 'Автосохранение' : `Слот ${slot}`;
+      const title = slot === 'auto' ? 'Автосохранение' : slot === 'quick' ? 'Быстрое сохранение' : `Слот ${slot}`;
       const thumbnail = entry?.visual?.bg ? resolveUrl(story, entry.visual.bg) : entry?.thumbnail;
-      const cell = el('div', { class: `save-cell${selected === slot ? ' is-selected' : ''}` });
+      const cell = el('div', { class: `save-cell${entry ? ' is-filled' : ' is-empty'}${selected === slot ? ' is-selected' : ''}` });
       cell.append(el('button', { class: 'save-select', type: 'button', 'aria-pressed': String(selected === slot), 'aria-label': `${title}${entry ? ': ' + entry.sceneName : ': пустой'}`, onclick: () => { selected = slot; render(); } },
         thumbnail ? el('img', { src: thumbnail, alt: '', class: 'slot-cover' }) : el('span', { class: 'slot-placeholder', text: entry ? '◇' : '+' }),
-        el('strong', { text: title }), el('span', { class: 'save-slot-meta', text: entry ? `${entry.sceneName || 'Начало'} · ${slotDate(entry.at)}` : 'Пустой слот' })));
-      if (entry && slot !== 'auto') cell.append(el('button', { class: 'text-btn slot-delete', type: 'button', text: 'Удалить', 'aria-label': `Удалить ${title}`, onclick: async () => {
+        el('strong', { text: slot === 'auto' ? entry?.sceneName || title : slot === 'quick' ? title : `Слот ${slot.padStart(2, '0')}` }), el('span', { class: 'save-slot-meta', text: entry ? `${slot === 'auto' ? 'Автосохранение' : entry.sceneName || 'Начало'} · ${slotDate(entry.at)}` : 'Пустой слот' })));
+      if (entry && slot !== 'auto' && mode === 'save' && selected === slot) cell.append(el('button', { class: 'text-btn slot-delete', type: 'button', text: 'Удалить', 'aria-label': `Удалить ${title}`, onclick: async () => {
         if (!await confirmDialog({ title: `Удалить ${title.toLowerCase()}?`, text: 'Автосохранение останется.', confirmText: 'Удалить' })) return;
         deleteSave(story.id, slot); selected = null; render();
       } }));
       list.append(cell);
     }
     if (!list.childElementCount || (category === 'auto' && !saves.auto)) {
-      list.replaceChildren(el('p', { class: 'field-hint', text: category === 'auto' ? 'Автосохранение появится при чтении.' : 'Пока нет ручных сохранений.' }));
+      list.replaceChildren(el('p', { class: 'field-hint', text: category === 'auto' ? 'Автосохранение появится при чтении.' : category === 'quick' ? 'Пока нет быстрого сохранения.' : 'Пока нет ручных сохранений.' }));
     }
-    const entry = selected === 'auto' ? saves.auto : saves.slots.find(item => item.slot === selected);
-    action.textContent = mode === 'save' && category === 'manual' ? 'Сохранить' : 'Загрузить';
+    const entry = selected === 'auto' ? saves.auto : selected === 'quick' ? saves.quick : saves.slots.find(item => item.slot === selected);
+    action.textContent = mode === 'save' && category !== 'auto' ? 'Сохранить' : 'Загрузить';
     action.disabled = !selected || (category === 'auto' || mode === 'load' ? !entry : !stage);
   }
   action.addEventListener('click', async () => {
     if (!selected) return;
     const slot = selected;
-    if (mode === 'save' && category === 'manual') {
-      const entry = getSaves(story.id).slots.find(item => item.slot === slot);
-      if (entry && !await confirmDialog({ title: `Перезаписать слот ${slot}?`, text: 'Предыдущее место будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
+    if (mode === 'save' && category !== 'auto') {
+      const entry = slot === 'quick' ? getSaves(story.id).quick : getSaves(story.id).slots.find(item => item.slot === slot);
+      if (entry && !await confirmDialog({ title: slot === 'quick' ? 'Перезаписать быстрое сохранение?' : `Перезаписать слот ${slot}?`, text: 'Предыдущее место будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
       if (!stage || currentStory?.id !== story.id) return;
       writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
-      toast(`Сохранено в слот ${slot}`); render();
+      toast(slot === 'quick' ? 'Быстрое сохранение записано' : `Сохранено в слот ${slot}`); render();
     } else {
       close();
       if (opts.onLoad) opts.onLoad(slot);
       else openPlayer(story, { ...opts, slot: slot === 'auto' ? undefined : slot });
     }
   });
-  render(); content.append(tabs, list, action);
-  close = openSheet({ layout: 'page', title: mode === 'save' ? 'Сохранить игру' : 'Загрузить игру', subtitle: story.title, content });
+  render(); content.append(tabs, current, list, action);
+  close = openSheet({ layout: 'page', header: 'brand', onSettings: () => openSettings(), title: mode === 'save' ? 'Сохранить игру' : 'Загрузить игру', subtitle: story.title, content });
   return close;
 }
 
@@ -276,11 +281,11 @@ function openPlayerMenu(story, opts) {
       { label: 'Сохранить', icon: ICONS.save, onSelect: () => openSaves(story, opts, 'save') },
       { label: 'Загрузить', icon: ICONS.download, onSelect: () => openSaves(story, opts, 'load') },
       { label: 'Журнал', icon: ICONS.journal, onSelect: () => openJournal(story) },
-      { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
+      { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story, { audio: stage?.audio }) },
       { label: 'Масштаб персонажей', icon: ICONS.eye, onSelect: () => openSpriteTuner() },
-      { label: 'Настройки', icon: ICONS.dots, onSelect: () => openSettings() },
+      { label: 'Настройки', icon: ICONS.settings, onSelect: () => openSettings() },
       { label: 'Скрыть интерфейс', icon: ICONS.eye, onSelect: () => stage?.node.classList.add('ui-hidden') },
-      { label: 'В главное меню', icon: ICONS.back, onSelect: () => (opts.onHome || opts.onExit)?.() },
+      { label: 'В главное меню', icon: ICONS.home, onSelect: () => (opts.onHome || opts.onExit)?.() },
     ],
   });
 }
@@ -301,6 +306,7 @@ function releaseWakeLock() {
 }
 
 document.addEventListener('visibilitychange', () => {
+  stage?.audio.setHidden(document.hidden);
   if (document.hidden) pendingPersist?.flush?.();
   if (!document.hidden && currentStory && getSettings().keepAwake) requestWakeLock(true);
 });

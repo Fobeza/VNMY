@@ -174,6 +174,7 @@ window.__VNMY_BUILTIN_LIBRARY__ = ${jsonForInlineScript({ schema: 2, universes }
 
 const MIME = {
   webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+  mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac',
   gif: 'image/gif', svg: 'image/svg+xml', avif: 'image/avif',
 };
 
@@ -242,12 +243,15 @@ async function inlineAssets(story, base, registry = null) {
   };
 
   story.cover = await inline(story.cover, true);
+  for (const track of story.soundtrack || []) track.src = await inline(track.src);
   for (const item of story.media || []) item.url = await inline(item.url);
   for (const char of story.characters || []) {
     for (const key of Object.keys(char.sprites || {})) char.sprites[key] = await inline(char.sprites[key]);
   }
   for (const scene of story.scenes || []) {
     scene.bg = await inline(scene.bg);
+    if (scene.music) scene.music = await inline(scene.music);
+    for (const step of scene.steps || []) for (const key of ['music', 'sound', 'voice']) if (step[key]) step[key] = await inline(step[key]);
     for (const step of scene.steps || []) step.bg = await inline(step.bg);
   }
   story.baseUrl = '';

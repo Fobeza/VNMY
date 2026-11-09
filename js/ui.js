@@ -1,4 +1,5 @@
 /* VNMY — общие UI-механики: тост, шторка, подтверждение */
+import { ICONS } from './icons.js';
 import { el, $ } from './util.js';
 
 let modalId = 0;
@@ -61,7 +62,7 @@ export function toast(message, ms = 2400) {
 }
 
 /** Нижняя шторка. content — элемент или функция(close). */
-export function openSheet({ title, subtitle, content, rows, layout = 'sheet', onClose } = {}) {
+export function openSheet({ title, subtitle, content, rows, layout = 'sheet', onClose, header = 'simple', onSettings, onMenu } = {}) {
   const root = $('#overlay-root');
   const backdrop = el('div', { class: `overlay-backdrop${layout === 'tune' ? ' overlay-tune' : ''}` });
   const sheet = el('div', { class: `sheet${layout === 'page' ? ' sheet-page' : layout === 'tune' ? ' sheet-tune' : layout === 'pause' ? ' sheet-pause' : ''}`, role: 'dialog', 'aria-modal': 'true' },
@@ -83,7 +84,14 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet', on
   };
 
   if (layout === 'page') {
-    sheet.prepend(el('button', { class: 'icon-btn page-back', type: 'button', 'aria-label': 'Назад', html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-7-7 7 7 7"/></svg>', onclick: close }));
+    const back = el('button', { class: 'icon-btn page-back', type: 'button', 'aria-label': 'Назад', html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-7-7 7 7 7"/></svg>', onclick: close });
+    if (header === 'brand') {
+      sheet.classList.add('has-brand-header');
+      sheet.prepend(el('div', { class: 'page-chrome' }, back,
+        el('span', { class: 'mini-brand', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.logo}</svg> VNMY` }),
+        onSettings ? el('button', { class: 'icon-btn chrome-settings', type: 'button', 'aria-label': 'Настройки', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.settings}</svg>`, onclick: onSettings }) : null));
+    } else sheet.prepend(back);
+    if (onMenu) sheet.append(el('button', { class: 'icon-btn page-more', type: 'button', 'aria-label': 'Действия с историей', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.dots}</svg>`, onclick: onMenu }));
   }
   const appendContent = () => {
     if (content) sheet.append(typeof content === 'function' ? content(close) : content);

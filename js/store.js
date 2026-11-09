@@ -1,6 +1,7 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
 import { normalizeStory, createStory, findScene, bareId, globalId, resolveUrl } from './format.js';
 import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
+import { AUDIO_DEFAULTS } from './audio.js';
 import { uid, download, readFileAsText, deepClone, prefersReducedMotion, clampSpriteScale } from './util.js';
 
 import {
@@ -256,9 +257,11 @@ export function storyAssets(story) {
   const urls = new Set();
   if (story.cover) urls.add(story.cover);
   for (const m of story.media || []) if (m.url) urls.add(m.url);
+  for (const track of story.soundtrack || []) if (track.src) urls.add(track.src);
   for (const scene of story.scenes) {
     if (scene.bg) urls.add(scene.bg);
-    for (const step of scene.steps) if (step.bg) urls.add(step.bg);
+    if (scene.music) urls.add(scene.music);
+    for (const step of scene.steps) for (const key of ['bg', 'music', 'sound', 'voice']) if (step[key]) urls.add(step[key]);
   }
   for (const char of story.characters) {
     for (const url of Object.values(char.sprites || {})) if (url) urls.add(url);
@@ -270,9 +273,11 @@ function replaceAssetPaths(story, map) {
   const swap = (url) => (url && map.has(url) ? map.get(url) : url);
   if (story.cover) story.cover = swap(story.cover);
   for (const m of story.media || []) m.url = swap(m.url);
+  for (const track of story.soundtrack || []) track.src = swap(track.src);
   for (const scene of story.scenes) {
     scene.bg = swap(scene.bg);
-    for (const step of scene.steps) if (step.bg) step.bg = swap(step.bg);
+    if (scene.music) scene.music = swap(scene.music);
+    for (const step of scene.steps) for (const key of ['bg', 'music', 'sound', 'voice']) if (step[key]) step[key] = swap(step[key]);
   }
   for (const char of story.characters) {
     for (const key of Object.keys(char.sprites || {})) char.sprites[key] = swap(char.sprites[key]);
@@ -631,13 +636,15 @@ export async function loadLibrary() {
 
 export function getSaves(storyId) {
   const value = lsJSON(K.saves(storyId), null);
-  return { slots: Array.isArray(value?.slots) ? value.slots.filter(Boolean) : [], auto: value?.auto && typeof value.auto === 'object' ? value.auto : null };
+  return { slots: Array.isArray(value?.slots) ? value.slots.filter(Boolean) : [], auto: value?.auto && typeof value.auto === 'object' ? value.auto : null, quick: value?.quick && typeof value.quick === 'object' ? value.quick : null };
 }
 
 export function writeSave(storyId, slot, payload) {
   const saves = getSaves(storyId);
   const entry = { ...payload, at: Date.now() };
-  if (slot === 'auto') {
+  if (slot === 'quick') {
+    saves.quick = entry;
+  } else if (slot === 'auto') {
     saves.auto = entry;
   } else {
     saves.slots = saves.slots.filter((s) => s.slot !== slot);
@@ -652,7 +659,8 @@ export function writeSave(storyId, slot, payload) {
 /** Удаляет один слот (автосейв не трогает). */
 export function deleteSave(storyId, slot) {
   const saves = getSaves(storyId);
-  if (slot === 'auto') saves.auto = null;
+  if (slot === 'quick') saves.quick = null;
+  else if (slot === 'auto') saves.auto = null;
   else saves.slots = saves.slots.filter((entry) => entry.slot !== slot);
   lsSet(K.saves(storyId), JSON.stringify(saves));
   return saves;
@@ -678,19 +686,19 @@ export function markSeen(storyId, stepId) {
   lsSet(K.seen(storyId), JSON.stringify([...seen]));
 }
 
-export function getArtwork(storyId) {
+export function getArtwork(storyId, kind = 'image') {
   const value = lsJSON(K.artwork(storyId), []);
-  return Array.isArray(value) ? value.filter(item => item && typeof item.path === 'string') : [];
+  return Array.isArray(value) ? value.filter(item => item && typeof item.path === 'string' && (kind === null || (item.kind || 'image') === kind)) : [];
 }
 
-export function markArtwork(storyId, path, name) {
+export function markArtwork(storyId, path, name, kind = 'image') {
   if (!path) return;
-  const images = getArtwork(storyId);
-  if (images.some(item => item.path === path)) return;
-  lsSet(K.artwork(storyId), JSON.stringify([...images, { path, name: name || 'Сцена' }]));
+  const images = getArtwork(storyId, null);
+  if (images.some(item => item.path === path && (item.kind || 'image') === kind)) return;
+  lsSet(K.artwork(storyId), JSON.stringify([...images, { path, name: name || 'Сцена', ...(kind !== 'image' ? { kind } : {}) }]));
 }
 
-const DEFAULT_SETTINGS = { textSpeed: 22, fontSize: 1, spriteScale: 1, skipSeen: false, keepAwake: true };
+const DEFAULT_SETTINGS = { ...AUDIO_DEFAULTS, confirmSkip: true, vibration: false, textSpeed: 22, fontSize: 1, spriteScale: 1, skipSeen: false, keepAwake: true };
 
 export function getSettings() {
   const settings = { ...DEFAULT_SETTINGS, ...lsJSON(K.settings, {}) };
@@ -711,7 +719,7 @@ export function saveSettings(patch) {
 
 export function progressOf(storyId) {
   const saves = getSaves(storyId);
-  const save = saves.auto || saves.slots[0];
+  const save = saves.auto || saves.slots[0] || saves.quick;
   if (!save) return null;
   return save;
 }

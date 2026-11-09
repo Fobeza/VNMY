@@ -608,3 +608,5 @@
 .stage.is-adjusting-sprites .dialogue-layer,
 .stage.is-adjusting-sprites .quick-actions { opacity: 0; pointer-events: none; }
 .stage.is-adjusting-sprites .dialogue-layer * { pointer-events: none; }
+
+.stage[data-mode="play"] .tap-layer { touch-action: none; }

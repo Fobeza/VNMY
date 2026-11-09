@@ -11,12 +11,13 @@
  */
 import {
   loadLibrary, deleteUniverse,
-  importStoryFile, exportBackup, listLocalStoryIds, storageUsage, exportUniversePortable, progressOf,
+  exportBackup, storageUsage, exportUniversePortable, progressOf,
 } from './store.js';
 import { resolveUrl } from './format.js';
 import { el, $, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
+import { openImport } from './import.js';
 import { openSettings } from './settings.js';
 import { openStoryDetails } from './novels.js';
 import { APP_VERSION } from './version.js';
@@ -173,7 +174,7 @@ async function runUniverseExport(universe) {
   toast('Собираю новеллы…', 8000);
   try {
     const result = await exportUniversePortable(universe, universe.novels || []);
-    toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, новелл: ${result.novels}, картинок: ${result.images}`);
+    toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, новелл: ${result.novels}, файлов: ${result.images}`);
   } catch (err) {
     console.error(err);
     toast('Не получилось собрать вселенную');
@@ -186,48 +187,8 @@ export function wireLibrary() {
   if (wired) return;
   wired = true;
 
-  const fileInput = el('input', { type: 'file', class: 'js-import-library', accept: 'application/json,.json,.vnmy,.zip,application/zip', style: { display: 'none' } });
-  document.body.append(fileInput);
-  fileInput.addEventListener('change', async () => {
-    const file = fileInput.files?.[0];
-    fileInput.value = '';
-    if (!file) return;
-    try {
-      const imported = await importStoryFile(file);
-      if (!imported.length) {
-        toast('В файле не нашлось новелл', 4000);
-        return;
-      }
-      if (imported.missing?.length) toast(`Не хватает картинок: ${imported.missing.length}. Подробности в консоли`, 5000);
-    if (imported.universe) {
-        toast(`Вселенная «${imported.universe.title}»: новелл ${imported.length}`, 3600);
-      } else {
-        const titles = imported.map((s) => `«${s.title}»`).join(', ');
-        toast(imported.length > 1 ? `Импортировано новелл: ${imported.length}` : `Импортировано: ${titles}`, 3200);
-      }
-    } catch (err) {
-      const code = String(err?.message || '');
-      if (code === 'STORAGE_FULL') {
-        const partial = err.imported?.length || 0;
-        toast(partial
-          ? `Место кончилось: загружено ${partial} из файла. Удалите лишние новеллы или загружайте картинки файлами.`
-          : 'В браузере мало места для этой новеллы. Удалите что-нибудь или держите картинки в папке stories.', 6000);
-      } else if (code === 'BAD_PACKAGE') {
-        toast('В архиве нет story.json или universe.json — это не новелла VNMY', 5000);
-      } else if (code === 'ZIP_UNSUPPORTED') {
-        toast('Архив сжат способом, который этот браузер не читает. Упакуйте его командой npm run pack', 6000);
-      } else if (code === 'BAD_JSON') {
-        toast('Это не файл истории VNMY: внутри не JSON', 4000);
-      } else {
-        console.error(err);
-        toast('Не получилось прочитать файл', 4000);
-      }
-    } finally {
-      await renderLibrary(hooks);
-    }
-  });
   $('#btn-settings')?.addEventListener('click', () => openSettings());
-  $('#btn-import-story')?.addEventListener('click', () => fileInput.click());
+  $('#btn-import-story')?.addEventListener('click', () => openImport({ onImported: () => renderLibrary(hooks) }));
 
   $('#btn-backup')?.addEventListener('click', async () => {
     try {
