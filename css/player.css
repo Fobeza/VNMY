@@ -91,8 +91,10 @@
   position: absolute;
   bottom: -2%;
   height: 64cqh;
-  /* ширину задаёт сама картинка: иначе max-width:100% сплющивает спрайт */
-  width: max-content;
+  /* Один и тот же прямоугольник для всех эмоций персонажа.
+   * Иначе translateX(-50%) пересчитывается от ширины каждой картинки,
+   * из-за чего при смене позы персонаж скачет по горизонтали. */
+  width: 64cqw;
   max-width: none;
   left: 50%;
   /* положение складывается из переменных: роли меняют их, а transition
@@ -112,11 +114,14 @@
 .sprite[data-pos="left"] { left: 23%; }
 .sprite[data-pos="center"] { left: 50%; }
 .sprite[data-pos="right"] { left: 77%; }
-.sprite-inner { height: 100%; width: max-content; }
+.sprite-inner { height: 100%; width: 100%; }
 .sprite img {
+  display: block;
   height: 100%;
-  width: auto;
+  width: 100%;
   max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
   filter: brightness(1) saturate(1) drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
   transition: opacity .18s linear, filter .4s var(--ease);
 }
