@@ -779,8 +779,10 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 
   position: absolute;
   bottom: -2%;
   height: 64cqh;
-  /* ширину задаёт сама картинка: иначе max-width:100% сплющивает спрайт */
-  width: max-content;
+  /* Один и тот же прямоугольник для всех эмоций персонажа.
+   * Иначе translateX(-50%) пересчитывается от ширины каждой картинки,
+   * из-за чего при смене позы персонаж скачет по горизонтали. */
+  width: 64cqw;
   max-width: none;
   left: 50%;
   /* положение складывается из переменных: роли меняют их, а transition
@@ -800,11 +802,14 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 
 .sprite[data-pos="left"] { left: 23%; }
 .sprite[data-pos="center"] { left: 50%; }
 .sprite[data-pos="right"] { left: 77%; }
-.sprite-inner { height: 100%; width: max-content; }
+.sprite-inner { height: 100%; width: 100%; }
 .sprite img {
+  display: block;
   height: 100%;
-  width: auto;
+  width: 100%;
   max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
   filter: brightness(1) saturate(1) drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
   transition: opacity .18s linear, filter .4s var(--ease);
 }
@@ -1204,6 +1209,94 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 
 .stage[data-mode="edit"] .text { font-size: calc(4.45cqw * var(--text-scale)); }
 .stage[data-mode="edit"] .speaker { font-size: 2.9cqw; }
 .stage[data-mode="edit"] .choice { font-size: calc(3.9cqw * var(--text-scale)); min-height: 0; }
+
+/* Atmospheric dialogue theme — portrait 9:16 reader.
+   Story art stays untouched; only the engine's dialogue chrome changes. */
+.stage[data-mode="play"] {
+  --dialogue-blue: #65caff;
+  --dialogue-edge: rgba(90, 197, 255, .85);
+}
+.stage[data-mode="play"] .dialogue-layer {
+  left: 2.4cqw;
+  right: 2.4cqw;
+  bottom: 2.5cqh;
+  padding: 3cqh 2.4cqw 2cqh;
+  max-height: 78cqh;
+  background: linear-gradient(to top, rgba(2, 15, 35, .88), rgba(2, 15, 35, .35) 76%, transparent);
+  overflow-y: auto;
+}
+.stage[data-mode="play"] .dialogue {
+  position: relative;
+  padding: 3.6cqh 4.5cqw 3cqh;
+  border: 1.5px solid var(--dialogue-edge);
+  border-radius: 4.5cqw;
+  background: linear-gradient(145deg, rgba(8, 36, 72, .94), rgba(2, 16, 40, .92));
+  box-shadow: inset 0 1px 0 rgba(194, 235, 255, .22), 0 0 14px rgba(31, 156, 255, .24), 0 10px 36px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.stage[data-mode="play"] .speaker:not(.is-empty) {
+  display: inline-block;
+  position: relative;
+  margin: -6.5cqh 0 1.5cqh -2.2cqw;
+  min-height: 0;
+  padding: 1.1cqh 5cqw;
+  border: 1px solid var(--dialogue-edge);
+  border-radius: 3cqw 3cqw 3cqw .8cqw;
+  background: linear-gradient(120deg, rgba(15, 67, 121, .98), rgba(8, 37, 78, .98));
+  box-shadow: 0 3px 14px rgba(0, 10, 32, .5);
+  color: #e5f7ff !important;
+  font-weight: 700;
+  letter-spacing: .035em;
+  text-transform: none;
+}
+.stage[data-mode="play"] .speaker.is-empty {
+  display: none;
+}
+.stage[data-mode="play"] .text {
+  color: #f5faff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .4);
+}
+.stage[data-mode="play"] .next-hint {
+  right: 1cqw;
+  bottom: .4cqh;
+  color: var(--dialogue-blue);
+}
+.stage[data-mode="play"] .choice-layer {
+  gap: 1.2cqh;
+  margin: 0 2cqw 2cqh;
+}
+.stage[data-mode="play"] .choice {
+  min-height: 44px;
+  padding: 1.65cqh 4cqw;
+  border: 1px solid rgba(85, 194, 255, .76);
+  border-radius: 3.3cqw;
+  background: linear-gradient(110deg, rgba(9, 48, 89, .96), rgba(4, 27, 58, .94));
+  color: #f4faff;
+  box-shadow: inset 0 1px 0 rgba(189, 230, 255, .12), 0 0 10px rgba(29, 145, 237, .12);
+}
+.stage[data-mode="play"] .choice::before { background: var(--dialogue-blue); width: 1px; }
+.stage[data-mode="play"] .choice:hover,
+.stage[data-mode="play"] .choice:focus-visible {
+  border-color: #a4e4ff;
+  background: rgba(16, 81, 139, .98);
+  outline: none;
+}
+.stage[data-mode="play"] .topbar .icon-btn {
+  border: 1px solid rgba(85, 194, 255, .35);
+  border-radius: 3cqw;
+  background: rgba(3, 25, 55, .7);
+}
+.stage[data-mode="play"] .topbar-title { color: rgba(227, 246, 255, .85); }
+.stage[data-mode="play"] .bg-shade {
+  background: linear-gradient(180deg, rgba(2, 13, 32, .5), transparent 26%, transparent 56%, rgba(2, 13, 32, .65) 100%);
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 0; max-height: 78cqh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-mode="play"] .choice { animation: none; opacity: 1; transform: none; }
+}
 
 </style>
 </head>
