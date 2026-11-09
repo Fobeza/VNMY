@@ -61,10 +61,10 @@ export function toast(message, ms = 2400) {
 }
 
 /** Нижняя шторка. content — элемент или функция(close). */
-export function openSheet({ title, subtitle, content, rows } = {}) {
+export function openSheet({ title, subtitle, content, rows, layout = 'sheet' } = {}) {
   const root = $('#overlay-root');
   const backdrop = el('div', { class: 'overlay-backdrop' });
-  const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
+  const sheet = el('div', { class: `sheet${layout === 'page' ? ' sheet-page' : ''}`, role: 'dialog', 'aria-modal': 'true' },
     el('div', { class: 'sheet-handle' }),
     title ? el('h3', { text: title }) : null,
     subtitle ? el('p', { class: 'sheet-sub', text: subtitle }) : null,
@@ -80,6 +80,9 @@ export function openSheet({ title, subtitle, content, rows } = {}) {
     setTimeout(() => { backdrop.remove(); sheet.remove(); }, 320);
   };
 
+  if (layout === 'page') {
+    sheet.prepend(el('button', { class: 'icon-btn page-back', type: 'button', 'aria-label': 'Назад', text: '‹', onclick: close }));
+  }
   if (rows?.length) {
     const list = el('div', { class: 'sheet-list' });
     for (const row of rows) {
@@ -104,7 +107,7 @@ export function openSheet({ title, subtitle, content, rows } = {}) {
     const node = typeof content === 'function' ? content(close) : content;
     sheet.append(node);
   }
-  sheet.append(el('button', { class: 'ghost-btn', type: 'button', style: { width: '100%', marginTop: '14px' }, onclick: close }, 'Закрыть'));
+  if (layout !== 'page') sheet.append(el('button', { class: 'ghost-btn', type: 'button', style: { width: '100%', marginTop: '14px' }, onclick: close }, 'Закрыть'));
 
   backdrop.addEventListener('click', close);
   root.append(backdrop, sheet);

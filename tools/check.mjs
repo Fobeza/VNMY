@@ -2,9 +2,11 @@ import { scanStories, scanSource } from './build.mjs';
 import { checkRoutes } from './check-routes.mjs';
 import { validateStories } from './validate.mjs';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { stabilizeCast } from '../js/format.js';
 import { checkRendering } from './check-rendering.mjs';
 
+execFileSync(process.execPath, [new URL('./check-interface.mjs', import.meta.url).pathname], { stdio: 'inherit' });
 await checkRendering();
 
 // staging "stable": оставшиеся не сдвигаются, новичок занимает свободное место

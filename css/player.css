@@ -30,7 +30,7 @@
   user-select: none;
   -webkit-user-select: none;
   --text-scale: 1;
-  --accent: #e0b072;
+  --accent: #8d9af2;
 }
 
 @media (min-width: 760px) {
@@ -89,8 +89,8 @@
 }
 .sprite {
   position: absolute;
-  bottom: -2%;
-  height: 64cqh;
+  bottom: 10cqh;
+  height: 78cqh;
   /* Один и тот же прямоугольник для всех эмоций персонажа.
    * Иначе translateX(-50%) пересчитывается от ширины каждой картинки,
    * из-за чего при смене позы персонаж скачет по горизонтали. */
@@ -127,12 +127,12 @@
 }
 
 /* Роли в разговоре (engine.js → conversationFocus):
- * говорящий — ярко и чуть крупнее; собеседник героя — почти ярко;
- * молчащие участники — приглушены; давно молчащие — «фон»: темнее и ниже. */
-.sprite.is-speaking { --focus: 1.015; }
+ * говорящий — ярко; собеседник героя — почти ярко;
+ * молчащие участники — приглушены; давно молчащие — «фон»: темнее, без смещения корпуса. */
+.sprite.is-speaking { --focus: 1; }
 .sprite.is-listening img { filter: brightness(.92) saturate(.97) drop-shadow(0 18px 30px rgba(0, 0, 0, .42)); }
 .sprite.is-idle img { filter: brightness(.72) saturate(.9) drop-shadow(0 18px 30px rgba(0, 0, 0, .4)); }
-.sprite.is-background { --lift: 1.2%; --focus: .985; }
+.sprite.is-background { --lift: 0%; --focus: 1; }
 .sprite.is-background img { filter: brightness(.55) saturate(.75) drop-shadow(0 18px 30px rgba(0, 0, 0, .35)); }
 .sprite.is-dim img { filter: brightness(.5) saturate(.75) drop-shadow(0 18px 30px rgba(0, 0, 0, .35)); }
 .sprite.is-leaving { opacity: 0; --lift: 2%; --focus: .98; pointer-events: none; }
@@ -522,89 +522,83 @@
 .stage[data-mode="edit"] .speaker { font-size: 2.9cqw; }
 .stage[data-mode="edit"] .choice { font-size: calc(3.9cqw * var(--text-scale)); min-height: 0; }
 
-/* Atmospheric dialogue theme — portrait 9:16 reader.
-   Story art stays untouched; only the engine's dialogue chrome changes. */
+/* Universal reading layout: scene and actor anchors never depend on dialogue height. */
 .stage[data-mode="play"] {
-  --dialogue-blue: #65caff;
-  --dialogue-edge: rgba(90, 197, 255, .85);
+  --accent: #8d9af2;
+  --dialogue-edge: rgba(255,255,255,.12);
+  background: #141923;
 }
 .stage[data-mode="play"] .dialogue-layer {
-  left: 2.4cqw;
-  right: 2.4cqw;
-  bottom: 2.5cqh;
-  padding: 3cqh 2.4cqw 2cqh;
-  max-height: 78cqh;
-  background: linear-gradient(to top, rgba(2, 15, 35, .88), rgba(2, 15, 35, .35) 76%, transparent);
-  overflow-y: auto;
-}
-.stage[data-mode="play"] .dialogue {
-  position: relative;
-  padding: 3.6cqh 4.5cqw 3cqh;
-  border: 1.5px solid var(--dialogue-edge);
-  border-radius: 4.5cqw;
-  background: linear-gradient(145deg, rgba(8, 36, 72, .94), rgba(2, 16, 40, .92));
-  box-shadow: inset 0 1px 0 rgba(194, 235, 255, .22), 0 0 14px rgba(31, 156, 255, .24), 0 10px 36px rgba(0, 0, 0, .35);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-.stage[data-mode="play"] .speaker:not(.is-empty) {
-  display: inline-block;
-  position: relative;
-  margin: -6.5cqh 0 1.5cqh -2.2cqw;
-  min-height: 0;
-  padding: 1.1cqh 5cqw;
+  left: 3cqw; right: 3cqw; bottom: 9cqh;
+  padding: 3cqw;
+  max-height: 47cqh;
+  display: flex; flex-direction: column;
+  gap: 2cqh;
+  background: rgba(20,25,35,var(--dialogue-opacity,.9));
   border: 1px solid var(--dialogue-edge);
-  border-radius: 3cqw 3cqw 3cqw .8cqw;
-  background: linear-gradient(120deg, rgba(15, 67, 121, .98), rgba(8, 37, 78, .98));
-  box-shadow: 0 3px 14px rgba(0, 10, 32, .5);
-  color: #e5f7ff !important;
-  font-weight: 700;
-  letter-spacing: .035em;
-  text-transform: none;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.stage[data-mode="play"] .speaker.is-empty {
-  display: none;
+.stage[data-mode="play"] .dialogue { position: relative; flex: none; padding: 0 1cqw 1cqh; }
+.stage[data-mode="play"] .speaker {
+  color: var(--accent);
+  margin: 0 0 1cqh;
+  font-size: clamp(14px,3.6cqw,19px);
+  font-weight: 600; letter-spacing: 0; text-transform: none;
 }
+.stage[data-mode="play"] .speaker.is-empty { display: none; }
 .stage[data-mode="play"] .text {
-  color: #f5faff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, .4);
+  font-size: calc(clamp(16px,4.2cqw,24px) * var(--text-scale));
+  line-height: 1.5; color: #f3f4f8; text-shadow: none;
+  max-height: 25cqh; overflow-y: auto;
 }
-.stage[data-mode="play"] .next-hint {
-  right: 1cqw;
-  bottom: .4cqh;
-  color: var(--dialogue-blue);
-}
-.stage[data-mode="play"] .choice-layer {
-  gap: 1.2cqh;
-  margin: 0 2cqw 2cqh;
-}
+.stage[data-mode="play"] .choice-layer { flex: none; margin: 0; gap: 1cqh; }
 .stage[data-mode="play"] .choice {
-  min-height: 44px;
-  padding: 1.65cqh 4cqw;
-  border: 1px solid rgba(85, 194, 255, .76);
-  border-radius: 3.3cqw;
-  background: linear-gradient(110deg, rgba(9, 48, 89, .96), rgba(4, 27, 58, .94));
-  color: #f4faff;
-  box-shadow: inset 0 1px 0 rgba(189, 230, 255, .12), 0 0 10px rgba(29, 145, 237, .12);
+  min-height: 44px; padding: 1.4cqh 3cqw;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 8px;
+  background: rgba(255,255,255,.055); color: #f3f4f8;
+  box-shadow: none; backdrop-filter: none;
+  font-size: calc(clamp(15px,3.6cqw,20px) * var(--text-scale));
 }
-.stage[data-mode="play"] .choice::before { background: var(--dialogue-blue); width: 1px; }
+.stage[data-mode="play"] .choice::before { display: none; }
 .stage[data-mode="play"] .choice:hover,
-.stage[data-mode="play"] .choice:focus-visible {
-  border-color: #a4e4ff;
-  background: rgba(16, 81, 139, .98);
-  outline: none;
+.stage[data-mode="play"] .choice:focus-visible { background: rgba(141,154,242,.16); border-color: var(--accent); }
+.stage[data-mode="play"] .next-hint { right: 0; bottom: 0; width: 14px; height: 14px; color: var(--ink-mute); }
+.stage[data-mode="play"] .topbar {
+  min-height: 8cqh; padding: .7cqh 3cqw;
+  background: rgba(20,25,35,.76); backdrop-filter: blur(12px);
 }
-.stage[data-mode="play"] .topbar .icon-btn {
-  border: 1px solid rgba(85, 194, 255, .35);
-  border-radius: 3cqw;
-  background: rgba(3, 25, 55, .7);
+.stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; }
+.stage[data-mode="play"] .topbar .icon-btn { min-height: 44px; min-width: 44px; background: none; border: 0; }
+.stage[data-mode="play"] .quick-actions {
+  inset: auto 0 0; height: 8cqh; min-height: 48px;
+  display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr;
+  gap: 0; padding: 0 3cqw;
+  border-top: 1px solid rgba(255,255,255,.1);
+  background: rgba(20,25,35,.92);
 }
-.stage[data-mode="play"] .topbar-title { color: rgba(227, 246, 255, .85); }
-.stage[data-mode="play"] .bg-shade {
-  background: linear-gradient(180deg, rgba(2, 13, 32, .5), transparent 26%, transparent 56%, rgba(2, 13, 32, .65) 100%);
+.stage[data-mode="play"] .quick-actions .pill {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 100%; min-height: 44px; padding: 0 4px;
+  border: 0; border-radius: 0; background: none;
+  font-size: clamp(12px,3cqw,16px); color: var(--ink-soft);
 }
+.stage[data-mode="play"] .quick-actions .pill[aria-pressed="true"] { color: var(--accent); }
+.quick-actions svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.stage[data-mode="play"] .bg-shade { background: linear-gradient(180deg,rgba(20,25,35,.25),transparent 25%,transparent 65%,rgba(20,25,35,.5)); }
+.stage[data-mode="play"] .scene-vignette { box-shadow: inset 0 0 12cqw rgba(0,0,0,.2); }
+.stage.ui-hidden .quick-actions { pointer-events: none; }
 @media (orientation: landscape) and (max-height: 600px) {
-  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 0; max-height: 78cqh; }
+  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 2%; bottom: 15%; max-height: 65cqh; padding: 14px; }
+  .stage[data-mode="play"] .text { font-size: calc(18px * var(--text-scale)); max-height: 32cqh; }
+  .stage[data-mode="play"] .choice { font-size: calc(16px * var(--text-scale)); padding: 10px; }
+  .stage[data-mode="play"] .topbar { min-height: 44px; padding: 0 10px; }
+  .stage[data-mode="play"] .quick-actions { left: 50%; height: 44px; }
+  .stage[data-mode="play"] .sprite { bottom: 0; height: 85cqh; width: 32cqw; }
+  .stage[data-mode="play"] .speaker { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stage[data-mode="play"] .choice { animation: none; opacity: 1; transform: none; }

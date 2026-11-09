@@ -54,6 +54,7 @@ function playStory(story, opts = {}) {
   show('player');
   openPlayer(story, {
     ...opts,
+    onHome: () => backToLibrary(),
     onExit: () => { goBack(); },
   });
   pushScreen('player');

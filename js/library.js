@@ -17,6 +17,8 @@ import { resolveUrl } from './format.js';
 import { el, $, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
 import { ICONS } from './icons.js';
+import { openSettings } from './settings.js';
+import { openStoryDetails } from './novels.js';
 import { APP_VERSION } from './version.js';
 
 let hooks = {};
@@ -37,7 +39,19 @@ export async function renderLibrary(nextHooks) {
   universes = lib.universes;
   const resumeHost = document.getElementById('continue-reading');
   resumeHost?.replaceChildren();
-  const latest = universes.flatMap(u => u.novels || []).map(story => ({ story, save: progressOf(story.id) }))
+  const allStories = universes.flatMap(u => u.novels || []);
+  const home = document.getElementById('home-stories');
+  home?.replaceChildren();
+  for (const story of allStories) {
+    const cover = resolveUrl(story, story.cover);
+    const progress = progressOf(story.id);
+    home?.append(el('button', { class: 'home-story', type: 'button', onclick: () => openStoryDetails(story, hooks) },
+      cover ? el('img', { src: cover, alt: '', loading: 'lazy' }) : el('span', { class: 'home-story-initial', text: story.title.slice(0, 1) }),
+      el('span', { class: 'home-story-copy' }, el('strong', { text: story.title }), el('small', { text: progress ? progress.ended ? 'Прочитано' : progress.sceneName || 'Продолжить чтение' : 'Новая история' })),
+      el('span', { class: 'chev', text: '›', 'aria-hidden': 'true' })));
+  }
+  if (!allStories.length) home?.append(el('p', { class: 'empty-library', text: 'Добавьте свою первую историю из файла .vnmy.' }));
+  const latest = allStories.map(story => ({ story, save: progressOf(story.id) }))
     .filter(item => item.save && !item.save.ended).sort((a, b) => (b.save.at || 0) - (a.save.at || 0))[0];
   if (latest && resumeHost) {
     const { story, save } = latest;
@@ -46,13 +60,15 @@ export async function renderLibrary(nextHooks) {
       cover ? el('img', { src: cover, alt: '', class: 'continue-cover' }) : null,
       el('div', {}, el('p', { class: 'continue-kicker', text: 'Продолжить чтение' }), el('h2', { text: story.title }),
         el('p', { class: 'field-hint', text: save.sceneName || 'Вернуться к истории' }),
+        el('progress', { class: 'reading-progress', max: 1, value: Math.max(0, Math.min(1, save.percent || 0)), 'aria-label': 'Прогресс чтения' }),
         el('button', { class: 'solid-btn', type: 'button', onclick: () => hooks.onPlay?.(story) }, 'Продолжить'))));
   }
 
   if (!universes.length) {
     list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной новеллы. Нажмите «Импорт» и выберите файл новеллы .vnmy (или .json).' }));
   }
-  for (const universe of universes) list.append(universeCard(universe));
+  if (universes.some(u => !u.loose)) list.append(el('h2', { class: 'section-title', text: 'Вселенные' }));
+  for (const universe of universes.filter(u => !u.loose)) list.append(universeCard(universe));
 
   const note = $('#library-note');
   note.innerHTML = '';
@@ -210,6 +226,7 @@ export function wireLibrary() {
       await renderLibrary(hooks);
     }
   });
+  $('#btn-settings')?.addEventListener('click', () => openSettings());
   $('#btn-import-story')?.addEventListener('click', () => fileInput.click());
 
   $('#btn-backup')?.addEventListener('click', async () => {

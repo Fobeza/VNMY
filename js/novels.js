@@ -12,6 +12,8 @@ import {
 import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
+import { openSaves } from './player.js';
+import { openGallery } from './gallery.js';
 import { ICONS } from './icons.js';
 
 let hooks = {};
@@ -37,7 +39,7 @@ export async function renderUniverse(universeId, nextHooks) {
   const desc = $('#uni-desc');
   desc.textContent = universe?.description || '';
   desc.hidden = !universe?.description;
-  document.documentElement.style.setProperty('--accent', universe?.accent || '#e0b072');
+  document.documentElement.style.setProperty('--accent', '#8d9af2');
 
   const novels = universe?.novels || [];
   const importBtn = $('#btn-import-novel');
@@ -100,12 +102,31 @@ function storyCard(story) {
 
   );
 
-  const open = () => hooks.onPlay(story);
+  const open = () => openStoryDetails(story);
   card.addEventListener('click', open);
   card.addEventListener('keydown', (e) => {
     if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); }
   });
   return card;
+}
+
+export function openStoryDetails(story, actions = hooks) {
+  const save = progressOf(story.id);
+  const cover = resolveUrl(story, story.cover);
+  return openSheet({ layout: 'page', title: 'Об истории', content: close => el('div', { class: 'story-details' },
+    cover ? el('img', { class: 'detail-cover', src: cover, alt: '' }) : null,
+    el('h2', { text: story.title }),
+    story.author ? el('p', { class: 'field-hint', text: story.author }) : null,
+    story.description ? el('p', { class: 'detail-description', text: story.description }) : null,
+    save ? el('p', { class: 'field-hint', text: save.ended ? 'История прочитана' : save.sceneName || 'Чтение начато' }) : null,
+    el('button', { class: 'solid-btn', type: 'button', text: save && !save.ended ? 'Продолжить' : 'Начать историю', onclick: () => { close(); actions.onPlay?.(story, { fresh: !!save?.ended }); } }),
+    save ? el('button', { class: 'ghost-btn', type: 'button', text: 'Начать заново', onclick: async () => {
+      if (!await confirmDialog({ title: 'Начать заново?', text: 'Ручные сохранения останутся.', confirmText: 'Начать', danger: false })) return;
+      deleteSave(story.id, 'auto'); close(); actions.onPlay?.(story, { fresh: true });
+    } }) : null,
+    el('button', { class: 'sheet-row', type: 'button', text: 'Сохранения', onclick: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') }),
+    el('button', { class: 'sheet-row', type: 'button', text: 'Галерея', onclick: () => openGallery(story) }),
+  ) });
 }
 
 /** Меню одной новеллы. */

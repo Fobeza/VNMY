@@ -1,6 +1,8 @@
 /* VNMY — экран прохождения: мост между движком, сохранениями и меню */
 import { Stage } from './engine.js';
-import { getSettings, saveSettings, getSaves, writeSave, deleteSave, getSeen, markSeen } from './store.js';
+import { openSettings } from './settings.js';
+import { openGallery } from './gallery.js';
+import { getSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, markArtwork } from './store.js';
 import { findScene, bareId, resolveUrl } from './format.js';
 import { $, debounce, el, plural, deepClone } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
@@ -14,7 +16,7 @@ let wakeLock = null;
 let keyHandler = null;
 
 /** Сколько ручных сохранений показываем в меню. */
-const SLOT_IDS = ['1', '2', '3'];
+const SLOT_IDS = ['1', '2', '3', '4', '5', '6'];
 
 function flatPosition(story, sceneId, stepIndex) {
   let before = 0;
@@ -79,6 +81,7 @@ export function openPlayer(story, opts = {}) {
     seenBefore,
     onPosition: (position, step) => {
       markSeen(story.id, `${position.sceneId}:${bareId(step?.id || '')}`);
+      markArtwork(story.id, position.visual?.bg, findScene(story, position.sceneId)?.name);
       persist(position, step);
     },
     onJournal: () => openJournal(story),
@@ -113,7 +116,7 @@ export function openPlayer(story, opts = {}) {
     },
   });
   stage.mount();
-  stage.node.style.setProperty('--accent', story.accent || '#e0b072');
+  stage.node.style.setProperty('--accent', '#8d9af2');
 
   keyHandler = (e) => {
     if (document.body.classList.contains('no-scroll')) return; // открыта шторка
@@ -178,7 +181,8 @@ function openJournal(story) {
     ));
   }
   openSheet({
-    title: 'История реплик',
+    layout: 'page',
+    title: 'Журнал',
     subtitle: entries.length
       ? `${entries.length} ${plural(entries.length, 'реплика', 'реплики', 'реплик')} · ${story.title}`
       : story.title,
@@ -190,83 +194,62 @@ function openJournal(story) {
   });
 }
 
-/** Ручные сохранения: три слота, каждый можно записать, открыть и очистить. */
-function openSaves(story, opts) {
-  const content = (close) => {
+/** Save and load pages share slots, with explicit actions and an auto-save tab. */
+export function openSaves(story, opts = {}, mode = 'save') {
+  let category = 'manual';
+  let selected = mode === 'save' ? '1' : null;
+  let close;
+  const content = el('div', { class: 'saves-page' });
+  const tabs = el('div', { class: 'reader-tabs', role: 'tablist', 'aria-label': 'Тип сохранения' });
+  const list = el('div', { class: 'save-grid', id: 'save-panel', role: 'tabpanel' });
+  const action = el('button', { class: 'solid-btn save-action', type: 'button' });
+  function render() {
     const saves = getSaves(story.id);
-    const list = el('div', { class: 'save-slots' });
-    const again = () => {
-      close();
-      setTimeout(() => openSaves(story, opts), 340);
-    };
-
-    for (const slot of SLOT_IDS) {
-      const entry = saves.slots.find((item) => item.slot === slot);
-      const saveHere = async () => {
-        if (!stage) return;
-        if (entry && !await confirmDialog({ title: `Перезаписать слот ${slot}?`, text: 'Предыдущее место в этом слоте будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
-        if (!stage) return;
-        writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
-        toast(`Сохранено в слот ${slot}`);
-        again();
-      };
-      list.append(el('div', { class: `save-slot${entry ? ' is-filled' : ''}` },
-        el('button', {
-          class: `save-slot-main${entry?.thumbnail ? ' has-thumbnail' : ''}`,
-          type: 'button',
-          title: entry ? 'Перезаписать слот' : 'Сохранить здесь',
-          onclick: saveHere,
-        },
-        entry?.thumbnail ? el('img', { class: 'save-thumbnail', src: entry.thumbnail, alt: '', loading: 'lazy' }) : null,
-        el('span', { class: 'save-slot-copy' },
-        el('span', { class: 'save-slot-title', text: `Слот ${slot}` }),
-        el('span', {
-          class: 'save-slot-meta',
-          text: entry
-            ? `${entry.sceneName || 'без названия'} · ${slotDate(entry.at)}`
-            : 'пусто — нажмите, чтобы сохранить здесь',
-        }),
-        entry?.excerpt ? el('span', { class: 'save-excerpt', text: plainLine(entry.excerpt) }) : null,
-        el('span', { class: 'save-slot-write', text: entry ? 'Сохранить поверх…' : 'Сохранить' }),
-        ),
-        ),
-        entry ? el('button', {
-          class: 'pill',
-          type: 'button',
-          onclick: () => {
-            close();
-            setTimeout(() => openPlayer(story, { ...opts, slot }), 200);
-          },
-        }, 'Загрузить') : null,
-        entry ? el('button', {
-          class: 'mini-btn is-danger',
-          type: 'button',
-          'aria-label': `Удалить слот ${slot}`,
-          title: `Удалить слот ${slot}`,
-          html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.trash}</svg>`,
-          onclick: () => {
-            deleteSave(story.id, slot);
-            toast(`Слот ${slot} очищен`);
-            again();
-          },
-        }) : null,
-      ));
+    tabs.replaceChildren(); list.replaceChildren();
+    for (const [id, label] of [['manual', 'Ручные'], ['auto', 'Авто']]) {
+      tabs.append(el('button', { class: 'reader-tab', type: 'button', role: 'tab', id: `save-tab-${id}`, 'aria-controls': list.id, 'aria-selected': String(category === id), text: label, onclick: () => { category = id; selected = null; render(); } }));
     }
-
-    return el('div', {},
-      list,
-      el('p', { class: 'field-hint', text: '«Сохранить» записывает текущее место, «Загрузить» возвращает в выбранный слот. Автосохранение работает отдельно и всегда держит последнюю реплику.' }),
-    );
-  };
-
-  const filled = getSaves(story.id).slots.length;
-  openSheet({
-    title: 'Сохранения',
-    subtitle: filled
-      ? `${filled} ${plural(filled, 'слот', 'слота', 'слотов')} из ${SLOT_IDS.length}`
-      : 'Пока пусто — можно сохраниться в любой момент',
-    content,
+    list.setAttribute('aria-labelledby', `save-tab-${category}`);
+    const entries = category === 'auto' ? [['auto', saves.auto]] : SLOT_IDS.map(slot => [slot, saves.slots.find(item => item.slot === slot)]);
+    for (const [slot, entry] of entries) {
+      if (mode === 'load' && !entry) continue;
+      const title = slot === 'auto' ? 'Автосохранение' : `Слот ${slot}`;
+      const thumbnail = entry?.visual?.bg ? resolveUrl(story, entry.visual.bg) : entry?.thumbnail;
+      const cell = el('div', { class: `save-cell${selected === slot ? ' is-selected' : ''}` });
+      cell.append(el('button', { class: 'save-select', type: 'button', 'aria-pressed': String(selected === slot), 'aria-label': `${title}${entry ? ': ' + entry.sceneName : ': пустой'}`, onclick: () => { selected = slot; render(); } },
+        thumbnail ? el('img', { src: thumbnail, alt: '', class: 'slot-cover' }) : el('span', { class: 'slot-placeholder', text: entry ? '◇' : '+' }),
+        el('strong', { text: title }), el('span', { class: 'save-slot-meta', text: entry ? `${entry.sceneName || 'Начало'} · ${slotDate(entry.at)}` : 'Пустой слот' })));
+      if (entry && slot !== 'auto') cell.append(el('button', { class: 'text-btn slot-delete', type: 'button', text: 'Удалить', 'aria-label': `Удалить ${title}`, onclick: async () => {
+        if (!await confirmDialog({ title: `Удалить ${title.toLowerCase()}?`, text: 'Автосохранение останется.', confirmText: 'Удалить' })) return;
+        deleteSave(story.id, slot); selected = null; render();
+      } }));
+      list.append(cell);
+    }
+    if (!list.childElementCount || (category === 'auto' && !saves.auto)) {
+      list.replaceChildren(el('p', { class: 'field-hint', text: category === 'auto' ? 'Автосохранение появится при чтении.' : 'Пока нет ручных сохранений.' }));
+    }
+    const entry = selected === 'auto' ? saves.auto : saves.slots.find(item => item.slot === selected);
+    action.textContent = mode === 'save' && category === 'manual' ? 'Сохранить' : 'Загрузить';
+    action.disabled = !selected || (category === 'auto' || mode === 'load' ? !entry : !stage);
+  }
+  action.addEventListener('click', async () => {
+    if (!selected) return;
+    const slot = selected;
+    if (mode === 'save' && category === 'manual') {
+      const entry = getSaves(story.id).slots.find(item => item.slot === slot);
+      if (entry && !await confirmDialog({ title: `Перезаписать слот ${slot}?`, text: 'Предыдущее место будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
+      if (!stage || currentStory?.id !== story.id) return;
+      writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
+      toast(`Сохранено в слот ${slot}`); render();
+    } else {
+      close();
+      if (opts.onLoad) opts.onLoad(slot);
+      else openPlayer(story, { ...opts, slot: slot === 'auto' ? undefined : slot });
+    }
   });
+  render(); content.append(tabs, list, action);
+  close = openSheet({ layout: 'page', title: mode === 'save' ? 'Сохранить игру' : 'Загрузить игру', subtitle: story.title, content });
+  return close;
 }
 
 export function closePlayer() {
@@ -283,139 +266,27 @@ export function closePlayer() {
 }
 
 function openPlayerMenu(story, opts) {
-  const settings = getSettings();
-  const content = document.createElement('div');
-  content.className = 'menu-settings';
-
-  const speedRow = document.createElement('div');
-  speedRow.className = 'field';
-  speedRow.innerHTML = '<label>Скорость текста</label>';
-  const speed = document.createElement('input');
-  speed.type = 'range';
-  speed.min = '6';
-  speed.max = '55';
-  speed.step = '1';
-  speed.value = String(56 - Number(settings.textSpeed || 22));
-  const speedNote = document.createElement('span');
-  speedNote.className = 'range-note';
-  speedNote.textContent = `${speed.value > 34 ? 'быстро' : speed.value > 18 ? 'обычно' : 'медленно'}`;
-  const speedWrap = document.createElement('div');
-  speedWrap.className = 'range-row';
-  speedWrap.append(speed, speedNote);
-  speedRow.append(speedWrap);
-  speed.addEventListener('input', () => {
-    const ms = 56 - Number(speed.value);
-    stage?.applySettings({ textSpeed: ms });
-    saveSettings({ textSpeed: ms });
-    speedNote.textContent = speed.value > 34 ? 'быстро' : speed.value > 18 ? 'обычно' : 'медленно';
-  });
-
-  const sizeRow = document.createElement('div');
-  sizeRow.className = 'field';
-  sizeRow.innerHTML = '<label>Размер текста</label>';
-  const size = document.createElement('input');
-  size.type = 'range';
-  size.min = '0.85';
-  size.max = '1.35';
-  size.step = '0.05';
-  size.value = String(settings.fontSize || 1);
-  const sizeWrap = document.createElement('div');
-  sizeWrap.className = 'range-row';
-  sizeWrap.append(el('span', { class: 'range-note', text: 'а' }), size, el('span', { class: 'range-note range-note-big', text: 'А' }));
-  sizeRow.append(sizeWrap);
-  size.addEventListener('input', () => {
-    stage?.applySettings({ fontSize: Number(size.value) });
-    saveSettings({ fontSize: Number(size.value) });
-  });
-
-  const skipRow = document.createElement('button');
-  skipRow.type = 'button';
-  skipRow.className = 'sheet-row';
-  const skipState = getSettings().skipSeen;
-  skipRow.innerHTML = `<span>Пропускать прочитанное<small>уже прочитанные реплики листаются сами</small></span>`;
-  const skipSwitch = el('span', { class: 'switch', role: 'switch', 'aria-checked': String(!!skipState) });
-  skipRow.append(skipSwitch);
-  skipRow.addEventListener('click', () => {
-    const next = !(skipSwitch.getAttribute('aria-checked') === 'true');
-    skipSwitch.setAttribute('aria-checked', String(next));
-    saveSettings({ skipSeen: next });
-    stage?.applySettings({ skipSeen: next });
-  });
-
-  const awakeRow = document.createElement('button');
-  awakeRow.type = 'button';
-  awakeRow.className = 'sheet-row';
-  awakeRow.innerHTML = `<span>Не гасить экран<small>пока открыта история</small></span>`;
-  const awakeSwitch = el('span', { class: 'switch', role: 'switch', 'aria-checked': String(!!settings.keepAwake) });
-  awakeRow.append(awakeSwitch);
-  awakeRow.addEventListener('click', () => {
-    const next = !(awakeSwitch.getAttribute('aria-checked') === 'true');
-    awakeSwitch.setAttribute('aria-checked', String(next));
-    saveSettings({ keepAwake: next });
-    if (next) requestWakeLock(true); else releaseWakeLock();
-  });
-
-  const motionRow = document.createElement('button');
-  motionRow.type = 'button';
-  motionRow.className = 'sheet-row';
-  motionRow.innerHTML = `<span>Меньше анимации<small>без печати текста, дождя и переходов</small></span>`;
-  const motionSwitch = el('span', { class: 'switch', role: 'switch', 'aria-checked': String(!!settings.reduceMotion) });
-  motionRow.append(motionSwitch);
-  motionRow.addEventListener('click', () => {
-    const next = !(motionSwitch.getAttribute('aria-checked') === 'true');
-    motionSwitch.setAttribute('aria-checked', String(next));
-    saveSettings({ reduceMotion: next });
-    stage?.applySettings({ reduceMotion: next });
-  });
-
-  const opacityRow = el('div', { class: 'field' }, el('label', { text: 'Подложка под текстом' }));
-  const opacity = el('input', { type: 'range', min: '0.35', max: '1', step: '0.05', value: String(settings.dialogueOpacity ?? 0.9), 'aria-label': 'Непрозрачность подложки' });
-  opacity.addEventListener('input', () => {
-    const patch = { dialogueOpacity: Number(opacity.value) };
-    stage?.applySettings(patch);
-    saveSettings(patch);
-  });
-  opacityRow.append(opacity);
-  content.append(speedRow, sizeRow, opacityRow, skipRow, awakeRow, motionRow);
-
+  stage?.node.classList.remove('ui-hidden');
   openSheet({
-    title: story.title,
-    subtitle: `${stage?.scene?.act ? stage.scene.act + ' · ' : ''}${stage?.scene?.name || 'Начало'} · прогресс сохраняется сам`,
+    title: 'Пауза',
+    subtitle: `${story.title} · ${stage?.scene?.name || 'Начало'}`,
+    content: close => el('button', { class: 'solid-btn pause-resume', type: 'button', text: 'Продолжить', onclick: close }),
     rows: [
-      {
-        label: 'История реплик',
-        icon: ICONS.journal,
-        hint: 'всё, что уже прочитано',
-        value: stage?.history?.length ? String(stage.history.length) : '',
-        onSelect: () => openJournal(story),
-      },
-      {
-        label: 'Сохранения',
-        icon: ICONS.save,
-        hint: 'три слота для своих мест',
-        value: getSaves(story.id).slots.length ? `${getSaves(story.id).slots.length} из ${SLOT_IDS.length}` : '',
-        onSelect: () => openSaves(story, opts),
-      },
-      {
-        label: 'Начать сначала',
-        icon: ICONS.restart,
-        onSelect: async () => {
-          const ok = await confirmDialog({ title: 'Начать сначала?', text: 'Автосохранение сбросится. Ручные слоты и отметки «прочитано» останутся.', confirmText: 'Начать сначала', danger: false });
-          if (!ok) return;
-          deleteSave(story.id, 'auto');
-          openPlayer(story, { ...opts, fresh: true });
-        },
-      },
-      { label: 'В библиотеку', icon: ICONS.back, onSelect: () => opts.onExit?.() },
+      { label: 'Сохранить', icon: ICONS.save, onSelect: () => openSaves(story, opts, 'save') },
+      { label: 'Загрузить', icon: ICONS.download, onSelect: () => openSaves(story, opts, 'load') },
+      { label: 'Журнал', icon: ICONS.journal, onSelect: () => openJournal(story) },
+      { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
+      { label: 'Настройки', icon: ICONS.dots, onSelect: () => openSettings() },
+      { label: 'Скрыть интерфейс', icon: ICONS.eye, onSelect: () => stage?.node.classList.add('ui-hidden') },
+      { label: 'В главное меню', icon: ICONS.back, onSelect: () => (opts.onHome || opts.onExit)?.() },
     ],
-    content,
   });
 }
 
 /* ─────────────── wake lock ─────────────── */
 
 async function requestWakeLock(enabled) {
-  if (!enabled || !('wakeLock' in navigator)) return;
+  if (wakeLock || !enabled || !('wakeLock' in navigator)) return;
   try {
     wakeLock = await navigator.wakeLock.request('screen');
     wakeLock.addEventListener('release', () => { wakeLock = null; });
@@ -434,3 +305,8 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('pagehide', () => pendingPersist?.flush?.());
 document.addEventListener('vnmy:modal', e => stage?.setPaused(e.detail > 0));
+
+document.addEventListener('vnmy:settings', event => {
+  stage?.applySettings(event.detail);
+  if (currentStory && event.detail.keepAwake) requestWakeLock(true); else releaseWakeLock();
+});
