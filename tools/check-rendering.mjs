@@ -8,16 +8,16 @@ import { normalizeStory } from '../js/format.js';
 export async function checkRendering() {
   // Different sprite image widths must not change the centered actor frame.
   const css = readFileSync(new URL('../css/player.css', import.meta.url), 'utf8');
-  assert.match(css, /\\.sprite\\s*\\{[^}]*width:\\s*64cqw;/s);
-  assert.match(css, /\\.sprite-inner\\s*\\{[^}]*width:\\s*100%;/s);
-  assert.match(css, /\\.sprite img\\s*\\{[^}]*width:\\s*100%;[^}]*object-fit:\\s*contain;[^}]*object-position:\\s*center bottom;/s);
+  assert.match(css, /\.sprite\s*\{[^}]*width:\s*64cqw;/s);
+  assert.match(css, /\.sprite-inner\s*\{[^}]*width:\s*100%;/s);
+  assert.match(css, /\.sprite img\s*\{[^}]*width:\s*100%;[^}]*object-fit:\s*contain;[^}]*object-position:\s*center bottom;/s);
 
   // Atmospheric mode must keep choices accessible and the player UI hideable.
-  assert.match(css, /\\.stage\\[data-mode="play"\\] \\.dialogue\\s*\\{[^}]*border:[^}]*var\\(--dialogue-edge\\)/s);
-  assert.match(css, /\\.stage\\[data-mode="play"\\] \\.choice\\s*\\{[^}]*min-height:\\s*44px/s);
-  assert.match(css, /\\.stage\\[data-mode="play"\\] \\.speaker\\.is-empty\\s*\\{[^}]*display:\\s*none/s);
-  assert.match(css, /@media \\(prefers-reduced-motion: reduce\\)/);
-  assert.match(css, /\\.stage\\.ui-hidden \\.dialogue-layer/);
+  assert.match(css, /\.stage\[data-mode="play"\] \.dialogue\s*\{[^}]*border:[^}]*var\(--dialogue-edge\)/s);
+  assert.match(css, /\.stage\[data-mode="play"\] \.choice\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(css, /\.stage\[data-mode="play"\] \.speaker\.is-empty\s*\{[^}]*display:\s*none/s);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /\.stage\.ui-hidden \.dialogue-layer/);
 
   const dom = new JSDOM('<div id="stage"><div id="sprites"></div></div>');
   const saved = new Map(['document', 'Image', 'requestAnimationFrame'].map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
