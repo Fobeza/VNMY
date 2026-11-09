@@ -6,12 +6,13 @@
  */
 import {
   loadLibrary, deleteStory, progressOf, getSaves,
-  importStoryFile, deleteSave,
-  deleteUniverse, exportUniversePortable, moveStoryToUniverse,
+  deleteSave,
+  deleteUniverse, exportUniversePortable,
 } from './store.js';
 import { countWords, resolveUrl } from './format.js';
 import { el, $, formatDate, plural } from './util.js';
 import { toast, openSheet, confirmDialog } from './ui.js';
+import { openImport } from './import.js';
 import { openSaves } from './player.js';
 import { openGallery } from './gallery.js';
 import { ICONS } from './icons.js';
@@ -113,20 +114,27 @@ function storyCard(story) {
 export function openStoryDetails(story, actions = hooks) {
   const save = progressOf(story.id);
   const cover = resolveUrl(story, story.cover);
-  return openSheet({ layout: 'page', title: 'Об истории', content: close => el('div', { class: 'story-details' },
+  let close;
+  close = openSheet({ layout: 'page', title: 'Об истории', onMenu: () => openSheet({ title: story.title, rows: [
+    { label: 'Сохранения', icon: ICONS.download, onSelect: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') },
+    { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
+  ] }), content: close => el('div', { class: 'story-details' },
     cover ? el('img', { class: 'detail-cover', src: cover, alt: '' }) : null,
     el('h2', { text: story.title }),
+    story.genres?.length ? el('div', { class: 'genre-chips' }, ...story.genres.map(text => el('span', { text }))) : null,
     story.author ? el('p', { class: 'field-hint', text: story.author }) : null,
     story.description ? el('p', { class: 'detail-description', text: story.description }) : null,
     save ? el('p', { class: 'field-hint', text: save.ended ? 'История прочитана' : save.sceneName || 'Чтение начато' }) : null,
+    save ? el('progress', { class: 'reading-progress', max: 1, value: Math.max(0, Math.min(1, save.percent || 0)), 'aria-label': 'Прогресс чтения' }) : null,
     el('button', { class: 'solid-btn', type: 'button', text: save && !save.ended ? 'Продолжить' : 'Начать историю', onclick: () => { close(); actions.onPlay?.(story, { fresh: !!save?.ended }); } }),
     save ? el('button', { class: 'ghost-btn', type: 'button', text: 'Начать заново', onclick: async () => {
       if (!await confirmDialog({ title: 'Начать заново?', text: 'Ручные сохранения останутся.', confirmText: 'Начать', danger: false })) return;
       deleteSave(story.id, 'auto'); close(); actions.onPlay?.(story, { fresh: true });
     } }) : null,
-    el('button', { class: 'sheet-row', type: 'button', text: 'Сохранения', onclick: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') }),
-    el('button', { class: 'sheet-row', type: 'button', text: 'Галерея', onclick: () => openGallery(story) }),
+    el('button', { class: 'sheet-row detail-link', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.download}</svg><span>Сохранения</span><span class="chev">›</span>`, onclick: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') }),
+    el('button', { class: 'sheet-row detail-link', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.image}</svg><span>Галерея</span><span class="chev">›</span>`, onclick: () => openGallery(story) }),
   ) });
+  return close;
 }
 
 /** Меню одной новеллы. */
@@ -163,48 +171,6 @@ function openStoryMenu(story) {
       } : null,
     ],
   });
-}
-
-/** Импорт новеллы прямо в эту вселенную. */
-async function runImport(file, universeId) {
-  try {
-    const imported = await importStoryFile(file);
-    if (!imported.length) {
-      toast('В файле не нашлось новелл', 4000);
-      return;
-    }
-    if (imported.missing?.length) toast(`Не хватает картинок: ${imported.missing.length}. Подробности в консоли`, 5000);
-    if (imported.universe) {
-      toast(`Вселенная «${imported.universe.title}»: новелл ${imported.length}`, 4000);
-    } else {
-      // новелла без вселенной попадает в ту, внутри которой её импортировали
-      if (universeId) {
-        for (const story of imported) if (!story.universe) moveStoryToUniverse(story, universeId);
-      }
-      toast(imported.length > 1
-        ? `Импортировано новелл: ${imported.length}`
-        : `Импортировано: «${imported[0].title}»`, 3200);
-    }
-  } catch (err) {
-    const code = String(err?.message || '');
-    if (code === 'STORAGE_FULL') {
-      const partial = err.imported?.length || 0;
-      toast(partial
-        ? `Место кончилось: загружено ${partial}. Удалите лишние новеллы или грузите картинки файлами.`
-        : 'В браузере мало места для этой новеллы. Удалите что-нибудь или держите картинки в папке stories.', 6000);
-    } else if (code === 'BAD_PACKAGE') {
-      toast('В архиве нет story.json или universe.json — это не новелла VNMY', 5000);
-    } else if (code === 'ZIP_UNSUPPORTED') {
-      toast('Архив сжат способом, который этот браузер не читает. Упакуйте его командой npm run pack', 6000);
-    } else if (code === 'BAD_JSON') {
-      toast('Это не файл истории VNMY: внутри не JSON', 4000);
-    } else {
-      console.error(err);
-      toast('Не получилось прочитать файл', 4000);
-    }
-  } finally {
-    await renderUniverse(current?.id ?? universeId ?? '', hooks);
-  }
 }
 
 /** Меню вселенной: экспорт / удалить. */
@@ -245,7 +211,7 @@ async function runUniverseExport(universe) {
   toast('Собираю новеллы…', 8000);
   try {
     const result = await exportUniversePortable(universe, universe.novels || []);
-    toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, новелл: ${result.novels}, картинок: ${result.images}`);
+    toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, новелл: ${result.novels}, файлов: ${result.images}`);
   } catch (err) {
     console.error(err);
     toast('Не получилось собрать вселенную');
@@ -262,13 +228,5 @@ export function wireUniverse() {
   $('#uni-back')?.addEventListener('click', () => hooks.onBack?.());
   $('#uni-menu')?.addEventListener('click', openUniverseMenu);
 
-  const fileInput = el('input', { type: 'file', class: 'js-import-novel', accept: 'application/json,.json,.vnmy,.zip,application/zip', style: { display: 'none' } });
-  document.body.append(fileInput);
-  fileInput.addEventListener('change', async () => {
-    const file = fileInput.files?.[0];
-    fileInput.value = '';
-    if (!file) return;
-    await runImport(file, current?.id || '');
-  });
-  $('#btn-import-novel')?.addEventListener('click', () => fileInput.click());
+  $('#btn-import-novel')?.addEventListener('click', () => openImport({ universeId: current?.id || '', onImported: () => renderUniverse(current?.id || '', hooks) }));
 }

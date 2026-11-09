@@ -39,7 +39,7 @@ try {
   assert.deepEqual(getArtwork(story.id).map(item => item.path), ['cafe.webp'], 'only displayed background unlocks');
   const closeSettings = openSettings(); await tick();
   assert.equal(stage.paused, true, 'settings must pause the reader');
-  let slider = overlay().querySelector('#reader-fontSize');
+  let slider = overlay().querySelector('[aria-label="Размер текста"]');
   slider.value = '1.2'; slider.dispatchEvent(new window.Event('input'));
   assert.equal(getSettings().fontSize, 1.2); assert.equal(stage.settings.fontSize, 1.2, 'settings apply to current reader');
   click('Управление');

@@ -10,6 +10,8 @@ import {
 } from './format.js';
 import { evalCondition, interpolate } from './expr.js';
 import { NarrativeState } from './session.js';
+import { installReadingGestures } from './gestures.js';
+import { StoryAudio } from './audio.js';
 import { WeatherLayer } from './weather.js';
 
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
@@ -26,6 +28,7 @@ export class Stage extends NarrativeState {
     this.mode = opts.mode || 'play';
     this.opts = opts;
     this.settings = { ...DEFAULTS, ...(opts.settings || {}) };
+    this.audio = new StoryAudio(this.story, this.settings);
     this.cast = [];
     this.bgUrl = null;
     this.bgLayer = 0;
@@ -112,6 +115,7 @@ export class Stage extends NarrativeState {
     menuBtn.addEventListener('click', (e) => { e.stopPropagation(); this.opts.onMenu?.(); });
 
     this.mounted = true;
+    this.disposeGestures = installReadingGestures(this);
     if (this.opts.resuming) this.renderInstance(this.index, { instant: true, replay: true });
     else this.enter(this.sceneId, this.index, { instant: this.opts.instantFirst !== false });
     return this;
@@ -123,6 +127,8 @@ export class Stage extends NarrativeState {
     for (const t of this._timers) clearTimeout(t);
     this._timers.clear();
     this.weather?.destroy();
+    this.audio.destroy();
+    this.disposeGestures?.();
     this.node?.remove();
     this.mounted = false;
   }
@@ -139,6 +145,7 @@ export class Stage extends NarrativeState {
     this.settings = { ...this.settings, ...patch };
     this.applyFontSize();
     this.applyMotion();
+    this.audio.applySettings(this.settings);
   }
 
   /** «Меньше анимации»: без печати текста, погоды и переходов. */
@@ -247,6 +254,7 @@ export class Stage extends NarrativeState {
     this.applyBackground(state.bg, { instant });
     this.applyWeather(state.weather, { instant });
     this.applyCast(cast, { instant, speaker: step.speaker });
+    this.audio.render(state, step, replay);
 
     const renderToken = this._renderToken;
     const pause = instant ? 0 : Math.min(4000, Math.max(0, Number(step.pause) || 0));
@@ -573,6 +581,7 @@ export class Stage extends NarrativeState {
 
   setPaused(value) {
     this.paused = value;
+    this.audio.setPaused(value);
     if (value) { this.invalidateRender(); this.cancelTyping(); }
     else if (this.mounted && !this.ended) this.renderInstance(this.index, { instant: true, replay: true });
   }
@@ -712,7 +721,9 @@ export class Stage extends NarrativeState {
   handleTap() {
     if (this.paused || this.ended || this.asking) return;
     if (this.node.classList.contains('ui-hidden')) { this.node.classList.remove('ui-hidden'); return; }
+    this.audio.sync();
     this.opts.onTap?.();
+    if (this.settings.vibration) navigator.vibrate?.(10);
     if (this.awaitingChoices) return;
     if (this.waitingPause) {
       // тап во время паузы показывает реплику сразу, а не пропускает её
@@ -852,6 +863,8 @@ export class Stage extends NarrativeState {
   }
 
   restart() {
+    this.audio.destroy();
+    this.audio = new StoryAudio(this.story, this.settings);
     this.invalidateRender();
     this.cancelTyping();
     this.hideEnding();

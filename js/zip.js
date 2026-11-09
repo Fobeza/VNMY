@@ -7,6 +7,7 @@
 
 const MIME = {
   webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+  mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac',
   gif: 'image/gif', svg: 'image/svg+xml', avif: 'image/avif', json: 'application/json',
 };
 
