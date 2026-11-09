@@ -46,9 +46,9 @@ try {
   const motion = overlay().querySelector('[role="switch"][aria-label="Меньше анимации"]');
   motion.click(); assert.equal(getSettings().reduceMotion, false);
   motion.click(); assert.equal(getSettings().reduceMotion, true);
-  closeSettings(); assert.equal(stage.paused, false);
+  closeSettings(); await tick(); assert.equal(stage.paused, false);
   stage.node.querySelector('.quick-menu').click(); await tick();
-  click('Скрыть интерфейс');
+  click('Скрыть интерфейс'); await tick();
   assert.equal(stage.node.classList.contains('ui-hidden'), true);
   stage.handleTap(); assert.equal(stage.node.classList.contains('ui-hidden'), false);
   assert.equal(stage.step.id, 'first', 'restoring UI must not advance dialogue');
@@ -67,7 +67,7 @@ try {
   assert.deepEqual(stage.visual.cast, authoredBeforeZoom, 'zoom must not rewrite authored scale or positions');
   document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   assert.equal(stage.node.classList.contains('is-adjusting-sprites'), false, 'Escape restores dialogue');
-  assert.equal(stage.paused, false);
+  await tick(); assert.equal(stage.paused, false);
   closeTuner(); // idempotent cleanup
   const closeSceneSettings = openSettings('sprites'); await tick();
   assert.equal(overlay().querySelector('[aria-label="Масштаб персонажей"]').value, '1.8');
@@ -116,11 +116,11 @@ try {
   overlay().querySelector('.gallery-tile').click(); await tick();
   assert.equal(document.querySelector('#screen-library').inert, true);
   back(); assert.equal(stage.paused, true, 'closing artwork keeps gallery modal paused');
-  back(); assert.equal(stage.paused, false, 'closing last modal resumes reader');
+  back(); await tick(); assert.equal(stage.paused, false, 'closing last modal resumes reader');
 
   let opened = null;
   openStoryDetails(story, { onPlay: (value, opts) => { opened = { value, opts }; } }); await tick();
-  click('Продолжить'); assert.equal(opened.value.id, story.id);
+  click('Продолжить'); await tick(); assert.equal(opened.value.id, story.id);
 
   // Auto-reading waits for a choice instead of choosing on the player's behalf.
   let advanced = 0;

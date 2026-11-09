@@ -35,26 +35,16 @@
  */
 
 import { compile as compileExpression, interpolatedVars, evalCondition } from './expr.js';
+import { uid as makeUid } from './util.js';
 
 export const SCHEMA_VERSION = 1;
 
 export const POSITIONS = ['left', 'center', 'right'];
-export const POSITION_LABELS = { left: 'слева', center: 'по центру', right: 'справа' };
 export const WEATHERS = ['none', 'rain', 'snow', 'dust', 'petals'];
-export const WEATHER_LABELS = { none: 'ясно', rain: 'дождь', snow: 'снег', dust: 'пыль', petals: 'лепестки' };
 export const MOODS = ['', 'shake', 'flash', 'blush', 'dim', 'zoom'];
-export const MOOD_LABELS = {
-  '': 'обычное', shake: 'тряска', flash: 'вспышка', blush: 'смущение', dim: 'затемнение', zoom: 'наплыв',
-};
 export const ACCENTS = ['#e0b072', '#d98a8a', '#8fb8d8', '#9ecf9a', '#b79ae0', '#d8d2c4'];
 export const VAR_TYPES = ['number', 'bool', 'text'];
-export const VAR_TYPE_LABELS = { number: 'число', bool: 'флаг', text: 'текст' };
 export const VAR_OPS = ['set', 'add', 'sub', 'toggle'];
-export const VAR_OP_LABELS = { set: '=', add: '+', sub: '−', toggle: 'переключить' };
-
-export function newVar(overrides = {}) {
-  return { name: 'переменная', type: 'number', initial: 0, ...overrides };
-}
 
 export function defaultVarValue(v) {
   if (v.type === 'bool') return v.initial === true || v.initial === 'true' || v.initial === 1 || v.initial === '1';
@@ -77,7 +67,7 @@ export function varByName(story, name) {
 }
 
 export function uid(prefix = 's') {
-  return `${prefix}${Math.random().toString(36).slice(2, 7)}`;
+  return makeUid(prefix);
 }
 
 export function newStep(overrides = {}) {
@@ -98,25 +88,6 @@ export function newScene(overrides = {}) {
 
 export function newCharacter(overrides = {}) {
   return { id: uid('ch'), name: 'Новый персонаж', color: '', sprites: {}, ...overrides };
-}
-
-export function createStory(overrides = {}) {
-  const scene = newScene({ name: 'Начало' });
-  return normalizeStory({
-    schema: SCHEMA_VERSION,
-    id: uid('story'),
-    title: 'Без названия',
-    author: '',
-    description: '',
-    cover: '',
-    accent: ACCENTS[0],
-    universe: '',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    characters: [],
-    scenes: [scene],
-    ...overrides,
-  });
 }
 
 /** Приводит историю к актуальной схеме. Не бросает исключений — чинит по ходу. */
@@ -140,21 +111,8 @@ export function normalizeStory(input) {
   story.createdAt = story.createdAt || Date.now();
   story.updatedAt = story.updatedAt || Date.now();
   if (!Array.isArray(story.vars)) story.vars = [];
-  const varNames = new Set();
-  story.vars = story.vars.filter(Boolean).map((v) => {
-    let name = String(v.name || '').trim().replace(/[^\p{L}\p{N}_]/gu, '_') || 'переменная';
-    while (varNames.has(name)) name += '_2';
-    varNames.add(name);
-    const type = VAR_TYPES.includes(v.type) ? v.type : 'number';
-    return { name, type, initial: v.initial ?? (type === 'bool' ? false : type === 'number' ? 0 : '') };
-  });
-  if (!Array.isArray(story.media)) story.media = [];
-  story.media = story.media.filter(Boolean).map((m) => ({
-    id: m.id || uid('m'),
-    name: String(m.name || 'картинка'),
-    url: String(m.url || ''),
-    kind: 'image',
-  })).filter((m) => m.url);
+  story.vars = normalizeVars(story.vars);
+  delete story.media; // поле удалённого редактора
   if (!Array.isArray(story.characters)) story.characters = [];
   if (!Array.isArray(story.scenes)) story.scenes = [];
   if (!story.scenes.length) story.scenes.push(newScene({ name: 'Начало' }));
@@ -201,6 +159,36 @@ export function normalizeStory(input) {
   return story;
 }
 
+/** Корректное имя переменной: буква или _, дальше буквы, цифры и _. */
+export const VAR_NAME = /^[\p{L}_][\p{L}\p{N}_]*$/u;
+
+/**
+ * Переменные: корректные имена сохраняются как есть, повтор имени — та же
+ * переменная (лишнее объявление отбрасывается). Некорректное имя чинится так,
+ * чтобы не совпасть ни с одним существующим — иначе условия начнут читать
+ * чужую переменную. Валидатор считает такие имена ошибкой.
+ */
+function normalizeVars(list) {
+  const items = list.filter((v) => v && typeof v === 'object');
+  const taken = new Set(items.map((v) => String(v.name ?? '').trim()).filter((name) => VAR_NAME.test(name)));
+  const used = new Set();
+  const result = [];
+  for (const v of items) {
+    let name = String(v.name ?? '').trim();
+    if (!VAR_NAME.test(name)) {
+      const base = name.replace(/[^\p{L}\p{N}_]/gu, '_').replace(/^(?=\p{N})/u, '_') || 'переменная';
+      name = base;
+      for (let n = 2; taken.has(name) || used.has(name); n++) name = `${base}_${n}`;
+      taken.add(name);
+    }
+    if (used.has(name)) continue;
+    used.add(name);
+    const type = VAR_TYPES.includes(v.type) ? v.type : 'number';
+    result.push({ name, type, initial: v.initial ?? (type === 'bool' ? false : type === 'number' ? 0 : '') });
+  }
+  return result;
+}
+
 function normalizeCast(entry) {
   if (!entry || typeof entry !== 'object') return null;
   return {
@@ -221,21 +209,33 @@ const FALLBACK = { left: ['left', 'center', 'right'], center: ['center', 'right'
  * Режим staging: "stable" — без «конвейера». Персонаж, который уже стоит
  * на сцене, остаётся на своей позиции, даже если в новом cast указана
  * другая; новичок встаёт на указанную позицию или ближайшую свободную.
- * Перейти на другое место можно явно: { "move": true }.
+ * Перейти на другое место можно явно: { "move": true }. Если это место
+ * занято стоящим персонажем, они меняются местами.
  */
 export function stabilizeCast(prev = [], next = []) {
   const before = new Map(prev.filter((c) => c && !c.hidden).map((c) => [c.char, c.pos]));
   const taken = new Set();
   const placed = new Map();
-  const claim = (entry, wish) => {
-    const pos = FALLBACK[wish]?.find((p) => !taken.has(p)) || entry.pos;
+  const vacated = [];
+  const claim = (entry, wish, preferred = []) => {
+    const pos = [...preferred, ...(FALLBACK[wish] || [])].find((p) => !taken.has(p)) || entry.pos;
     taken.add(pos);
     placed.set(entry, pos);
   };
   const visible = next.filter((c) => c && !c.hidden);
   // явные перемещения, затем оставшиеся на месте, затем новички
-  for (const c of visible) if (c.move) claim(c, c.pos);
-  for (const c of visible) if (!c.move && before.has(c.char)) claim(c, before.get(c.char));
+  for (const c of visible) {
+    if (!c.move) continue;
+    claim(c, c.pos);
+    const old = before.get(c.char);
+    if (old && old !== placed.get(c)) vacated.push(old);
+  }
+  for (const c of visible) {
+    if (c.move || !before.has(c.char)) continue;
+    const wish = before.get(c.char);
+    // место заняли явным перемещением — встаём на освободившееся (обмен)
+    claim(c, wish, taken.has(wish) ? vacated : []);
+  }
   for (const c of visible) if (!c.move && !before.has(c.char)) claim(c, c.pos);
   return next.map((c) => (placed.has(c) && placed.get(c) !== c.pos ? { ...c, pos: placed.get(c) } : { ...c }));
 }
@@ -376,10 +376,12 @@ export function dropAssetUrls(storyId) {
 
 export function resolveUrl(story, url) {
   if (!url) return '';
-  const packaged = story?.packaged && assetUrlTable.get(story.id)?.get(url);
-  if (packaged) return packaged;
-  if (/^(https?:|data:|blob:|\/)/.test(url)) return url;
-  return (story.baseUrl || '') + url;
+  if (/^(https?:|data:|blob:)/.test(url)) return url;
+  // у новеллы из .vnmy относительный путь ведёт только в её пакет:
+  // отсутствующий файл не запрашиваем у сайта приложения
+  if (story?.packaged) return assetUrlTable.get(story.id)?.get(url) || '';
+  if (url.startsWith('/')) return url;
+  return (story?.baseUrl || '') + url;
 }
 
 export function characterById(story, id) {
@@ -437,7 +439,7 @@ export function lintStory(story) {
     }
     const variable = (story.vars || []).find((v) => v.name === step.ask.var);
     if (variable && variable.type !== 'text') {
-      issues.push({ level: 'warn', sceneId, stepId: step.id, text: `${where}: «${step.ask.var}» не текстовая переменная — имя сохранится как число` });
+      issues.push({ level: 'warn', sceneId, stepId: step.id, text: `${where}: «${step.ask.var}» не текстовая переменная — ответ будет приведён к типу «${variable.type}»` });
     }
   };
 
@@ -466,7 +468,6 @@ export function lintStory(story) {
     if (visible.length > POSITIONS.length) issues.push({ level: 'error', sceneId, stepId, text: `${where}: на сцене ${visible.length} персонажей, а позиций ${POSITIONS.length}` });
   };
 
-  const ids = new Set();
   for (let i = 0; i < story.scenes.length; i++) {
     const scene = story.scenes[i];
     if (!scene.bg) issues.push({ level: 'warn', sceneId: scene.id, text: `Сцена «${scene.name}» без фона` });
@@ -499,17 +500,19 @@ export function lintStory(story) {
         if (!varNames.has(op.var)) {
           issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: изменение несуществующей переменной «${op.var || '—'}»` });
         }
-        if (op.op === 'add' || op.op === 'sub') {
-          const type = varByName(story, op.var)?.type;
-          if (type === 'bool' && op.op !== 'toggle') {
-            issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: «${op.var}» — флаг, для него есть «переключить»` });
-          }
+        const opType = varByName(story, op.var)?.type;
+        if ((op.op === 'add' || op.op === 'sub') && opType === 'bool') {
+          issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: «${op.var}» — флаг: add включает, sub выключает; понятнее set или toggle` });
+        }
+        if (op.op === 'sub' && opType === 'text') {
+          issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: из текстовой переменной «${op.var}» нельзя вычитать` });
         }
         if (op.op === 'toggle' && varByName(story, op.var)?.type !== 'bool') {
           issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: «переключить» для не-флага «${op.var}»` });
         }
       }
       for (const [k, rule] of (step.gotoIf || []).entries()) {
+        if (!rule.when.trim()) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: у условного перехода ${k + 1} пустое условие — для безусловного перехода используйте goto` });
         checkCondition(rule.when, `Шаг #${j + 1}: условный переход ${k + 1}`, scene.id, step.id);
         if (!rule.goto) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: у условного перехода ${k + 1} нет цели` });
         else if (!resolveTarget(story, rule.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: условный переход ${k + 1} ведёт в никуда` });
@@ -522,7 +525,7 @@ export function lintStory(story) {
       }
       if (step.goto && !resolveTarget(story, step.goto, scene.id)) issues.push({ level: 'error', stepId: step.id, sceneId: scene.id, text: `Переход после реплики #${j + 1} ведёт в никуда` });
       if (step.end && step.choices?.length) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: одновременно «конец» и выборы — сработают выборы` });
-      if (step.goto) ids.add(step.goto);
+      if (step.end && (step.goto || step.gotoIf?.length)) issues.push({ level: 'warn', stepId: step.id, sceneId: scene.id, text: `Шаг #${j + 1}: у концовки есть переход — он никогда не сработает` });
       if (step.end) continue;
       const isLast = j === scene.steps.length - 1;
       if (isLast && !step.choices?.length && !step.goto) {

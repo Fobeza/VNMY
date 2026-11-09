@@ -1,13 +1,22 @@
 /* Narrative state has no DOM dependencies: the player renders it. */
 import { findScene, defaultVars, varByName, bareId, stateAt, stabilizeCast } from './format.js';
 import { deepClone } from './util.js';
-import { applyOperation } from './expr.js';
+import { applyOperation, truthy } from './expr.js';
+
+/** Сколько реплик держим в журнале: дальше старые просто уходят. */
+export const HISTORY_LIMIT = 150;
+
+/** storyRevision сериализует всю историю — считаем один раз на объект. */
+const revisions = new WeakMap();
 
 export function storyRevision(story) {
+  if (revisions.has(story)) return revisions.get(story);
   let hash = 2166136261;
   const source = JSON.stringify([story.schema, story.vars, story.characters, story.scenes]);
   for (let i = 0; i < source.length; i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619);
-  return (hash >>> 0).toString(16);
+  const revision = (hash >>> 0).toString(16);
+  revisions.set(story, revision);
+  return revision;
 }
 
 export function restorePosition(story, save) {
@@ -32,7 +41,7 @@ export class NarrativeState {
     this.sceneId = findScene(this.story, opts.start?.sceneId)?.id || this.story.scenes[0].id;
     this.index = Math.max(0, Math.min(this.scene.steps.length - 1, Number(opts.start?.stepIndex) || 0));
     this.vars = { ...defaultVars(this.story), ...(opts.vars || {}) };
-    this.history = Array.isArray(opts.history) ? opts.history.slice(-150) : [];
+    this.history = Array.isArray(opts.history) ? opts.history.slice(-HISTORY_LIMIT) : [];
     this.seen = opts.seen || new Set();
     this.ended = false;
     this.visual = opts.visual
@@ -73,7 +82,18 @@ export class NarrativeState {
     }
     if (step?.set?.length) this.opts.onVars?.(this.vars);
   }
-  setVar(name, value) { this.vars[name] = value; this.opts.onVars?.(this.vars); }
+  /** Значение из поля ввода приводится к типу переменной. */
+  setVar(name, value) {
+    const type = varByName(this.story, name)?.type;
+    if (type === 'number') {
+      const n = Number(String(value ?? '').replace(',', '.'));
+      value = Number.isFinite(n) ? n : 0;
+    } else if (type === 'bool') {
+      value = truthy(value);
+    }
+    this.vars[name] = value;
+    this.opts.onVars?.(this.vars);
+  }
   resetVars() {
     this.vars = { ...defaultVars(this.story), ...(this.opts.initialVars || {}) };
     this.opts.onVars?.(this.vars);

@@ -6,17 +6,14 @@
 import { el, $, clamp, clampSpriteScale } from './util.js';
 import {
   findScene, resolveTarget, stateAt, spriteUrl, characterById, resolveUrl, bareId, WEATHERS,
-  defaultVars, varByName,
 } from './format.js';
 import { evalCondition, interpolate } from './expr.js';
-import { NarrativeState } from './session.js';
+import { NarrativeState, HISTORY_LIMIT } from './session.js';
 import { installReadingGestures } from './gestures.js';
 import { StoryAudio } from './audio.js';
 import { WeatherLayer } from './weather.js';
 
 const DEFAULTS = { textSpeed: 22, fontSize: 1, skipSeen: false };
-/** Сколько реплик держим в журнале: дальше старые просто уходят. */
-const HISTORY_LIMIT = 150;
 /** Через сколько шагов молчания персонаж на сцене считается «фоном». */
 const STALE_BEATS = 7;
 
@@ -24,15 +21,10 @@ export class Stage extends NarrativeState {
   constructor(host, opts = {}) {
     super(opts);
     this.host = host;
-    this.story = opts.story;
-    this.mode = opts.mode || 'play';
-    this.opts = opts;
     this.settings = { ...DEFAULTS, ...(opts.settings || {}) };
     this.audio = new StoryAudio(this.story, this.settings);
-    this.cast = [];
     this.bgUrl = null;
     this.bgLayer = 0;
-    this.ended = false;
     this.typing = null;
     this.awaitingChoices = false;
     this.asking = false;
@@ -47,6 +39,8 @@ export class Stage extends NarrativeState {
     this._beat = 0;
     this._spokeAt = new Map();
     this._enteredAt = new Map();
+    /* Был ли текущий шаг прочитан до этого входа в него. */
+    this._stepWasSeen = false;
   }
 
   /* ─────────────────────────── жизненный цикл ─────────────────────────── */
@@ -72,6 +66,7 @@ export class Stage extends NarrativeState {
     this.askLayer = $('.ask-layer', node);
     this.askLabel = $('.ask-label', node);
     this.askInput = $('.ask-input', node);
+    this.liveEl = $('.reader-live', node);
     $('.ask-submit', node)?.addEventListener('click', () => this.submitAsk());
     this.askInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); this.submitAsk(); }
@@ -90,6 +85,13 @@ export class Stage extends NarrativeState {
     $('.quick-journal', node)?.addEventListener('click', () => this.opts.onJournal?.());
     $('.quick-save', node)?.addEventListener('click', () => this.opts.onSaves?.());
     $('.quick-hide', node)?.addEventListener('click', () => node.classList.toggle('ui-hidden'));
+    // После нажатия пальцем или мышью фокус не остаётся на кнопке: иначе
+    // Пробел и Enter снова нажмут её вместо перехода к следующей реплике.
+    // Фокус, пришедший с клавиатуры (Tab), сохраняется.
+    node.addEventListener('click', (e) => {
+      const button = e.target.closest?.('.quick-actions button, .topbar button');
+      if (button && e.detail > 0) button.blur();
+    });
     this.node.style.setProperty('--accent', '#8d9af2');
     if (this.story.lang) document.documentElement.lang = this.story.lang;
     this.applyFontSize();
@@ -99,7 +101,8 @@ export class Stage extends NarrativeState {
     this.dialogue.addEventListener('click', () => {
       const selection = window.getSelection?.();
       if (selection && String(selection).trim()) return; // не мешаем выделять текст
-      if (this.textEl.classList.contains('is-scrollable') && this.textEl.scrollTop > 4) return;
+      // прокрутка длинной реплики пальцем не порождает click, поэтому
+      // касание листает даже после прокрутки вниз
       this.handleTap();
     });
     this.tapLayer.addEventListener('keydown', (e) => {
@@ -110,14 +113,16 @@ export class Stage extends NarrativeState {
       }
     });
     const backBtn = $('.topbar-back', node);
-    const menuBtn = $('.topbar-menu', node);
     backBtn.addEventListener('click', (e) => { e.stopPropagation(); this.opts.onExit?.(); });
-    menuBtn.addEventListener('click', (e) => { e.stopPropagation(); this.opts.onMenu?.(); });
 
     this.mounted = true;
     this.disposeGestures = installReadingGestures(this);
-    if (this.opts.resuming) this.renderInstance(this.index, { instant: true, replay: true });
-    else this.enter(this.sceneId, this.index, { instant: this.opts.instantFirst !== false });
+    if (this.opts.resuming) {
+      this._entered = true;
+      this.renderInstance(this.index, { instant: true, replay: true });
+    } else {
+      this.enter(this.sceneId, this.index, { instant: this.opts.instantFirst !== false });
+    }
     return this;
   }
 
@@ -167,30 +172,28 @@ export class Stage extends NarrativeState {
   /* ─────────────────────────── состояние ─────────────────────────── */
 
   /** Полный переход к шагу; instant — без анимаций и печати текста. */
-  goTo(sceneId, stepIndex, { instant = false, effects = true, force = false } = {}) {
-    return this.enter(sceneId, stepIndex, { instant, effects, force });
+  goTo(sceneId, stepIndex, { instant = false, effects = true } = {}) {
+    return this.enter(sceneId, stepIndex, { instant, effects });
   }
 
   /**
    * Вход в шаг: пропускает шаги с ложным условием, применяет изменения
    * переменных и рисует кадр. Единственный путь «перейти куда-то».
    */
-  enter(sceneId, stepIndex, { instant = false, effects = true, force = false } = {}) {
+  enter(sceneId, stepIndex, { instant = false, effects = true } = {}) {
     const scene = findScene(this.story, sceneId);
     if (!scene) return false;
     let index = clamp(stepIndex, 0, scene.steps.length - 1);
-    // в редакторе первый кадр показываем принудительно: автор должен видеть
-    // тот шаг, который выбрал, даже если его условие сейчас ложно
-    const forced = force || (this.opts.forceStart && !this._entered);
-    this._entered = true;
-    while (!forced && index < scene.steps.length
+    while (index < scene.steps.length
       && scene.steps[index].if
       && !evalCondition(scene.steps[index].if, this.vars)) {
       index++;
     }
     if (index >= scene.steps.length) return this.leaveScene(scene);
 
-    const sceneChanged = sceneId !== this.sceneId;
+    // первый вход (новая игра, «Начать заново») тоже показывает карточку сцены
+    const sceneChanged = sceneId !== this.sceneId || !this._entered;
+    this._entered = true;
     this.invalidateRender();
     this.moveTo(sceneId, index);
     this._beat++;
@@ -205,10 +208,6 @@ export class Stage extends NarrativeState {
 
   /** Сцена закончилась (все шаги позади или скрыты условиями). */
   leaveScene(scene) {
-    if (this.opts.limitToScene) {
-      this.opts.onSceneEnd?.();
-      return false;
-    }
     const next = this.story.scenes[this.story.scenes.findIndex((s) => s.id === scene.id) + 1];
     if (next) {
       const firstVisible = next.steps.findIndex((step) => !step.if || evalCondition(step.if, this.vars));
@@ -244,7 +243,7 @@ export class Stage extends NarrativeState {
     const step = scene.steps[index];
     if (!step) return;
 
-    const state = this.mode === 'edit' ? stateAt(this.story, scene.id, index, this.vars) : this.visual;
+    const state = this.visual;
     let cast = state.cast.map((c) => ({ ...c }));
     if (step.speaker && step.spriteOverride) {
       cast = cast.map((c) => (c.char === step.speaker ? { ...c, sprite: step.spriteOverride } : c));
@@ -276,15 +275,28 @@ export class Stage extends NarrativeState {
     }
 
     // эффект играет при входе в шаг, а не при перерисовке после меню
-    if (!replay && (!this.mode || this.mode === 'play') && step.mood) this.playMood(step.mood);
+    if (!replay && step.mood) this.playMood(step.mood);
 
-    this.seen.add(`${scene.id}:${bareId(step.id)}`);
-    this.opts.onPosition?.(this.position, step);
+    const key = `${scene.id}:${bareId(step.id)}`;
+    // «прочитано» — до этого входа в шаг, включая текущую сессию;
+    // перерисовка после меню не делает шаг прочитанным
+    if (!replay) this._stepWasSeen = this.seen.has(key);
+    this.seen.add(key);
+    try {
+      this.opts.onPosition?.(this.position, step);
+    } catch (err) {
+      // ошибка сохранения (например, переполнение хранилища) не должна
+      // останавливать историю: выборы и финал показываются в любом случае
+      console.error('[vnmy] onPosition', err);
+    }
 
     // если текста нет — сразу доступные выборы или финал; выборы имеют приоритет
     if (!step.text || step.end) {
       if (this.visibleChoices(step).length) this.showChoices(step);
       else if (step.end) this.showEnding(step);
+      // шаг без реплики (только фон, состав, переменные) ждёт касания —
+      // авточтение и пропуск прочитанного идут дальше сами
+      else if (!this.asking) this.maybeAutoAdvance(step);
     }
   }
 
@@ -491,7 +503,14 @@ export class Stage extends NarrativeState {
     this.node.classList.toggle('is-narration', !char);
 
     const fullText = step.text ? interpolate(step.text, this.vars) : '';
-    this.noteHistory(step, fullText);
+    // пока открыт вопрос ask, подстановка ещё пустая: в журнал реплика
+    // попадёт после ответа, один раз
+    if (!this.asking) this.noteHistory(step, fullText);
+    // экранный диктор читает реплику целиком, а не по букве во время печати
+    if (this.liveEl) {
+      const spoken = hasText && !this.asking ? fullText.replace(/\*\*(.+?)\*\*|\*(.+?)\*/g, '$1$2') : '';
+      this.liveEl.textContent = spoken && char ? `${this.speakerEl.textContent}: ${spoken}` : spoken;
+    }
     const segments = parseRich(fullText);
     this.textEl.innerHTML = '';
     const holders = [];
@@ -614,9 +633,7 @@ export class Stage extends NarrativeState {
   /** Автопропуск уже прочитанных реплик при включённой настройке. */
   maybeAutoAdvance(step) {
     if (this.paused || this.mode !== 'play') return;
-    const key = `${this.sceneId}:${bareId(step.id)}`;
-    const wasSeen = this.opts.seenBefore?.has(key);
-    if (wasSeen && this.settings.skipSeen) {
+    if (this._stepWasSeen && this.settings.skipSeen) {
       this.later(() => { if (this.settings.skipSeen && this.isIdle()) this.advance(); }, 90);
     } else if (this.autoReading) {
       const token = this._renderToken;
@@ -638,7 +655,7 @@ export class Stage extends NarrativeState {
    */
   renderAsk(step) {
     const ask = step?.ask;
-    const open = !!(ask && ask.var && this.mode !== 'edit' && !this.vars[ask.var]);
+    const open = !!(ask && ask.var && !this.vars[ask.var]);
     this.asking = open;
     if (!this.askLayer) return;
     this.askLayer.hidden = !open;
@@ -646,7 +663,10 @@ export class Stage extends NarrativeState {
     if (!open) return;
     this.askLabel.textContent = ask.label || 'Как тебя зовут?';
     if (this.askInput) {
-      this.askInput.value = '';
+      // перерисовка того же вопроса (после меню) не стирает начатый ответ
+      const key = `${this.sceneId}:${bareId(step.id)}`;
+      if (this.askInput.dataset.step !== key) this.askInput.value = '';
+      this.askInput.dataset.step = key;
       this.askInput.placeholder = ask.placeholder || '';
       this.later(() => { if (this.asking) this.askInput.focus({ preventScroll: true }); }, 80);
     }
@@ -658,6 +678,7 @@ export class Stage extends NarrativeState {
     const value = String(this.askInput?.value || '').trim().slice(0, 24) || String(ask.value || '').trim() || 'Гость';
     this.setVar(ask.var, value);
     this.asking = false;
+    if (this.askInput) delete this.askInput.dataset.step;
     if (this.askLayer) this.askLayer.hidden = true;
     this.node?.classList.remove('is-asking');
     if (this.step.text) this.renderDialogue(this.step, { instant: true });
@@ -696,11 +717,7 @@ export class Stage extends NarrativeState {
   }
 
   choose(choice) {
-    if (this.paused) return;
-    if (this.mode === 'edit') {
-      this.opts.onChoice?.(choice);
-      return;
-    }
+    if (this.paused || this.asking || this.ended) return;
     const target = resolveTarget(this.story, choice.goto, this.sceneId);
     if (!target) {
       this.opts.onBrokenLink?.(choice.goto);
@@ -781,17 +798,6 @@ export class Stage extends NarrativeState {
       this.opts.onBrokenLink?.(rule.goto);
     }
     return false;
-  }
-
-  /** Перерисовать текущий шаг без смены позиции (после правок в редакторе). */
-  refresh({ instant = true } = {}) {
-    if (!this.mounted) return;
-    const scene = this.scene;
-    if (!scene) return;
-    this.index = clamp(this.index, 0, Math.max(0, scene.steps.length - 1));
-    this.hideEnding();
-    this.renderInstance(this.index, { instant });
-    this.opts.onVars?.(this.vars);
   }
 
   /* ─────────────────────────── эффекты ─────────────────────────── */
@@ -882,6 +888,7 @@ export class Stage extends NarrativeState {
     this.spriteNodes.clear();
     this._spokeAt.clear();
     this._enteredAt.clear();
+    this._entered = false;
     this.visual = stateAt(this.story, this.sceneId, -1, this.vars);
     this.enter(this.sceneId, 0, { instant: false });
   }

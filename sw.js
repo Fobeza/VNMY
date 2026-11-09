@@ -6,7 +6,7 @@
  *  - картинки, иконки, манифест — cache-first (они неизменяемые);
  *  - stories/index.json и story.json — network-first: новые истории видны сразу.
  */
-const VERSION = 'vnmy-2.7.0';
+const VERSION = 'vnmy-2.8.0';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
@@ -62,6 +62,12 @@ function isMedia(url) {
   return /\.(webp|png|jpe?g|gif|svg|woff2?|ico)$/i.test(url.pathname);
 }
 
+/* Кэш принимает только полный ответ: частичный (206, запрос диапазона для
+ * аудио) он отвергает с ошибкой. */
+function cacheable(res) {
+  return res.status === 200 && res.type === 'basic';
+}
+
 function isData(url) {
   return /stories\/(index\.json|.*story\.json)$/i.test(url.pathname);
 }
@@ -79,7 +85,7 @@ self.addEventListener('fetch', (event) => {
       if (hit) return hit;
       try {
         const res = await fetch(request);
-        if (res.ok) cache.put(request, res.clone());
+        if (cacheable(res)) cache.put(request, res.clone()).catch(() => {});
         return res;
       } catch (err) {
         const fallback = await caches.match(request);
@@ -94,7 +100,7 @@ self.addEventListener('fetch', (event) => {
     const cache = await caches.open(SHELL);
     try {
       const res = await fetch(request);
-      if (res.ok) cache.put(request, res.clone());
+      if (cacheable(res)) cache.put(request, res.clone()).catch(() => {});
       return res;
     } catch (err) {
       const hit = await cache.match(request, { ignoreSearch: isData(url) });

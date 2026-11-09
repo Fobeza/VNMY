@@ -244,7 +244,6 @@ async function inlineAssets(story, base, registry = null) {
 
   story.cover = await inline(story.cover, true);
   for (const track of story.soundtrack || []) track.src = await inline(track.src);
-  for (const item of story.media || []) item.url = await inline(item.url);
   for (const char of story.characters || []) {
     for (const key of Object.keys(char.sprites || {})) char.sprites[key] = await inline(char.sprites[key]);
   }

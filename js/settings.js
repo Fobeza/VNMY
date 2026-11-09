@@ -1,13 +1,19 @@
 /* Shared reader settings, available before opening a story. */
-import { getSettings, saveSettings } from './store.js';
+import { getSettings, saveSettings, resetSettings, DEFAULT_SETTINGS as DEFAULTS } from './store.js';
 import { el } from './util.js';
 import { openSheet, confirmDialog } from './ui.js';
-import { AUDIO_DEFAULTS, playTestTone } from './audio.js';
+import { playTestTone } from './audio.js';
 import { ICONS } from './icons.js';
 import { toast } from './ui.js';
 import { APP_VERSION } from './version.js';
 
-const DEFAULTS = { ...AUDIO_DEFAULTS, confirmSkip: true, vibration: false, textSpeed: 22, fontSize: 1, spriteScale: 1, dialogueOpacity: .9, instantText: false, skipSeen: false, keepAwake: true, reduceMotion: false, autoDelay: 55 };
+/* Скорость печати: textSpeed — миллисекунды на символ, от 50 (медленно)
+ * до 4 (быстрее движок не печатает). Ползунок идёт слева направо от
+ * медленного к быстрому, 100% — самая быстрая печать. */
+const TEXT_SPEED_FASTEST = 4;
+const TEXT_SPEED_SLOWEST = 50;
+const textSpeedPosition = (ms) => TEXT_SPEED_FASTEST + TEXT_SPEED_SLOWEST - Math.min(TEXT_SPEED_SLOWEST, Math.max(TEXT_SPEED_FASTEST, ms));
+const textSpeedPercent = (ms) => `${Math.round(textSpeedPosition(ms) / TEXT_SPEED_SLOWEST * 100)}%`;
 
 const SETTINGS_TABS = [['text', 'Текст'], ['sound', 'Звук'], ['controls', 'Управление']];
 
@@ -94,7 +100,7 @@ export function openSettings(initialTab = 'text') {
       panel.append(el('div', { class: 'settings-preview', style: { '--preview-scale': getSettings().fontSize || 1, '--preview-opacity': getSettings().dialogueOpacity ?? .9 } },
         el('strong', { text: 'Предпросмотр' }), el('p', { text: 'У каждого вечера есть своя история.' })),
       slider('Размер текста', 'fontSize', '.85', '1.35', '.05', value => `${Math.round(value * 100)}%`),
-      slider('Скорость текста', 'textSpeed', '6', '55', '1', value => `${Math.round((56 - value) / 50 * 100)}%`, value => 56 - value, value => 56 - value),
+      slider('Скорость текста', 'textSpeed', String(TEXT_SPEED_FASTEST), String(TEXT_SPEED_SLOWEST), '1', textSpeedPercent, textSpeedPosition, textSpeedPosition),
       slider('Непрозрачность окна', 'dialogueOpacity', '.35', '1', '.05', value => `${Math.round(value * 100)}%`),
       toggle('Мгновенный текст', 'instantText'),
       el('button', { class: 'sheet-row', type: 'button', text: 'Масштаб персонажей', onclick: () => { close(); openSpriteTuner(); } }));
@@ -124,7 +130,10 @@ export function openSettings(initialTab = 'text') {
   }
   render();
   content.append(tabs, panel, el('button', { class: 'reset-settings', type: 'button', text: 'Сбросить настройки', onclick: async () => {
-    if (await confirmDialog({ title: 'Сбросить настройки?', text: 'Вернуть исходный размер текста, скорость и управление?', confirmText: 'Сбросить', danger: false })) { patch(DEFAULTS); render(); }
+    if (await confirmDialog({ title: 'Сбросить настройки?', text: 'Все настройки вернутся к исходным: текст, масштаб персонажей, звук и управление.', confirmText: 'Сбросить', danger: false })) {
+      document.dispatchEvent(new CustomEvent('vnmy:settings', { detail: resetSettings() }));
+      render();
+    }
   } }), el('p', { class: 'app-version', text: `VNMY ${APP_VERSION}` }));
   const close = openSheet({ title: 'Настройки', content, layout: 'page' });
   return close;

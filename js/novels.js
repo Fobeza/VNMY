@@ -50,8 +50,8 @@ export async function renderUniverse(universeId, nextHooks) {
 
   if (!novels.length) {
     list.append(el('p', { class: 'lib-note', text: universe?.builtin
-      ? 'В этой вселенной пока нет новелл. Можно импортировать новеллу из JSON.'
-      : 'Пока пусто. Нажмите «Импорт» — или положите папку stories/<вселенная>/novels/<имя>/ в проект и соберите (npm run build).' }));
+      ? 'В этой вселенной пока нет новелл. Добавьте новеллу кнопкой «Импортировать .vnmy».'
+      : 'Пока пусто. Добавьте новеллу кнопкой «Импортировать .vnmy».' }));
   }
   for (const story of novels) list.append(storyCard(story));
 
@@ -62,7 +62,7 @@ export async function renderUniverse(universeId, nextHooks) {
       note.append(el('span', { text: 'Импортированные новеллы этой вселенной хранятся в этом браузере.' }));
     }
     if (!universe?.builtin && universe) {
-      note.append(el('span', { text: 'Ваша вселенная: новеллы и правки хранятся в этом браузере. Экспорт вселенной — в меню «⋯» сверху.' }));
+      note.append(el('span', { text: 'Новеллы этой вселенной хранятся в этом браузере. Экспорт вселенной — в меню «⋯» сверху.' }));
     }
   }
   return universe;
@@ -116,7 +116,7 @@ export function openStoryDetails(story, actions = hooks) {
   const cover = resolveUrl(story, story.cover);
   let close;
   close = openSheet({ layout: 'page', title: 'Об истории', onMenu: () => openSheet({ title: story.title, rows: [
-    { label: 'Сохранения', icon: ICONS.download, onSelect: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') },
+    { label: 'Сохранения', icon: ICONS.download, onSelect: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, { slot }); } }, 'load') },
     { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
   ] }), content: close => el('div', { class: 'story-details' },
     cover ? el('img', { class: 'detail-cover', src: cover, alt: '' }) : null,
@@ -131,7 +131,7 @@ export function openStoryDetails(story, actions = hooks) {
       if (!await confirmDialog({ title: 'Начать заново?', text: 'Ручные сохранения останутся.', confirmText: 'Начать', danger: false })) return;
       deleteSave(story.id, 'auto'); close(); actions.onPlay?.(story, { fresh: true });
     } }) : null,
-    el('button', { class: 'sheet-row detail-link', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.download}</svg><span>Сохранения</span><span class="chev">›</span>`, onclick: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, slot === 'auto' ? {} : { slot }); } }, 'load') }),
+    el('button', { class: 'sheet-row detail-link', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.download}</svg><span>Сохранения</span><span class="chev">›</span>`, onclick: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, { slot }); } }, 'load') }),
     el('button', { class: 'sheet-row detail-link', type: 'button', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.image}</svg><span>Галерея</span><span class="chev">›</span>`, onclick: () => openGallery(story) }),
   ) });
   return close;
@@ -173,17 +173,20 @@ function openStoryMenu(story) {
   });
 }
 
-/** Меню вселенной: экспорт / удалить. */
-function openUniverseMenu() {
-  const universe = current;
+/**
+ * Меню вселенной — общее для карточки в библиотеке и экрана вселенной.
+ * onOpen добавляет пункт «Открыть»; onDeleted вызывается после удаления.
+ */
+export function openUniverseMenu(universe, { onOpen, onDeleted } = {}) {
   if (!universe) return;
   const canEdit = !universe.builtin && !universe.loose;
   openSheet({
     title: universe.title,
     subtitle: universe.loose
       ? 'Новеллы без вселенной'
-      : `${countNovels(universe.novels?.length || 0)}${universe.builtin ? ' · из папки stories' : ''}`,
+      : `${countNovels(universe.novels?.length || 0)}${universe.builtin ? ' · встроенная' : ''}`,
     rows: [
+      onOpen ? { label: 'Открыть', icon: ICONS.play, onSelect: onOpen } : null,
       {
         label: 'Экспорт вселенной',
         icon: ICONS.download,
@@ -200,7 +203,7 @@ function openUniverseMenu() {
           if (!ok) return;
           deleteUniverse(universe.id);
           toast('Вселенная удалена');
-          hooks.onBack?.();
+          onDeleted?.();
         },
       } : null,
     ],
@@ -226,7 +229,7 @@ export function wireUniverse() {
   wired = true;
 
   $('#uni-back')?.addEventListener('click', () => hooks.onBack?.());
-  $('#uni-menu')?.addEventListener('click', openUniverseMenu);
+  $('#uni-menu')?.addEventListener('click', () => openUniverseMenu(current, { onDeleted: () => hooks.onBack?.() }));
 
   $('#btn-import-novel')?.addEventListener('click', () => openImport({ universeId: current?.id || '', onImported: () => renderUniverse(current?.id || '', hooks) }));
 }

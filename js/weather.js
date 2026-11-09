@@ -76,7 +76,8 @@ export class WeatherLayer {
     };
   }
 
-  step() {
+  /** k — длительность кадра в долях 1/60 с: скорость не зависит от частоты экрана. */
+  step(k = 1) {
     const cfg = PRESETS[this.kind];
     if (!cfg) return;
     const ctx = this.ctx;
@@ -85,8 +86,8 @@ export class WeatherLayer {
     ctx.fillStyle = cfg.color;
     ctx.lineCap = 'round';
     for (const p of this.particles) {
-      p.y += p.vy;
-      p.x += p.vx + (this.kind === 'snow' || this.kind === 'petals' ? Math.sin(p.sway += 0.03) * 0.35 : 0);
+      p.y += p.vy * k;
+      p.x += (p.vx + (this.kind === 'snow' || this.kind === 'petals' ? Math.sin(p.sway += 0.03 * k) * 0.35 : 0)) * k;
       if (p.y > this.h + 20 || p.x < -30 || p.x > this.w + 30) {
         Object.assign(p, this.spawn(cfg));
       }
@@ -126,8 +127,12 @@ export class WeatherLayer {
 
   start() {
     if (this.raf || this.kind === 'none' || this.reduced) return;
-    const loop = () => {
-      this.step();
+    let last = 0;
+    const loop = (time) => {
+      // после паузы вкладки кадр не «прыгает»: шаг ограничен тремя кадрами
+      const k = last ? Math.min(3, Math.max(0, (time - last) / (1000 / 60))) : 1;
+      last = time;
+      this.step(k);
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);

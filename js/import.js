@@ -1,6 +1,6 @@
 /* Preview is read-only. Only the primary Add action writes to the library. */
 import { isZip, readZip } from './zip.js';
-import { importPackage, importStoryFile, moveStoryToUniverse, storyAssets } from './store.js';
+import { importPackage, importStoryFile, moveStoryToUniverse, storyAssets, packageLayout } from './store.js';
 import { el } from './util.js';
 import { openSheet, toast } from './ui.js';
 import { normalizeStory } from './format.js';
@@ -10,13 +10,9 @@ export async function inspectStoryFile(file) {
   let files = null, root = '', directory = '', raw, stories, directories = [];
   if (await isZip(file)) {
     files = await readZip(file);
-    const markers = [...files.keys()].filter(name => /(^|\/)(universe|story)\.json$/.test(name) && !name.split('/').some(part => part.startsWith('_') || part.startsWith('.'))).sort((a, b) => a.split('/').length - b.split('/').length);
-    if (!markers.length) throw new Error('BAD_PACKAGE');
-    root = markers[0].replace(/[^/]*$/, '');
-    const paths = files.has(root + 'universe.json')
-      ? [...files.keys()].filter(name => name.startsWith(root + 'novels/') && name.slice((root + 'novels/').length).split('/').length === 2 && name.endsWith('/story.json') && !name.slice((root + 'novels/').length).startsWith('_')).sort()
-      : [root + 'story.json'];
-    if (!paths.length) throw new Error('BAD_PACKAGE');
+    const layout = packageLayout(files);
+    root = layout.root;
+    const paths = layout.novelDirs.map(dir => `${root}${dir}story.json`);
     try { stories = await Promise.all(paths.map(name => files.get(name).text().then(JSON.parse))); } catch { throw new Error('BAD_JSON'); }
     raw = stories[0]; directories = paths.map(name => name.replace(/[^/]*$/, '')); directory = directories[0];
   } else {
