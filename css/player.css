@@ -527,7 +527,7 @@
 .stage[data-mode="play"] {
   --accent: #8d9af2;
   --dialogue-edge: rgba(255,255,255,.12);
-  --reader-toolbar-height: max(48px, 8cqh);
+  --reader-toolbar-height: 56px;
   background: #141923;
 }
 .stage[data-mode="play"] .dialogue-layer {
@@ -570,7 +570,7 @@
 .stage[data-mode="play"] .choice:focus-visible { background: rgba(141,154,242,.16); border-color: var(--accent); }
 .stage[data-mode="play"] .next-hint { right: 0; bottom: 0; width: 14px; height: 14px; color: var(--ink-mute); }
 .stage[data-mode="play"] .topbar {
-  min-height: 8cqh; padding: .7cqh 3cqw;
+  min-height: 56px; padding: 6px 3cqw;
   background: rgba(20,25,35,.76); backdrop-filter: blur(12px);
 }
 .stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; }
