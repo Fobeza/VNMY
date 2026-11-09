@@ -17,6 +17,7 @@ const K = {
   universes: 'vnmy:universes',
   settings: 'vnmy:settings',
   seen: (id) => `vnmy:seen:${id}`,
+  artwork: (id) => `vnmy:artwork:${id}`,
 };
 
 const memory = new Map();
@@ -223,6 +224,7 @@ export function deleteStory(id) {
   lsSet(K.index, JSON.stringify(listLocalStoryIds().filter((x) => x !== id)));
   lsRemove(K.saves(id));
   lsRemove(K.seen(id));
+  lsRemove(K.artwork(id));
 }
 
 export function duplicateStory(story, titleSuffix = ' (копия)') {
@@ -394,7 +396,7 @@ export function browserBackupData() {
   const keys = new Set(memory.keys());
   try { for (let i = 0; i < localStorage.length; i++) keys.add(localStorage.key(i)); } catch { /* memory fallback */ }
   for (const key of keys) {
-    if (key === K.settings || key?.startsWith('vnmy:saves:') || key?.startsWith('vnmy:seen:')) {
+    if (key === K.settings || key?.startsWith('vnmy:saves:') || key?.startsWith('vnmy:seen:') || key?.startsWith('vnmy:artwork:')) {
       const value = lsJSON(key, null);
       if (value != null) data[key] = value;
     }
@@ -405,8 +407,8 @@ export function browserBackupData() {
 function restoreBrowserBackup(data, idMap) {
   for (const [key, value] of Object.entries(data || {})) {
     if (key === K.settings && value && typeof value === 'object') lsSet(key, JSON.stringify(value));
-    else if (/^vnmy:(saves|seen):.+/.test(key)) {
-      const prefix = key.startsWith('vnmy:saves:') ? 'vnmy:saves:' : 'vnmy:seen:';
+    else if (/^vnmy:(saves|seen|artwork):.+/.test(key)) {
+      const prefix = key.slice(0, key.indexOf(':', 5) + 1);
       const id = key.slice(prefix.length);
       lsSet(prefix + (idMap.get(id) || id), JSON.stringify(value));
     }
@@ -659,6 +661,7 @@ export function deleteSave(storyId, slot) {
 export function clearSaves(storyId) {
   lsRemove(K.saves(storyId));
   lsRemove(K.seen(storyId));
+  lsRemove(K.artwork(storyId));
 }
 
 /* ─────────────────────────── настройки и «прочитано» ─────────────────────────── */
@@ -673,6 +676,18 @@ export function markSeen(storyId, stepId) {
   if (seen.has(stepId)) return;
   seen.add(stepId);
   lsSet(K.seen(storyId), JSON.stringify([...seen]));
+}
+
+export function getArtwork(storyId) {
+  const value = lsJSON(K.artwork(storyId), []);
+  return Array.isArray(value) ? value.filter(item => item && typeof item.path === 'string') : [];
+}
+
+export function markArtwork(storyId, path, name) {
+  if (!path) return;
+  const images = getArtwork(storyId);
+  if (images.some(item => item.path === path)) return;
+  lsSet(K.artwork(storyId), JSON.stringify([...images, { path, name: name || 'Сцена' }]));
 }
 
 const DEFAULT_SETTINGS = { textSpeed: 22, fontSize: 1, skipSeen: false, keepAwake: true };

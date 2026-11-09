@@ -457,7 +457,7 @@ export function lintStory(story) {
       // без sprite движок подставит 'neutral', а при его отсутствии — первую эмоцию
       if (char && keys.length && !char.sprites[c.sprite]) issues.push({ level: c.sprite === 'neutral' ? 'warn' : 'error', sceneId, stepId, text: `${where}: у «${c.char}» нет эмоции «${c.sprite}» (есть: ${keys.join(', ')})` });
     }
-    if (visible.length > POSITIONS.length) issues.push({ level: 'warn', sceneId, stepId, text: `${where}: на сцене ${visible.length} персонажей, а позиций ${POSITIONS.length}` });
+    if (visible.length > POSITIONS.length) issues.push({ level: 'error', sceneId, stepId, text: `${where}: на сцене ${visible.length} персонажей, а позиций ${POSITIONS.length}` });
   };
 
   const ids = new Set();

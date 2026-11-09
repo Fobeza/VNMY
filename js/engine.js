@@ -78,10 +78,16 @@ export class Stage extends NarrativeState {
     this.weather = new WeatherLayer($('.weather-layer', node));
     this.applyMotion();
     this.topTitle.textContent = this.story.title || '';
+    $('.quick-auto', node)?.addEventListener('click', () => {
+      this.autoReading = !this.autoReading;
+      $('.quick-auto', node).setAttribute('aria-pressed', String(this.autoReading));
+      if (this.autoReading && this.isIdle()) this.maybeAutoAdvance(this.step);
+    });
+    $('.quick-menu', node)?.addEventListener('click', () => this.opts.onMenu?.());
     $('.quick-journal', node)?.addEventListener('click', () => this.opts.onJournal?.());
     $('.quick-save', node)?.addEventListener('click', () => this.opts.onSaves?.());
     $('.quick-hide', node)?.addEventListener('click', () => node.classList.toggle('ui-hidden'));
-    this.node.style.setProperty('--accent', this.story.accent || '#e0b072');
+    this.node.style.setProperty('--accent', '#8d9af2');
     if (this.story.lang) document.documentElement.lang = this.story.lang;
     this.applyFontSize();
 
@@ -140,7 +146,7 @@ export class Stage extends NarrativeState {
     const reduced = !!this.settings.reduceMotion;
     this.node?.classList.toggle('is-reduced-motion', reduced);
     this.weather?.setReduced(reduced);
-    if (reduced && this.isTyping()) this.finishTyping();
+    if ((reduced || this.settings.instantText) && this.isTyping()) this.finishTyping();
   }
 
   applyFontSize() {
@@ -325,11 +331,20 @@ export class Stage extends NarrativeState {
   applyCast(cast, { instant = false, speaker = null } = {}) {
     const layer = this.spriteLayer;
     const wanted = new Map();
+    const occupied = new Set();
     for (const entry of cast) {
-      if (!entry || !entry.char || entry.hidden) continue;
-      wanted.set(entry.char, entry);
+      if (!entry || !entry.char || entry.hidden || wanted.has(entry.char)) continue;
+      if (!spriteUrl(this.story, entry.char, entry.sprite)) continue;
+      if (wanted.size === 3) break;
+      const pos = ['left', 'center', 'right'].includes(entry.pos) ? entry.pos : 'center';
+      const available = [pos, 'left', 'center', 'right'].find(p => !occupied.has(p));
+      occupied.add(available);
+      wanted.set(entry.char, { ...entry, pos: available });
     }
 
+    const replacing = [...wanted.keys()].some(id => !this.spriteNodes.has(id));
+    // Never overlap departing actors with newcomers beyond the three slots.
+    layer.querySelectorAll('.sprite.is-leaving').forEach(node => node.remove());
     // удалить лишних
     for (const [charId, node] of this.spriteNodes) {
       if (!wanted.has(charId)) {
@@ -339,7 +354,8 @@ export class Stage extends NarrativeState {
         this.spriteNodes.delete(charId);
         this._enteredAt.delete(charId);
         this._spokeAt.delete(charId);
-        this.later(() => node.remove(), instant ? 0 : 480);
+        if (replacing || instant) node.remove();
+        else this.later(() => node.remove(), 480);
       }
     }
 
@@ -493,7 +509,7 @@ export class Stage extends NarrativeState {
     this.fitText();
     if (!instant) for (const h of holders) h.node.textContent = '';
 
-    if (instant || this.settings.reduceMotion) {
+    if (instant || this.settings.reduceMotion || this.settings.instantText) {
       for (const h of holders) h.node.textContent = h.text;
       this.finishTyping(step);
       return;
@@ -587,10 +603,16 @@ export class Stage extends NarrativeState {
 
   /** Автопропуск уже прочитанных реплик при включённой настройке. */
   maybeAutoAdvance(step) {
-    if (this.paused || !this.settings.skipSeen || this.mode !== 'play') return;
+    if (this.paused || this.mode !== 'play') return;
     const key = `${this.sceneId}:${bareId(step.id)}`;
     const wasSeen = this.opts.seenBefore?.has(key);
-    if (wasSeen) this.later(() => { if (this.isIdle()) this.advance(); }, 90);
+    if (wasSeen && this.settings.skipSeen) {
+      this.later(() => { if (this.settings.skipSeen && this.isIdle()) this.advance(); }, 90);
+    } else if (this.autoReading) {
+      const token = this._renderToken;
+      const delay = Math.max(1600, String(step.text || '').length * (this.settings.autoDelay || 55));
+      this.later(() => { if (this.autoReading && token === this._renderToken && this.isIdle()) this.advance(); }, delay);
+    }
   }
 
   isIdle() {

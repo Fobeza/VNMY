@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { Stage } from '../js/engine.js';
-import { normalizeStory } from '../js/format.js';
+import { normalizeStory, lintStory } from '../js/format.js';
 
 /** Exercise real Stage DOM updates with explicitly controlled image load/decode. */
 export async function checkRendering() {
@@ -12,8 +12,8 @@ export async function checkRendering() {
   assert.match(css, /\.sprite-inner\s*\{[^}]*width:\s*100%;/s);
   assert.match(css, /\.sprite img\s*\{[^}]*width:\s*100%;[^}]*object-fit:\s*contain;[^}]*object-position:\s*center bottom;/s);
 
-  // Atmospheric mode must keep choices accessible and the player UI hideable.
-  assert.match(css, /\.stage\[data-mode="play"\] \.dialogue\s*\{[^}]*border:[^}]*var\(--dialogue-edge\)/s);
+  // Minimal mode must keep choices accessible and the player UI hideable.
+  assert.match(css, /\.stage\[data-mode="play"\] \.dialogue-layer\s*\{[^}]*border:[^}]*var\(--dialogue-edge\)/s);
   assert.match(css, /\.stage\[data-mode="play"\] \.choice\s*\{[^}]*min-height:\s*44px/s);
   assert.match(css, /\.stage\[data-mode="play"\] \.speaker\.is-empty\s*\{[^}]*display:\s*none/s);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
@@ -90,10 +90,23 @@ export async function checkRendering() {
     assert.notEqual(returning, actor); await ready(loads.at(-1));
     assert.equal(returning.querySelector('img').getAttribute('src'), 'base.png');
 
+    // Malformed older packages cannot render a fourth actor or an off-screen speaker.
+    const crowd = normalizeStory({ id: 'crowd', characters: ['a','b','c','d'].map(id => ({ id, sprites: { neutral: id + '.png' } })),
+      scenes: [{ id: 's', bg: 'cafe.png', cast: ['a','b','c','d'].map(char => ({ char, pos: 'center' })), steps: [{ id: 'one', text: 'Hi', end: true }] }] });
+    assert.ok(lintStory(crowd).some(issue => issue.level === 'error' && /4 персонаж/.test(issue.text)), 'four actors must fail package validation');
+    stage.story = crowd;
+    stage.applyCast(crowd.scenes[0].cast, { speaker: 'd' });
+    assert.equal(stage.spriteNodes.size, 3);
+    assert.equal(new Set([...stage.spriteNodes.values()].map(node => node.dataset.pos)).size, 3);
+    assert.ok(!stage.spriteNodes.has('d'));
+    const anchors = [...stage.spriteNodes.values()].map(node => [node.dataset.char, node.dataset.pos, node.style.getPropertyValue('--scale')]);
+    stage.applyCast(crowd.scenes[0].cast, { speaker: 'b' });
+    assert.deepEqual([...stage.spriteNodes.values()].map(node => [node.dataset.char, node.dataset.pos, node.style.getPropertyValue('--scale')]), anchors, 'speaker changes must keep positions and scale');
+    stage.story = story;
     stage.applyCast(cast('afraid')); const destroyed = loads.at(-1);
     stage.mounted = false; await ready(destroyed);
     assert.equal(returning.querySelector('img').getAttribute('src'), 'base.png', 'unmounted stage must ignore late load');
-    console.log('Рендер спрайтов: 8 проверок пройдено');
+    console.log('Рендер спрайтов: загрузка эмоций, неизменные позиции и лимит трёх персонажей — пройдено');
   } finally {
     dom.window.close();
     for (const [key, descriptor] of saved) {
