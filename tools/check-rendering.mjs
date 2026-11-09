@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { Stage } from '../js/engine.js';
 import { normalizeStory } from '../js/format.js';
 
 /** Exercise real Stage DOM updates with explicitly controlled image load/decode. */
 export async function checkRendering() {
+  // Different sprite image widths must not change the centered actor frame.
+  const css = readFileSync(new URL('../css/player.css', import.meta.url), 'utf8');
+  assert.match(css, /\\.sprite\\s*\\{[^}]*width:\\s*64cqw;/s);
+  assert.match(css, /\\.sprite-inner\\s*\\{[^}]*width:\\s*100%;/s);
+  assert.match(css, /\\.sprite img\\s*\\{[^}]*width:\\s*100%;[^}]*object-fit:\\s*contain;[^}]*object-position:\\s*center bottom;/s);
+
   const dom = new JSDOM('<div id="stage"><div id="sprites"></div></div>');
   const saved = new Map(['document', 'Image', 'requestAnimationFrame'].map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
   const loads = [];
