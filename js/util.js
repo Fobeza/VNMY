@@ -25,6 +25,11 @@ export function el(tag, props = {}, ...children) {
 }
 
 export const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+/** Reader zoom is a multiplier, independent of authored cast.scale. */
+export function clampSpriteScale(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? clamp(value, .5, 3) : 1;
+}
+
 export const now = () => Date.now();
 
 export function uid(prefix = 'id') {

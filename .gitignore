@@ -16,3 +16,7 @@ tests/.tmp/
 # новеллы не хранятся в репозитории: их импортируют из файла .vnmy (npm run pack)
 stories/*/
 *.vnmy
+
+# Browser verification artifacts
+test-results/
+playwright-report/
