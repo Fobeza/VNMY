@@ -3,7 +3,7 @@
  * const stage = new Stage(host, { story, start: {sceneId, stepIndex}, mode: 'play', onPosition, onExit, onMenu });
  * stage.mount();
  */
-import { el, $, clamp } from './util.js';
+import { el, $, clamp, clampSpriteScale } from './util.js';
 import {
   findScene, resolveTarget, stateAt, spriteUrl, characterById, resolveUrl, bareId, WEATHERS,
   defaultVars, varByName,
@@ -151,6 +151,7 @@ export class Stage extends NarrativeState {
 
   applyFontSize() {
     if (!this.node) return;
+    this.node.style.setProperty('--sprite-scale', String(clampSpriteScale(this.settings.spriteScale)));
     this.node.style.setProperty('--text-scale', String(this.settings.fontSize || 1));
     this.node.style.setProperty('--dialogue-opacity', String(this.settings.dialogueOpacity ?? 0.9));
     if (this._holders?.length) this.fitText();

@@ -716,21 +716,21 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 
 .sheet-page { inset: 0; max-width: 580px; max-height: none; border: 0; border-radius: 0; padding: calc(24px + var(--safe-t)) 22px calc(24px + var(--safe-b)); background: var(--bg); transform: translateY(12px); opacity: 0; transition: opacity .2s, transform .2s; }
 .sheet-page.is-visible { opacity: 1; transform: none; }
 .sheet-page > .sheet-handle { display: none; }
-.sheet-page > h3 { padding-left: 44px; margin: 4px 0 24px; min-height: 36px; }
-.page-back { position: absolute; top: calc(22px + var(--safe-t)); left: 14px; font-size: 34px; line-height: 1; min-width: 44px; min-height: 44px; }
+.sheet-page > h3 { padding-left: 40px; margin: 2px 0 16px; min-height: 36px; font-size: 22px; }
+.page-back { position: absolute; top: calc(22px + var(--safe-t)); left: 14px; font-size: 30px; line-height: 1; min-width: 44px; min-height: 44px; border: 0; background: none; }
 .sheet-page > .sheet-sub { margin: -8px 0 24px; line-height: 1.5; }
-.reader-tabs { display: flex; gap: 12px; border-bottom: 1px solid var(--line); margin: 12px 0 24px; }
+.reader-tabs { display: flex; gap: 12px; border-bottom: 1px solid var(--line); margin: 8px 0 16px; }
 .reader-tab { flex: 1; min-height: 48px; border-bottom: 2px solid transparent; color: var(--ink-mute); font-size: 15px; }
 .reader-tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
-.settings-preview { padding: 18px; background: rgba(255,255,255,calc(var(--preview-opacity,.9) * .06)); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 24px; }
-.settings-preview strong { color: var(--accent); font-size: 15px; }
+.settings-preview { padding: 14px; background: rgba(255,255,255,calc(var(--preview-opacity,.9) * .06)); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+.settings-preview strong { color: var(--accent); font-size: 13px; }
 .settings-preview p { font-size: calc(18px * var(--preview-scale,1)); line-height: 1.5; margin: 8px 0 0; }
-.setting-range { border-bottom: 1px solid var(--line); padding: 18px 0; }
-.setting-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; font-size: 16px; }
+.setting-range { border-bottom: 1px solid var(--line); padding: 10px 0; }
+.setting-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; font-size: 15px; }
 .setting-label output { color: var(--ink-mute); font-size: 14px; white-space: nowrap; }
-.setting-range input { width: 100%; min-height: 44px; }
+.setting-range input { display: block; width: 100%; min-height: 44px; margin: 0; }
 input[type="range"]::-webkit-slider-thumb { box-shadow: none; }
-.reset-settings { min-height: 48px; width: 100%; margin-top: 32px; color: var(--accent); font-size: 14px; }
+.reset-settings { min-height: 48px; width: 100%; margin-top: 20px; color: var(--accent); font-size: 14px; }
 .app-version { color: var(--ink-mute); font-size: 12px; text-align: center; margin: 22px 0 0; }
 .sheet-row { min-height: 56px; font-size: 16px; padding: 18px 0; }
 .switch[aria-checked="true"]::after { background: white; }
@@ -759,3 +759,31 @@ input[type="range"]::-webkit-slider-thumb { box-shadow: none; }
 .detail-description { color: var(--ink-soft); line-height: 1.6; white-space: pre-line; }
 .story-card { background: var(--bg-soft); }
 @media (max-width: 360px) { .lib-scroll, .sheet-page { padding-inline: 16px; } .lib-head h1 { font-size: 27px; } .setting-label { font-size: 14px; } }
+/* Clear in-scene zoom preview: keep the stage sharp while adjusting. */
+.overlay-tune { background: rgba(0,0,0,.12); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.sheet-tune { max-height: 55dvh; padding: 8px 20px calc(16px + var(--safe-b)); }
+.sheet-tune h3 { font-size: 20px; }
+.sheet-tune .sheet-handle { margin-bottom: 10px; }
+.zoom-scale-labels { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink-mute); font-size: 12px; }
+.zoom-scale-labels .text-btn { min-height: 44px; color: var(--accent); font-size: 13px; }
+.sprite-zoom-control .field-hint { color: var(--ink-mute); line-height: 1.5; font-size: 13px; margin: 8px 0; }
+.tune-in-scene { width: 100%; margin-top: 14px; }
+/* Reference layouts: centered pause, compact rows, quiet gallery placeholders. */
+.sheet-pause { top: 50%; bottom: auto; width: calc(100% - 40px); max-width: 420px; max-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 32px); padding: 22px; border: 1px solid var(--line); border-radius: 12px; transform: translateY(calc(-50% + 12px)); opacity: 0; transition: transform .2s, opacity .2s; }
+.sheet-pause.is-visible { transform: translateY(-50%); opacity: 1; }
+.sheet-pause .sheet-handle { display: none; }
+.sheet-pause h3, .sheet-pause .sheet-sub { text-align: center; }
+.sheet-pause .sheet-sub { margin: 8px 0 18px; }
+.sheet-pause .pause-resume { margin: 0 0 18px; }
+.sheet-pause .sheet-row { padding-block: 12px; min-height: 48px; font-size: 15px; }
+.sheet-pause .sheet-row:first-child { border-top: 0; }
+.save-grid.is-load { display: flex; flex-direction: column; }
+.save-grid.is-load .save-select { display: grid; grid-template-columns: 96px minmax(0,1fr); grid-template-rows: auto auto; gap: 6px 14px; min-height: 100px; padding: 12px; align-content: center; }
+.save-grid.is-load .slot-cover, .save-grid.is-load .slot-placeholder { grid-row: 1 / 3; width: 96px; height: 76px; margin: 0; border-radius: 6px; }
+.save-grid.is-load .save-select strong, .save-grid.is-load .save-slot-meta { padding: 0; align-self: center; }
+.save-grid.is-load .slot-delete { display: none; }
+.journal-latest { position: sticky; bottom: 0; width: 100%; min-height: 48px; margin-top: 28px; background: var(--bg); }
+.gallery-count { color: var(--ink-mute); margin: 4px 0 18px; font-size: 14px; }
+.gallery-locked { display: grid; place-items: center; min-height: 170px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); color: var(--ink-mute); }
+.gallery-locked svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.gallery-note { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); text-align: center; color: var(--ink-mute); font-size: 13px; }

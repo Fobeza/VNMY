@@ -61,10 +61,10 @@ export function toast(message, ms = 2400) {
 }
 
 /** Нижняя шторка. content — элемент или функция(close). */
-export function openSheet({ title, subtitle, content, rows, layout = 'sheet' } = {}) {
+export function openSheet({ title, subtitle, content, rows, layout = 'sheet', onClose } = {}) {
   const root = $('#overlay-root');
-  const backdrop = el('div', { class: 'overlay-backdrop' });
-  const sheet = el('div', { class: `sheet${layout === 'page' ? ' sheet-page' : ''}`, role: 'dialog', 'aria-modal': 'true' },
+  const backdrop = el('div', { class: `overlay-backdrop${layout === 'tune' ? ' overlay-tune' : ''}` });
+  const sheet = el('div', { class: `sheet${layout === 'page' ? ' sheet-page' : layout === 'tune' ? ' sheet-tune' : layout === 'pause' ? ' sheet-pause' : ''}`, role: 'dialog', 'aria-modal': 'true' },
     el('div', { class: 'sheet-handle' }),
     title ? el('h3', { text: title }) : null,
     subtitle ? el('p', { class: 'sheet-sub', text: subtitle }) : null,
@@ -74,6 +74,8 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet' } =
   const close = () => {
     if (closed) return;
     closed = true;
+    sheet.setAttribute('aria-hidden', 'true');
+    onClose?.();
     disposeModal();
     backdrop.classList.remove('is-visible');
     sheet.classList.remove('is-visible');
@@ -81,8 +83,12 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet' } =
   };
 
   if (layout === 'page') {
-    sheet.prepend(el('button', { class: 'icon-btn page-back', type: 'button', 'aria-label': 'Назад', text: '‹', onclick: close }));
+    sheet.prepend(el('button', { class: 'icon-btn page-back', type: 'button', 'aria-label': 'Назад', html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-7-7 7 7 7"/></svg>', onclick: close }));
   }
+  const appendContent = () => {
+    if (content) sheet.append(typeof content === 'function' ? content(close) : content);
+  };
+  if (layout === 'pause') appendContent();
   if (rows?.length) {
     const list = el('div', { class: 'sheet-list' });
     for (const row of rows) {
@@ -103,11 +109,8 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet' } =
     sheet.append(list);
   }
 
-  if (content) {
-    const node = typeof content === 'function' ? content(close) : content;
-    sheet.append(node);
-  }
-  if (layout !== 'page') sheet.append(el('button', { class: 'ghost-btn', type: 'button', style: { width: '100%', marginTop: '14px' }, onclick: close }, 'Закрыть'));
+  if (layout !== 'pause') appendContent();
+  if (layout !== 'page' && layout !== 'pause') sheet.append(el('button', { class: 'ghost-btn', type: 'button', style: { width: '100%', marginTop: '14px' }, onclick: close }, 'Закрыть'));
 
   backdrop.addEventListener('click', close);
   root.append(backdrop, sheet);

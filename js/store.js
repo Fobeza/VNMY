@@ -1,7 +1,7 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
 import { normalizeStory, createStory, findScene, bareId, globalId, resolveUrl } from './format.js';
 import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
-import { uid, download, readFileAsText, deepClone, prefersReducedMotion } from './util.js';
+import { uid, download, readFileAsText, deepClone, prefersReducedMotion, clampSpriteScale } from './util.js';
 
 import {
   initializeStorage, getLargeRecord, putLargeRecord, removeLargeRecord, flushStorage, storageBackend,
@@ -690,10 +690,11 @@ export function markArtwork(storyId, path, name) {
   lsSet(K.artwork(storyId), JSON.stringify([...images, { path, name: name || 'Сцена' }]));
 }
 
-const DEFAULT_SETTINGS = { textSpeed: 22, fontSize: 1, skipSeen: false, keepAwake: true };
+const DEFAULT_SETTINGS = { textSpeed: 22, fontSize: 1, spriteScale: 1, skipSeen: false, keepAwake: true };
 
 export function getSettings() {
   const settings = { ...DEFAULT_SETTINGS, ...lsJSON(K.settings, {}) };
+  settings.spriteScale = clampSpriteScale(settings.spriteScale);
   // «меньше анимации» по умолчанию повторяет системную настройку
   if (typeof settings.reduceMotion !== 'boolean') settings.reduceMotion = prefersReducedMotion();
   return settings;
@@ -701,6 +702,7 @@ export function getSettings() {
 
 export function saveSettings(patch) {
   const next = { ...getSettings(), ...patch };
+  next.spriteScale = clampSpriteScale(next.spriteScale);
   lsSet(K.settings, JSON.stringify(next));
   return next;
 }

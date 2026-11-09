@@ -1,6 +1,6 @@
 /* VNMY — экран прохождения: мост между движком, сохранениями и меню */
 import { Stage } from './engine.js';
-import { openSettings } from './settings.js';
+import { openSettings, openSpriteTuner } from './settings.js';
 import { openGallery } from './gallery.js';
 import { getSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, markArtwork } from './store.js';
 import { findScene, bareId, resolveUrl } from './format.js';
@@ -186,7 +186,7 @@ function openJournal(story) {
     subtitle: entries.length
       ? `${entries.length} ${plural(entries.length, 'реплика', 'реплики', 'реплик')} · ${story.title}`
       : story.title,
-    content: list,
+    content: el('div', { class: 'journal-page' }, list, el('button', { class: 'ghost-btn journal-latest', type: 'button', text: 'К последней реплике', onclick: () => list.lastElementChild?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }) })),
   });
   requestAnimationFrame(() => {
     const sheet = document.querySelector('#overlay-root .sheet');
@@ -201,7 +201,7 @@ export function openSaves(story, opts = {}, mode = 'save') {
   let close;
   const content = el('div', { class: 'saves-page' });
   const tabs = el('div', { class: 'reader-tabs', role: 'tablist', 'aria-label': 'Тип сохранения' });
-  const list = el('div', { class: 'save-grid', id: 'save-panel', role: 'tabpanel' });
+  const list = el('div', { class: `save-grid${mode === 'load' ? ' is-load' : ''}`, id: 'save-panel', role: 'tabpanel' });
   const action = el('button', { class: 'solid-btn save-action', type: 'button' });
   function render() {
     const saves = getSaves(story.id);
@@ -268,6 +268,7 @@ export function closePlayer() {
 function openPlayerMenu(story, opts) {
   stage?.node.classList.remove('ui-hidden');
   openSheet({
+    layout: 'pause',
     title: 'Пауза',
     subtitle: `${story.title} · ${stage?.scene?.name || 'Начало'}`,
     content: close => el('button', { class: 'solid-btn pause-resume', type: 'button', text: 'Продолжить', onclick: close }),
@@ -276,6 +277,7 @@ function openPlayerMenu(story, opts) {
       { label: 'Загрузить', icon: ICONS.download, onSelect: () => openSaves(story, opts, 'load') },
       { label: 'Журнал', icon: ICONS.journal, onSelect: () => openJournal(story) },
       { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
+      { label: 'Масштаб персонажей', icon: ICONS.eye, onSelect: () => openSpriteTuner() },
       { label: 'Настройки', icon: ICONS.dots, onSelect: () => openSettings() },
       { label: 'Скрыть интерфейс', icon: ICONS.eye, onSelect: () => stage?.node.classList.add('ui-hidden') },
       { label: 'В главное меню', icon: ICONS.back, onSelect: () => (opts.onHome || opts.onExit)?.() },

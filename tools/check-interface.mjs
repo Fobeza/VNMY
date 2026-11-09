@@ -22,10 +22,10 @@ try {
   const { normalizeStory, registerAssetUrls } = await import('../js/format.js');
   const { getSettings, saveSettings, getSaves, getArtwork, browserBackupData, markArtwork, saveStory } = await import('../js/store.js');
   const { openPlayer, closePlayer, openSaves } = await import('../js/player.js');
-  const { openSettings } = await import('../js/settings.js');
+  const { openSettings, openSpriteTuner } = await import('../js/settings.js');
   const { openGallery } = await import('../js/gallery.js');
   const { openStoryDetails } = await import('../js/novels.js');
-  const story = normalizeStory({ id: 'interface-fixture', title: 'История', packaged: true, scenes: [{ id: 'cafe', name: 'Кофейня', card: false, bg: 'cafe.webp', steps: [
+  const story = normalizeStory({ id: 'interface-fixture', title: 'История', packaged: true, characters: [{ id: 'a', name: 'A', sprites: { neutral: 'a.webp' } }, { id: 'b', name: 'B', sprites: { neutral: 'b.webp' } }], scenes: [{ id: 'cafe', name: 'Кофейня', card: false, bg: 'cafe.webp', cast: [{ char: 'a', pos: 'left', scale: .75 }, { char: 'b', pos: 'right', scale: 1.1 }], steps: [
     { id: 'first', text: 'Первая реплика' },
     { id: 'choice', text: 'Вторая реплика', choices: [{ text: 'Продолжить', goto: 'last' }] },
     { id: 'last', text: 'Последняя реплика', bg: 'evening.webp' },
@@ -53,6 +53,35 @@ try {
   stage.handleTap(); assert.equal(stage.node.classList.contains('ui-hidden'), false);
   assert.equal(stage.step.id, 'first', 'restoring UI must not advance dialogue');
 
+  // Zoom is a persisted reader preference, independent of authored cast and emotion frames.
+  const actorsBeforeZoom = [...stage.spriteNodes.values()];
+  const authoredBeforeZoom = structuredClone(stage.visual.cast);
+  const closeTuner = openSpriteTuner(); await tick();
+  assert.equal(stage.paused, true);
+  assert.equal(stage.node.classList.contains('is-adjusting-sprites'), true);
+  const zoom = overlay().querySelector('[aria-label="Масштаб персонажей"]');
+  zoom.value = '1.8'; zoom.dispatchEvent(new window.Event('input'));
+  assert.equal(stage.node.style.getPropertyValue('--sprite-scale'), '1.8');
+  assert.equal(getSettings().spriteScale, 1.8);
+  assert.deepEqual([...stage.spriteNodes.values()], actorsBeforeZoom, 'zoom must not remount actors');
+  assert.deepEqual(stage.visual.cast, authoredBeforeZoom, 'zoom must not rewrite authored scale or positions');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert.equal(stage.node.classList.contains('is-adjusting-sprites'), false, 'Escape restores dialogue');
+  assert.equal(stage.paused, false);
+  closeTuner(); // idempotent cleanup
+  const closeSceneSettings = openSettings('sprites'); await tick();
+  assert.equal(overlay().querySelector('[aria-label="Масштаб персонажей"]').value, '1.8');
+  click('Сбросить до 100%');
+  assert.equal(getSettings().spriteScale, 1);
+  assert.equal(getSettings().fontSize, 1.2, 'zoom reset must not reset text');
+  closeSceneSettings();
+  assert.equal(stage.node.style.getPropertyValue('--sprite-scale'), '1');
+  stage.applySettings({ spriteScale: NaN });
+  assert.equal(stage.node.style.getPropertyValue('--sprite-scale'), '1');
+  for (const [value, expected] of [[null, 1], [Infinity, 1], [-10, .5], [99, 3]]) {
+    saveSettings({ spriteScale: value }); assert.equal(getSettings().spriteScale, expected);
+  }
+  saveSettings({ spriteScale: 1.8 });
   stage.goTo('cafe', 1, { instant: true });
   openSaves(story); await tick();
   assert.equal(stage.paused, true);
@@ -66,6 +95,7 @@ try {
   closePlayer();
   stage = openPlayer(story, { slot: '4' });
   assert.equal(stage.step.id, 'choice');
+  assert.equal(stage.node.style.getPropertyValue('--sprite-scale'), '1.8', 'zoom survives reopening and slot loading');
   assert.equal(stage.awaitingChoices, true, 'choices survive slot restoration');
   assert.equal(stage.history.at(-1).text, 'Вторая реплика');
 
@@ -101,6 +131,10 @@ try {
   stage._autoCallback(); assert.equal(advanced, 0);
   stage.autoReading = false; stage.awaitingChoices = false;
   stage._autoCallback(); assert.equal(advanced, 0, 'disabled auto ignores queued callback');
+  closePlayer();
+  const otherStory = normalizeStory({ id: 'other-story', scenes: [{ id: 'first', card: false, steps: [{ text: 'Другая новелла' }] }] });
+  const otherStage = openPlayer(otherStory);
+  assert.equal(otherStage.node.style.getPropertyValue('--sprite-scale'), '1.8', 'the same zoom applies to any novel');
   closePlayer();
   console.log('Интерфейс: настройки, пауза, 6 слотов, продолжение с выбора, актуальные thumbnail URL, галерея, вложенные окна и авто — пройдено');
 } finally {

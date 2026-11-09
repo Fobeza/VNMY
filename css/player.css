@@ -19,8 +19,9 @@
 
 .stage {
   position: relative;
-  width: min(100vw, calc((100dvh - var(--safe-t) - var(--safe-b)) * 9 / 16));
-  height: min(calc(100dvh - var(--safe-t) - var(--safe-b)), calc(100vw * 16 / 9));
+  /* Phones fill the available viewport; desktop keeps the 9:16 preview below. */
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: #07080b;
   color: var(--ink);
@@ -89,8 +90,8 @@
 }
 .sprite {
   position: absolute;
-  bottom: 10cqh;
-  height: 78cqh;
+  bottom: 16cqh;
+  height: 74cqh;
   /* Один и тот же прямоугольник для всех эмоций персонажа.
    * Иначе translateX(-50%) пересчитывается от ширины каждой картинки,
    * из-за чего при смене позы персонаж скачет по горизонтали. */
@@ -101,7 +102,7 @@
    * плавно ведёт transform при любой комбинации классов */
   --lift: 4%;
   --focus: 1;
-  transform: translateX(-50%) translateY(var(--lift)) scale(calc(var(--scale, 1) * var(--focus)));
+  transform: translateX(-50%) translateY(var(--lift)) scale(calc(var(--scale, 1) * var(--focus) * var(--sprite-scale, 1)));
   transform-origin: bottom center;
   opacity: 0;
   transition:
@@ -526,10 +527,11 @@
 .stage[data-mode="play"] {
   --accent: #8d9af2;
   --dialogue-edge: rgba(255,255,255,.12);
+  --reader-toolbar-height: 56px;
   background: #141923;
 }
 .stage[data-mode="play"] .dialogue-layer {
-  left: 3cqw; right: 3cqw; bottom: 9cqh;
+  left: 3cqw; right: 3cqw; bottom: calc(var(--reader-toolbar-height) + 8px);
   padding: 3cqw;
   max-height: 47cqh;
   display: flex; flex-direction: column;
@@ -537,8 +539,8 @@
   background: rgba(20,25,35,var(--dialogue-opacity,.9));
   border: 1px solid var(--dialogue-edge);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -555,11 +557,11 @@
   line-height: 1.5; color: #f3f4f8; text-shadow: none;
   max-height: 25cqh; overflow-y: auto;
 }
-.stage[data-mode="play"] .choice-layer { flex: none; margin: 0; gap: 1cqh; }
+.stage[data-mode="play"] .choice-layer { flex: none; margin: 0; gap: 0; }
 .stage[data-mode="play"] .choice {
-  min-height: 44px; padding: 1.4cqh 3cqw;
-  border: 1px solid rgba(255,255,255,.14); border-radius: 8px;
-  background: rgba(255,255,255,.055); color: #f3f4f8;
+  min-height: 44px; padding: 1.2cqh 2cqw;
+  border: 0; border-top: 1px solid rgba(255,255,255,.14); border-radius: 0;
+  background: transparent; color: #f3f4f8;
   box-shadow: none; backdrop-filter: none;
   font-size: calc(clamp(15px,3.6cqw,20px) * var(--text-scale));
 }
@@ -568,13 +570,13 @@
 .stage[data-mode="play"] .choice:focus-visible { background: rgba(141,154,242,.16); border-color: var(--accent); }
 .stage[data-mode="play"] .next-hint { right: 0; bottom: 0; width: 14px; height: 14px; color: var(--ink-mute); }
 .stage[data-mode="play"] .topbar {
-  min-height: 8cqh; padding: .7cqh 3cqw;
+  min-height: 56px; padding: 6px 3cqw;
   background: rgba(20,25,35,.76); backdrop-filter: blur(12px);
 }
 .stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; }
 .stage[data-mode="play"] .topbar .icon-btn { min-height: 44px; min-width: 44px; background: none; border: 0; }
 .stage[data-mode="play"] .quick-actions {
-  inset: auto 0 0; height: 8cqh; min-height: 48px;
+  inset: auto 0 0; height: var(--reader-toolbar-height); min-height: 48px;
   display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr;
   gap: 0; padding: 0 3cqw;
   border-top: 1px solid rgba(255,255,255,.1);
@@ -592,14 +594,17 @@
 .stage[data-mode="play"] .scene-vignette { box-shadow: inset 0 0 12cqw rgba(0,0,0,.2); }
 .stage.ui-hidden .quick-actions { pointer-events: none; }
 @media (orientation: landscape) and (max-height: 600px) {
-  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 2%; bottom: 15%; max-height: 65cqh; padding: 14px; }
+  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 2%; bottom: calc(var(--reader-toolbar-height) + 8px); max-height: 65cqh; padding: 14px; }
   .stage[data-mode="play"] .text { font-size: calc(18px * var(--text-scale)); max-height: 32cqh; }
   .stage[data-mode="play"] .choice { font-size: calc(16px * var(--text-scale)); padding: 10px; }
   .stage[data-mode="play"] .topbar { min-height: 44px; padding: 0 10px; }
-  .stage[data-mode="play"] .quick-actions { left: 50%; height: 44px; }
+  .stage[data-mode="play"] .quick-actions { left: 50%; height: var(--reader-toolbar-height); }
   .stage[data-mode="play"] .sprite { bottom: 0; height: 85cqh; width: 32cqw; }
   .stage[data-mode="play"] .speaker { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stage[data-mode="play"] .choice { animation: none; opacity: 1; transform: none; }
 }
+.stage.is-adjusting-sprites .dialogue-layer,
+.stage.is-adjusting-sprites .quick-actions { opacity: 0; pointer-events: none; }
+.stage.is-adjusting-sprites .dialogue-layer * { pointer-events: none; }
