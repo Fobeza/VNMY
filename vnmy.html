@@ -839,14 +839,15 @@ input[type="range"]::-webkit-slider-thumb { width: 17px; height: 17px; margin-to
 .current-save-scene .chev { margin-left: auto; font-size: 24px; }
 .saves-page { min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 195px); display: flex; flex-direction: column; }
 .save-grid { gap: 12px; }
-.save-select { min-height: 144px; gap: 5px; padding-bottom: 10px; }
+.save-select { min-height: 126px; gap: 5px; padding-bottom: 10px; }
 .slot-cover { height: 82px; margin-bottom: 3px; }
 .save-slot-meta { font-size: 11px; }
-.save-cell.is-empty .save-select { justify-content: center; align-items: center; text-align: center; }
+.save-cell.is-empty .save-select { min-height: 104px; justify-content: center; align-items: center; text-align: center; }
 .save-cell.is-empty .save-select strong { display: none; }
 .save-cell.is-empty .slot-placeholder { height: 54px; margin-bottom: 0; }
 .save-action { position: sticky; bottom: 0; width: 100%; margin-top: auto; flex: none; min-height: 48px; box-shadow: 0 -12px 0 var(--bg); }
-.save-grid + .save-action { margin-top: 24px; }
+.save-grid { margin-bottom: 24px; }
+.save-grid + .save-action { margin-top: auto; }
 .save-grid.is-load .save-select strong { font-size: 16px; }
 .save-grid.is-load .save-slot-meta { font-size: 12px; line-height: 1.5; }
 .journal-page { min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 195px); display: flex; flex-direction: column; }
@@ -884,6 +885,8 @@ input[type="range"]::-webkit-slider-thumb { width: 17px; height: 17px; margin-to
 .import-checks strong { font-size: 16px; margin-bottom: 2px; }
 .import-checks span { color: var(--ink-soft); }
 .import-add { width: 100%; margin-top: auto; min-height: 48px; flex: none; }
+
+.sheet-page:not(.has-brand-header) > h3 { padding-left: 46px; }
 
 /* VNMY — экран игры: вертикальная сцена 9:16 */
 

@@ -33,7 +33,7 @@ try {
   await page.waitForFunction(() => window.__VNMY_BOOTED && document.body.dataset.screen === 'library');
   await page.evaluate(async () => {
     const { normalizeStory } = await import('/js/format.js');
-    const { saveSettings } = await import('/js/store.js');
+    const { saveSettings, writeSave } = await import('/js/store.js');
     const { openPlayer } = await import('/js/player.js');
     const sprite = color => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="700"><circle cx="150" cy="100" r="65" fill="${color}"/><path d="M90 170h120l30 480H60z" fill="${color}"/></svg>`);
     const bg = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="900"><rect width="500" height="900" fill="#303d54"/><path d="M0 600L500 450V900H0Z" fill="#4a5362"/></svg>');
@@ -44,6 +44,7 @@ try {
       { id: 'three', speaker: 'a', spriteOverride: 'smile', text: 'Как поступить?', choices: [{ text: 'Мы можем сами вещи отнести. Нас хватает.', goto: 'last' }, { text: 'Я пока пешком обучен. До лодки не дошёл.', goto: 'last' }, { text: 'Не вмешиваться', goto: 'last' }] },
       { id: 'last', text: 'Длинная реплика. '.repeat(80) }, { id: 'end', text: 'До встречи!', end: true },
     ] }] });
+    for (const slot of ['1','2']) writeSave(story.id, slot, { scene: 'cafe', step: 0, sceneName: 'Кофейня', visual: { bg }, thumbnail: bg });
     saveSettings({ reduceMotion: true, fontSize: 1, keepAwake: false, spriteScale: 1 });
     document.querySelector('#screen-library').hidden = true;
     document.querySelector('#screen-player').hidden = false;
@@ -118,6 +119,8 @@ try {
   // Inspect every reference screen, and import an actual .vnmy before writing to the library.
   const show = async action => { await page.evaluate(action); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); };
   const capture = async name => {
+    await page.waitForFunction(() => !document.querySelector('#toast.is-visible'));
+    await page.getByRole('dialog').last().click({ position: { x: 5, y: 5 } });
     await page.waitForFunction(() => { const node = [...document.querySelectorAll('.sheet')].findLast(n => !n.inert); return node && node.classList.contains('is-visible') && getComputedStyle(node).opacity === '1'; });
     await page.screenshot({ path: path.join(output, name + '.png') });
   };
