@@ -158,6 +158,15 @@
   cursor: pointer;
   outline: none;
 }
+.tap-layer:focus-visible { outline: 2px solid var(--accent); outline-offset: -6px; }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 
 .dialogue-layer {
   position: absolute;
@@ -312,7 +321,6 @@
   text-overflow: ellipsis;
   padding: 0 6px;
 }
-.stage[data-mode="edit"] .topbar { display: none; }
 
 /* ─────────────── карточка сцены ─────────────── */
 .chapter-card {
@@ -501,7 +509,6 @@
 .text.is-scrollable::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
 .quick-actions { position: absolute; top: 9cqh; right: 4cqw; z-index: 8; display: flex; gap: 6px; }
 .quick-actions .pill { background: rgba(8,9,12,.7); color: var(--ink); font-size: 12px; min-height: 40px; }
-.stage[data-mode="edit"] .quick-actions { display: none; }
 .stage.ui-hidden .dialogue-layer, .stage.ui-hidden .topbar, .stage.ui-hidden .quick-actions { opacity: 0; pointer-events: none; }
 .stage.ui-hidden .dialogue-layer * { pointer-events: none; }
 .chapter-name { white-space: normal; text-align: center; padding-inline: 20px; }
@@ -516,12 +523,8 @@
   .quick-actions { top: 15px; right: 65px; }
   .topbar { padding: 10px 14px; }
   .topbar-title { max-width: 42%; text-align: left; }
-  .topbar-menu { margin-left: auto; }
   .speaker { margin-bottom: 8px; }
 }
-.stage[data-mode="edit"] .text { font-size: calc(4.45cqw * var(--text-scale)); }
-.stage[data-mode="edit"] .speaker { font-size: 2.9cqw; }
-.stage[data-mode="edit"] .choice { font-size: calc(3.9cqw * var(--text-scale)); min-height: 0; }
 
 /* Universal reading layout: scene and actor anchors never depend on dialogue height. */
 .stage[data-mode="play"] {

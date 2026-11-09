@@ -4,6 +4,42 @@ import { el, $ } from './util.js';
 
 let modalId = 0;
 const modals = [];
+let announced = 0;
+let announceQueued = false;
+
+/* Число открытых окон сообщаем после текущей задачи: когда одна шторка
+ * закрывается и сразу открывается другая (пауза → настройки), игра не
+ * снимается с паузы на мгновение. */
+function announceModals() {
+  if (announceQueued) return;
+  announceQueued = true;
+  queueMicrotask(() => {
+    announceQueued = false;
+    const count = modals.length;
+    if (count === announced) return;
+    announced = count;
+    document.dispatchEvent(new CustomEvent('vnmy:modal', { detail: count }));
+  });
+}
+
+/** Сколько окон открыто сейчас. */
+export function openModalCount() {
+  return modals.length;
+}
+
+/** Закрыть верхнее окно (кнопка «Назад» телефона). true — окно было. */
+export function closeTopModal() {
+  const top = modals.at(-1);
+  if (!top) return false;
+  top.onClose();
+  return true;
+}
+
+/** Закрыть все окна — при смене экрана ничего не должно висеть сверху. */
+export function closeAllModals() {
+  for (let guard = 0; modals.length && guard < 50; guard++) closeTopModal();
+}
+
 function manageModal(node, onClose) {
   const previous = document.activeElement;
   const heading = node.querySelector('h3');
@@ -14,7 +50,7 @@ function manageModal(node, onClose) {
     document.body.classList.toggle('no-scroll', modals.length > 0);
     document.querySelectorAll('.screen').forEach(screen => { screen.inert = modals.length > 0; });
     modals.forEach((entry, i) => { entry.node.inert = i !== modals.length - 1; });
-    document.dispatchEvent(new CustomEvent('vnmy:modal', { detail: modals.length }));
+    announceModals();
   };
   const focusables = () => [...node.querySelectorAll('button, input, textarea, select, a[href], [tabindex="0"]')]
     .filter(el => !el.disabled && !el.closest('[hidden]'));

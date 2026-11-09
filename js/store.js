@@ -1,5 +1,5 @@
 /* VNMY — хранилище: localStorage, библиотека историй, сохранения, импорт/экспорт */
-import { normalizeStory, createStory, findScene, bareId, globalId, resolveUrl } from './format.js';
+import { normalizeStory, resolveUrl } from './format.js';
 import { normalizeUniverse, createUniverse, universeData, looseUniverse, NO_UNIVERSE_TITLE } from './universe.js';
 import { AUDIO_DEFAULTS } from './audio.js';
 import { uid, download, readFileAsText, deepClone, prefersReducedMotion, clampSpriteScale } from './util.js';
@@ -113,8 +113,20 @@ export function builtinIsBroken() {
   return builtinBroken;
 }
 
-/** Вселенные, которые едут вместе с движком. */
-export async function loadBuiltinUniverses() {
+let builtinRequest = null;
+
+/** Вселенные, которые едут вместе с движком. Загружаются один раз за запуск. */
+export function loadBuiltinUniverses({ reload = false } = {}) {
+  if (reload || !builtinRequest) {
+    builtinRequest = readBuiltinUniverses().catch((err) => {
+      builtinRequest = null;
+      throw err;
+    });
+  }
+  return builtinRequest;
+}
+
+async function readBuiltinUniverses() {
   builtinBroken = false;
   const embedded = embeddedLibrary();
   if (location.protocol === 'file:') {
@@ -228,23 +240,17 @@ export function deleteStory(id) {
   lsRemove(K.artwork(id));
 }
 
-export function duplicateStory(story, titleSuffix = ' (копия)') {
-  const copy = deepClone(story);
-  copy.id = uid('story');
-  copy.title = story.title + titleSuffix;
-  copy.readOnly = false;
-  copy.createdAt = Date.now();
-  copy.updatedAt = Date.now();
-  copy.baseUrl = story.baseUrl || '';
-  // встроенная история ссылается на файлы — при копировании пути остаются рабочими,
-  // пока папка stories на месте; иначе импортируем ассеты как data URL.
-  return saveStory(copy, { touch: false });
-}
-
-export function importStoryJSON(json, { keepId = false } = {}) {
-  const story = normalizeStory(typeof json === 'string' ? JSON.parse(json) : deepClone(json));
-  if (!keepId || listLocalStoryIds().includes(story.id)) story.id = uid('story');
+/**
+ * История из JSON. Как и у .vnmy, id сохраняется: повторный импорт обновляет
+ * новеллу, а её сохранения остаются. Картинки такой истории лежат прямо в
+ * JSON, поэтому прежние картинки пакета с тем же id больше не нужны.
+ */
+export function importStoryJSON(json) {
+  const raw = typeof json === 'string' ? JSON.parse(json) : deepClone(json);
+  const story = normalizeStory(raw);
+  if (!raw?.id) story.id = uid('story');
   story.readOnly = false;
+  delete story.packaged;
   story.title = story.title || 'Импортированная история';
   // у импортированной истории относительные пути некуда не ведут
   if (story.baseUrl && story.baseUrl.startsWith('stories/')) story.baseUrl = '';
@@ -256,7 +262,6 @@ export function importStoryJSON(json, { keepId = false } = {}) {
 export function storyAssets(story) {
   const urls = new Set();
   if (story.cover) urls.add(story.cover);
-  for (const m of story.media || []) if (m.url) urls.add(m.url);
   for (const track of story.soundtrack || []) if (track.src) urls.add(track.src);
   for (const scene of story.scenes) {
     if (scene.bg) urls.add(scene.bg);
@@ -272,7 +277,6 @@ export function storyAssets(story) {
 function replaceAssetPaths(story, map) {
   const swap = (url) => (url && map.has(url) ? map.get(url) : url);
   if (story.cover) story.cover = swap(story.cover);
-  for (const m of story.media || []) m.url = swap(m.url);
   for (const track of story.soundtrack || []) track.src = swap(track.src);
   for (const scene of story.scenes) {
     scene.bg = swap(scene.bg);
@@ -333,18 +337,6 @@ async function portableStory(story, { limitMb = 24, used = 0 } = {}) {
   data.exportedAt = Date.now();
   data.portable = true;
   return { data, images: map.size, skipped, spent };
-}
-
-/**
- * Портируемый экспорт одной новеллы: все картинки вшиваются в JSON как data URL.
- * limitMb ограничивает суммарный размер картинок (по умолчанию 24 МБ).
- */
-export async function exportStoryPortable(story, { limitMb = 24 } = {}) {
-  const { data, images, skipped } = await portableStory(story, { limitMb });
-  const json = JSON.stringify(data, null, 2);
-  const slug = slugify(story.title) || 'story';
-  download(`${slug}.json`, json);
-  return { bytes: json.length, images, skipped };
 }
 
 /**
@@ -428,6 +420,7 @@ function importStoryList(rawList, { universeId = null } = {}) {
     if (universeId != null) story.universe = universeId;
     try {
       saveStory(story);
+      removeStoryAssets(story.id);
       imported.push(story);
     } catch (err) {
       if (String(err?.message) === 'STORAGE_FULL') {
@@ -501,19 +494,6 @@ export async function importStoryFile(file) {
   return imported;
 }
 
-export function exportStory(story) {
-  const data = deepClone(story);
-  data.readOnly = false;
-  const slug = slugify(story.title) || 'story';
-  download(`${slug}.json`, JSON.stringify(data, null, 2));
-}
-
-export function exportStoryData(story) {
-  const data = deepClone(story);
-  delete data.readOnly;
-  return data;
-}
-
 /** Сколько места занято и сколько примерно осталось. */
 export function storageUsage() {
   let used = 0;
@@ -551,9 +531,10 @@ export function saveUniverse(universe, { touch = true } = {}) {
 /** Свободный id: не занят ни файлами, ни своими вселенными. */
 export function uniqueUniverseId(base) {
   const taken = new Set([...universeCatalog().map((u) => u.id), ...listLocalUniverses().map((u) => u.id)]);
-  let id = base || 'world';
+  const root = base || 'world';
+  let id = root;
   let n = 2;
-  while (taken.has(id)) id = `${base}-${n++}`;
+  while (taken.has(id)) id = `${root}-${n++}`;
   return id;
 }
 
@@ -582,21 +563,13 @@ export function moveStoryToUniverse(story, universeId) {
 
 let libraryCache = null;
 
-/** Синхронный доступ к последней загруженной библиотеке (для редактора). */
+/** Синхронный доступ к последней загруженной библиотеке. */
 export function universeCatalog() {
   return libraryCache?.universes || [];
 }
 
 export function findUniverse(id) {
   return universeCatalog().find((u) => u.id === id) || null;
-}
-
-/** Варианты для выпадающего списка в редакторе: «Без вселенной» + все известные. */
-export function universeOptions(currentId = '') {
-  const options = [{ value: '', label: NO_UNIVERSE_TITLE }];
-  for (const universe of universeCatalog()) options.push({ value: universe.id, label: universe.title });
-  if (currentId && !options.some((o) => o.value === currentId)) options.push({ value: currentId, label: currentId });
-  return options;
 }
 
 /**
@@ -698,7 +671,12 @@ export function markArtwork(storyId, path, name, kind = 'image') {
   lsSet(K.artwork(storyId), JSON.stringify([...images, { path, name: name || 'Сцена', ...(kind !== 'image' ? { kind } : {}) }]));
 }
 
-const DEFAULT_SETTINGS = { ...AUDIO_DEFAULTS, confirmSkip: true, vibration: false, textSpeed: 22, fontSize: 1, spriteScale: 1, skipSeen: false, keepAwake: true };
+/** Настройки читателя по умолчанию. reduceMotion здесь нет: без явного
+ *  выбора он повторяет системную настройку «уменьшить движение». */
+export const DEFAULT_SETTINGS = Object.freeze({
+  ...AUDIO_DEFAULTS, confirmSkip: true, vibration: false, textSpeed: 22, fontSize: 1, spriteScale: 1,
+  dialogueOpacity: 0.9, instantText: false, skipSeen: false, keepAwake: true, autoDelay: 55,
+});
 
 export function getSettings() {
   const settings = { ...DEFAULT_SETTINGS, ...lsJSON(K.settings, {}) };
@@ -706,6 +684,12 @@ export function getSettings() {
   // «меньше анимации» по умолчанию повторяет системную настройку
   if (typeof settings.reduceMotion !== 'boolean') settings.reduceMotion = prefersReducedMotion();
   return settings;
+}
+
+/** Сбросить все настройки к исходным, включая системный выбор анимации. */
+export function resetSettings() {
+  lsRemove(K.settings);
+  return getSettings();
 }
 
 export function saveSettings(patch) {
@@ -717,11 +701,18 @@ export function saveSettings(patch) {
 
 /* ─────────────────────────── прогресс чтения для библиотеки ─────────────────────────── */
 
-export function progressOf(storyId) {
+/**
+ * Самое свежее сохранение (авто, ручное или быстрое) — с него «Продолжить»
+ * открывает игру. Библиотека показывает прогресс по нему же.
+ */
+export function latestSave(storyId) {
   const saves = getSaves(storyId);
-  const save = saves.auto || saves.slots[0] || saves.quick;
-  if (!save) return null;
-  return save;
+  const all = [saves.auto, saves.quick, ...saves.slots].filter(Boolean);
+  return all.sort((a, b) => (b.at || 0) - (a.at || 0))[0] || null;
+}
+
+export function progressOf(storyId) {
+  return latestSave(storyId);
 }
 
 export function slugify(text = '') {
@@ -732,20 +723,6 @@ export function slugify(text = '') {
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
 }
-
-/** Сохранить точку прохождения: сцена + шаг + накопленное состояние */
-export function makeSavePoint(story, sceneId, stepIndex, extra = {}) {
-  const scene = findScene(story, sceneId);
-  return {
-    sceneId,
-    sceneIndex: story.scenes.findIndex((s) => s.id === sceneId),
-    stepIndex,
-    stepId: scene ? globalId(scene.id, scene.steps[stepIndex]?.id || '') : '',
-    ...extra,
-  };
-}
-
-export { createStory, normalizeStory, bareId, globalId };
 
 /* ─────────────────────────── файл новеллы .vnmy ───────────────────────────
  * Это zip той же папки, что лежала бы в stories/:
@@ -766,34 +743,64 @@ async function readJSONBlob(blob) {
   try { return JSON.parse(await blob.text()); } catch { throw new Error('BAD_JSON'); }
 }
 
-export async function importPackage(files) {
-  // корень пакета — папка с universe.json или story.json, ближайшая к началу
+const hiddenPart = (part) => part.startsWith('_') || part.startsWith('.');
+
+/**
+ * Раскладка пакета: корень (папка с universe.json или story.json, ближайшая
+ * к началу архива) и папки новелл относительно корня. Общая для
+ * предпросмотра импорта и самого импорта.
+ */
+export function packageLayout(files) {
   const markers = [...files.keys()]
-    .filter((p) => /(^|\/)(universe|story)\.json$/.test(p) && !p.split('/').some((part) => part.startsWith('_') || part.startsWith('.')))
+    .filter((p) => /(^|\/)(universe|story)\.json$/.test(p) && !p.split('/').some(hiddenPart))
     .sort((a, b) => a.split('/').length - b.split('/').length);
   if (!markers.length) throw new Error('BAD_PACKAGE');
   const root = markers[0].replace(/[^/]*$/, '');
-  const at = (rel) => files.get(root + rel);
-
-  let rawUniverse = null;
+  const hasUniverse = files.has(`${root}universe.json`);
   const novelDirs = [];
-  if (at('universe.json')) {
-    rawUniverse = await readJSONBlob(at('universe.json'));
-    const re = new RegExp(`^${root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}novels/([^/]+)/story\\.json$`);
+  if (hasUniverse) {
+    const prefix = `${root}novels/`;
     for (const p of files.keys()) {
-      const m = p.match(re);
-      if (m && !m[1].startsWith('_') && !m[1].startsWith('.')) novelDirs.push(`novels/${m[1]}/`);
+      if (!p.startsWith(prefix)) continue;
+      const parts = p.slice(prefix.length).split('/');
+      if (parts.length === 2 && parts[1] === 'story.json' && !hiddenPart(parts[0])) novelDirs.push(`novels/${parts[0]}/`);
     }
     novelDirs.sort();
   } else {
     novelDirs.push('');
   }
   if (!novelDirs.length) throw new Error('BAD_PACKAGE');
+  return { root, hasUniverse, novelDirs };
+}
+
+export async function importPackage(files) {
+  const { root, hasUniverse, novelDirs } = packageLayout(files);
+  const at = (rel) => files.get(root + rel);
+
+  // Сначала читаем и проверяем всё содержимое пакета и только потом пишем:
+  // битая вторая новелла не оставит в библиотеке половину пакета.
+  const rawUniverse = hasUniverse ? await readJSONBlob(at('universe.json')) : null;
+  const prepared = [];
+  const missing = [];
+  for (const dir of novelDirs) {
+    const raw = await readJSONBlob(at(`${dir}story.json`));
+    if (!raw || typeof raw !== 'object' || !Array.isArray(raw.scenes) || !raw.scenes.length) throw new Error('BAD_PACKAGE');
+    const story = normalizeStory(raw);
+    story.readOnly = false;
+    story.baseUrl = '';
+    story.updatedAt = Date.now();
+    const assets = new Map();
+    for (const url of storyAssets(story)) {
+      if (/^(data:|blob:|https?:|\/)/i.test(url)) continue;
+      const blob = at(dir + url);
+      if (blob) assets.set(url, blob); else missing.push(`${dir}${url}`);
+    }
+    prepared.push({ story, assets });
+  }
 
   // вселенная: из universe.json пакета, иначе по полю universe новеллы
   let universe = null;
-  const firstStory = await readJSONBlob(at(`${novelDirs[0]}story.json`));
-  const universeId = String(rawUniverse?.id || firstStory.universe || '').trim();
+  const universeId = String(rawUniverse?.id || prepared[0].story.universe || '').trim();
   if (universeId) {
     const known = universeCatalog().find((u) => u.id === universeId) || loadLocalUniverse(universeId);
     const data = rawUniverse ? universeData(normalizeUniverse({ ...rawUniverse, id: universeId })) : null;
@@ -805,20 +812,9 @@ export async function importPackage(files) {
   }
 
   const imported = [];
-  const missing = [];
-  for (const dir of novelDirs) {
-    const raw = dir === novelDirs[0] ? firstStory : await readJSONBlob(at(`${dir}story.json`));
-    const story = normalizeStory(raw);
-    story.readOnly = false;
-    story.baseUrl = '';
+  for (const { story, assets } of prepared) {
     story.universe = universe?.id || '';
-    story.updatedAt = Date.now();
-    const assets = new Map();
-    for (const url of storyAssets(story)) {
-      if (/^(data:|blob:|https?:|\/)/i.test(url)) continue;
-      const blob = at(dir + url);
-      if (blob) assets.set(url, blob); else missing.push(`${dir}${url}`);
-    }
+    const existed = listLocalStoryIds().includes(story.id);
     if (canStoreAssets()) {
       story.packaged = true;
       await replaceStoryAssets(story.id, assets);
@@ -831,6 +827,8 @@ export async function importPackage(files) {
     try {
       saveStory(story, { touch: false });
     } catch (err) {
+      // картинки новой новеллы без её сценария не нужны
+      if (!existed) removeStoryAssets(story.id);
       if (String(err?.message) === 'STORAGE_FULL') err.imported = imported;
       throw err;
     }

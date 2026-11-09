@@ -1,9 +1,23 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { normalizeStory, lintStory } from '../js/format.js';
+import { normalizeStory, lintStory, VAR_NAME } from '../js/format.js';
 import { storyAssets } from '../js/store.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
+
+/* Внутри .vnmy пути чувствительны к регистру, а файловые системы macOS и
+ * Windows — нет. Сверяем каждую часть пути с настоящим именем в папке. */
+async function assertExactCase(dir, relative) {
+  let current = dir;
+  for (const part of relative.split(/[\\/]/).filter(Boolean)) {
+    const names = await fs.readdir(current);
+    if (!names.includes(part)) {
+      const actual = names.find((name) => name.toLowerCase() === part.toLowerCase());
+      throw new Error(actual ? `регистр в пути не совпадает: «${part}», а файл называется «${actual}»` : `нет файла: ${relative}`);
+    }
+    current = path.join(current, part);
+  }
+}
 export async function validateStories(scan) {
   const failures = [];
   let warnings = 0;
@@ -19,6 +33,7 @@ export async function validateStories(scan) {
     const realRelative = path.relative(realDir, real);
     if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) throw new Error(`Картинка вне папки: ${url}`);
     await fs.access(real);
+    await assertExactCase(dir, relative);
   };
   for (const { dir, path: universePath = `stories/${dir}`, single, universe, novels } of scan) {
     if (!single) {
@@ -39,6 +54,13 @@ export async function validateStories(scan) {
           if (!item?.id || seen.has(item.id)) failures.push(`${label}: отсутствующий или повторный id: ${item?.id}`);
           seen.add(item?.id);
         }
+      }
+      const varNames = new Set();
+      for (const v of raw.vars || []) {
+        const name = String(v?.name ?? '');
+        if (!VAR_NAME.test(name)) failures.push(`${label}: некорректное имя переменной «${name}» — буквы, цифры и _, первой не цифра`);
+        else if (varNames.has(name)) failures.push(`${label}: переменная «${name}» объявлена дважды`);
+        varNames.add(name);
       }
       const story = normalizeStory(structuredClone(raw));
       const issues = lintStory(story);

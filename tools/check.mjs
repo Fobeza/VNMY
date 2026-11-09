@@ -8,6 +8,7 @@ import { checkRendering } from './check-rendering.mjs';
 
 execFileSync(process.execPath, [new URL('./check-interface.mjs', import.meta.url).pathname], { stdio: 'inherit' });
 execFileSync(process.execPath, [new URL('./check-features.mjs', import.meta.url).pathname], { stdio: 'inherit' });
+execFileSync(process.execPath, [new URL('./check-fixes.mjs', import.meta.url).pathname], { stdio: 'inherit' });
 await checkRendering();
 
 // staging "stable": оставшиеся не сдвигаются, новичок занимает свободное место

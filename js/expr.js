@@ -8,13 +8,16 @@
  *   !took_hand
  *
  * Операторы: == != > >= < <= && || ! ( )  и слова and / or / not.
- * Значения: числа, строки в кавычках, true/false, имена переменных.
+ * Значения: числа (в том числе отрицательные: -1), строки в кавычках,
+ * true/false, имена переменных.
  * Арифметики нет намеренно: условия должны оставаться читаемыми.
  */
 
 const IDENT_START = /[\p{L}_]/u;
 const IDENT_PART = /[\p{L}\p{N}_]/u;
-const NUMBER = /^[0-9]+(\.[0-9]+)?$/;
+const NUMBER = /^-?[0-9]+(\.[0-9]+)?$/;
+/** Токены, после которых минус не может начинать отрицательное число. */
+const VALUE_TOKENS = new Set(['number', 'string', 'bool', 'ident']);
 
 const WORD_OPERATORS = {
   and: '&&',
@@ -45,8 +48,11 @@ export function tokenize(src) {
       continue;
     }
 
-    if (/[0-9]/.test(ch)) {
-      let j = i;
+    const prev = tokens[tokens.length - 1];
+    const negative = ch === '-' && /[0-9]/.test(text[i + 1] ?? '')
+      && !(prev && (VALUE_TOKENS.has(prev.type) || prev.value === ')'));
+    if (/[0-9]/.test(ch) || negative) {
+      let j = negative ? i + 1 : i;
       while (j < text.length && /[0-9.]/.test(text[j])) j++;
       const raw = text.slice(i, j);
       if (!NUMBER.test(raw)) throw exprError(`не число: ${raw}`, i);
@@ -296,19 +302,27 @@ export function interpolatedVars(text) {
   return [...found];
 }
 
-/** Новое значение переменной по операции из шага. */
+/** Новое значение переменной по операции из шага.
+ *  Для флага add включает, sub выключает; для текста sub ничего не меняет. */
 export function applyOperation(current, op, rawValue, type = 'number') {
-  const parse = (value) => {
-    if (type === 'bool') return truthy(value);
-    if (type === 'text') return String(value ?? '');
+  const toNumber = (value) => {
     const n = Number(String(value ?? '').replace(',', '.'));
     return Number.isFinite(n) ? n : 0;
   };
-
-  if (op === 'set') return parse(rawValue);
   if (op === 'toggle') return !truthy(current);
-  const value = type === 'text' ? String(rawValue ?? '') : (Number(String(rawValue ?? '').replace(',', '.')) || 0);
-  if (op === 'add') return type === 'text' ? String(current ?? '') + value : (Number(current) || 0) + value;
-  if (op === 'sub') return (Number(current) || 0) - Number(value);
+  if (type === 'bool') {
+    if (op === 'set') return truthy(rawValue);
+    if (op === 'add') return truthy(current) || truthy(rawValue);
+    if (op === 'sub') return truthy(current) && !truthy(rawValue);
+    return truthy(current);
+  }
+  if (type === 'text') {
+    if (op === 'set') return String(rawValue ?? '');
+    if (op === 'add') return String(current ?? '') + String(rawValue ?? '');
+    return String(current ?? '');
+  }
+  if (op === 'set') return toNumber(rawValue);
+  if (op === 'add') return toNumber(current) + toNumber(rawValue);
+  if (op === 'sub') return toNumber(current) - toNumber(rawValue);
   return current;
 }

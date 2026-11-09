@@ -10,16 +10,15 @@
  *   3) «Без вселенной» — новеллы, у которых story.universe пустой.
  */
 import {
-  loadLibrary, deleteUniverse,
-  exportBackup, storageUsage, exportUniversePortable, progressOf,
+  loadLibrary,
+  exportBackup, storageUsage, progressOf,
 } from './store.js';
 import { resolveUrl } from './format.js';
 import { el, $, plural } from './util.js';
-import { toast, openSheet, confirmDialog } from './ui.js';
-import { ICONS } from './icons.js';
+import { toast } from './ui.js';
 import { openImport } from './import.js';
 import { openSettings } from './settings.js';
-import { openStoryDetails } from './novels.js';
+import { openStoryDetails, openUniverseMenu } from './novels.js';
 import { APP_VERSION } from './version.js';
 
 let hooks = {};
@@ -123,7 +122,7 @@ function universeCard(universe) {
     class: 'universe-card-menu',
     type: 'button',
     'aria-label': 'Действия с вселенной',
-    onclick: (e) => { e.stopPropagation(); openUniverseMenu(universe); },
+    onclick: (e) => { e.stopPropagation(); openUniverseMenu(universe, { onOpen: () => hooks.onOpenUniverse?.(universe.id), onDeleted: () => renderLibrary(hooks) }); },
   }, el('span', { html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>' })),
   );
 
@@ -133,52 +132,6 @@ function universeCard(universe) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
   return card;
-}
-
-/** Меню вселенной на главном экране. */
-function openUniverseMenu(universe) {
-  const canEdit = !universe.builtin && !universe.loose;
-  openSheet({
-    title: universe.title,
-    subtitle: `${novelCount((universe.novels || []).length)}${universe.builtin ? ' · из папки stories' : ''}`,
-    rows: [
-      { label: 'Открыть', icon: ICONS.play, onSelect: () => hooks.onOpenUniverse?.(universe.id) },
-      {
-        label: 'Экспорт вселенной',
-        icon: ICONS.download,
-        hint: 'все новеллы и картинки одним файлом',
-        onSelect: () => runUniverseExport(universe),
-      },
-      canEdit ? {
-        label: 'Удалить вселенную',
-        icon: ICONS.trash,
-        danger: true,
-        hint: 'новеллы останутся, но без вселенной',
-        onSelect: async () => {
-          const ok = await confirmDialog({
-            title: 'Удалить вселенную?',
-            text: `«${universe.title}» исчезнет из списка. Новеллы останутся и попадут в «Без вселенной».`,
-            confirmText: 'Удалить',
-          });
-          if (!ok) return;
-          deleteUniverse(universe.id);
-          toast('Вселенная удалена');
-          renderLibrary(hooks);
-        },
-      } : null,
-    ],
-  });
-}
-
-async function runUniverseExport(universe) {
-  toast('Собираю новеллы…', 8000);
-  try {
-    const result = await exportUniversePortable(universe, universe.novels || []);
-    toast(`Готово: ${(result.bytes / 1024 / 1024).toFixed(1)} МБ, новелл: ${result.novels}, файлов: ${result.images}`);
-  } catch (err) {
-    console.error(err);
-    toast('Не получилось собрать вселенную');
-  }
 }
 
 let wired = false;

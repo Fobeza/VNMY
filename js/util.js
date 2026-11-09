@@ -87,35 +87,6 @@ export function readFileAsText(file) {
   });
 }
 
-export function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-/** Сжать картинку в браузере: возвращает dataURL (webp/jpeg, если нет поддержки). */
-export async function compressImage(file, { maxSide = 1600, quality = 0.86 } = {}) {
-  const dataUrl = await readFileAsDataURL(file);
-  const img = await new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = dataUrl;
-  });
-  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(img.width * scale);
-  canvas.height = Math.round(img.height * scale);
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  const webp = canvas.toDataURL('image/webp', quality);
-  return { url: webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', quality), width: canvas.width, height: canvas.height };
-}
-
 export function formatDate(ts) {
   if (!ts) return '';
   const d = new Date(ts);

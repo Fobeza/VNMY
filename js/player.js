@@ -2,10 +2,10 @@
 import { Stage } from './engine.js';
 import { openSettings, openSpriteTuner } from './settings.js';
 import { openGallery } from './gallery.js';
-import { getSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, markArtwork } from './store.js';
-import { findScene, bareId, resolveUrl } from './format.js';
+import { getSettings, getSaves, writeSave, deleteSave, getSeen, markSeen, getArtwork, markArtwork, latestSave } from './store.js';
+import { findScene, bareId, resolveUrl, characterById } from './format.js';
 import { $, debounce, el, deepClone } from './util.js';
-import { toast, openSheet, confirmDialog } from './ui.js';
+import { toast, openSheet, confirmDialog, openModalCount } from './ui.js';
 import { ICONS } from './icons.js';
 import { restorePosition, storyRevision } from './session.js';
 
@@ -39,32 +39,61 @@ export function openPlayer(story, opts = {}) {
 
   const settings = getSettings();
   const saves = getSaves(story.id);
-  // явно выбранный слот важнее автосейва; «продолжить» берёт автосейв
-  const slotSave = opts.slot === 'quick' ? saves.quick : opts.slot ? saves.slots.find((entry) => entry.slot === opts.slot) : null;
-  const source = slotSave || (!opts.fresh ? saves.auto : null);
+  // Явно выбранный слот (в том числе «auto») открывается как есть, даже
+  // если это сохранение на концовке. «Продолжить» берёт самое свежее
+  // сохранение — то же, по которому библиотека показывает прогресс.
+  const slotSave = opts.slot === 'quick' ? saves.quick
+    : opts.slot === 'auto' ? saves.auto
+      : opts.slot ? saves.slots.find((entry) => entry.slot === opts.slot) : null;
+  const source = opts.slot ? slotSave : !opts.fresh ? latestSave(story.id) : null;
   const restored = restorePosition(story, source);
-  const canResume = !!restored && (!!slotSave || !source.ended) && !!findScene(story, restored.sceneId);
+  const canResume = !!restored && (!!opts.slot || !source.ended) && !!findScene(story, restored.sceneId);
+  // Сохранённая картинка сцены годится, только если история не менялась:
+  // иначе собираем её заново, чтобы не показать удалённых персонажей и файлы.
+  const visual = canResume && !restored.changed && !restored.relocated && restored.visual
+    ? { ...restored.visual, cast: (restored.visual.cast || []).filter((c) => characterById(story, c?.char)) }
+    : undefined;
   const resume = canResume
     ? {
       sceneId: restored.sceneId,
       stepIndex: restored.stepIndex,
       vars: restored.vars || {},
-      visual: restored.visual,
+      visual,
       history: Array.isArray(restored.history) ? restored.history : [],
     }
     : { sceneId: story.scenes[0].id, stepIndex: 0, history: [] };
+  // флаги одного открытия не переходят в следующие (загрузка из меню игры)
+  const sessionOpts = { ...opts, fresh: false, slot: undefined };
 
   if (canResume && (restored.changed || restored.relocated)) {
     toast(restored.relocated ? 'История обновилась: сохранённая реплика удалена. Открыто ближайшее место.' : 'История обновилась. Прогресс восстановлен по реплике.', 4500);
   }
   const seenBefore = getSeen(story.id);
+  // «прочитано» и открытые иллюстрации держим в памяти: localStorage
+  // пишется только когда появилось новое, а не на каждом шаге
+  const seenStored = new Set(seenBefore);
+  const artworkStored = new Set(getArtwork(story.id, null).map((item) => `${item.kind || 'image'}:${item.path}`));
+  const rememberArtwork = (path, name, kind = 'image') => {
+    if (!path || artworkStored.has(`${kind}:${path}`)) return;
+    artworkStored.add(`${kind}:${path}`);
+    markArtwork(story.id, path, name, kind);
+  };
+  let storageWarned = false;
+  const storageFailed = (err) => {
+    console.error('[vnmy] не удалось сохранить прогресс', err);
+    if (storageWarned) return;
+    storageWarned = true;
+    toast('Не удалось сохранить прогресс: в браузере закончилось место.', 6000);
+  };
 
   let finished = false;
   const persist = debounce((position, step) => {
     // после финала автосейв не перезаписываем: иначе теряется отметка «прочитано»
     if (finished || stage?.ended) return;
     if (!findScene(story, position.sceneId)) return;
-    writeSave(story.id, 'auto', positionPayload(story, position, step));
+    try {
+      writeSave(story.id, 'auto', positionPayload(story, position, step));
+    } catch (err) { storageFailed(err); }
   }, 350);
   pendingPersist = persist;
 
@@ -78,17 +107,19 @@ export function openPlayer(story, opts = {}) {
     mode: 'play',
     settings,
     seen: new Set(seenBefore),
-    seenBefore,
     onPosition: (position, step) => {
-      markSeen(story.id, `${position.sceneId}:${bareId(step?.id || '')}`);
-      markArtwork(story.id, position.visual?.bg, findScene(story, position.sceneId)?.name);
-      if (position.visual?.music) markArtwork(story.id, position.visual.music, story.soundtrack?.find(t => t.src === position.visual.music)?.title || 'Музыка сцены', 'music');
+      try {
+        const key = `${position.sceneId}:${bareId(step?.id || '')}`;
+        if (!seenStored.has(key)) { seenStored.add(key); markSeen(story.id, key); }
+        rememberArtwork(position.visual?.bg, findScene(story, position.sceneId)?.name);
+        if (position.visual?.music) rememberArtwork(position.visual.music, story.soundtrack?.find(t => t.src === position.visual.music)?.title || 'Музыка сцены', 'music');
+      } catch (err) { storageFailed(err); }
       persist(position, step);
     },
     onJournal: () => openJournal(story),
-    onSaves: () => openSaves(story, opts),
+    onSaves: () => openSaves(story, sessionOpts),
     onRestart: () => { finished = false; persist.cancel(); },
-    onMenu: () => openPlayerMenu(story, opts),
+    onMenu: () => openPlayerMenu(story, sessionOpts),
     onExit: () => opts.onExit?.(),
     onBrokenLink: (ref) => toast(`Переход «${ref}» не найден`),
     onVars: () => {
@@ -100,7 +131,7 @@ export function openPlayer(story, opts = {}) {
     onEnding: () => {
       finished = true;
       persist.cancel();
-      writeSave(story.id, 'auto', {
+      try { writeSave(story.id, 'auto', {
         sceneId: stage.position.sceneId,
         sceneIndex: stage.position.sceneIndex,
         stepIndex: stage.position.stepIndex,
@@ -113,11 +144,13 @@ export function openPlayer(story, opts = {}) {
         stepId: `${stage.sceneId}:${bareId(stage.step?.id || '')}`,
         revision: storyRevision(story),
         visual: deepClone(stage.visual),
-      });
+      }); } catch (err) { storageFailed(err); }
     },
   });
   stage.mount();
   stage.node.style.setProperty('--accent', '#8d9af2');
+  // игра, открытая из-под окна, стоит на паузе, пока окно не закроется
+  if (openModalCount()) stage.setPaused(true);
 
   keyHandler = (e) => {
     if (document.body.classList.contains('no-scroll')) return; // открыта шторка
@@ -126,7 +159,7 @@ export function openPlayer(story, opts = {}) {
       e.preventDefault();
       stage?.handleTap();
     } else if (e.key === 'Escape') {
-      openPlayerMenu(story, opts);
+      openPlayerMenu(story, sessionOpts);
     }
   };
   document.addEventListener('keydown', keyHandler);
@@ -244,12 +277,18 @@ export function openSaves(story, opts = {}, mode = 'save') {
       const entry = slot === 'quick' ? getSaves(story.id).quick : getSaves(story.id).slots.find(item => item.slot === slot);
       if (entry && !await confirmDialog({ title: slot === 'quick' ? 'Перезаписать быстрое сохранение?' : `Перезаписать слот ${slot}?`, text: 'Предыдущее место будет заменено текущим.', confirmText: 'Сохранить', danger: false })) return;
       if (!stage || currentStory?.id !== story.id) return;
-      writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
+      try {
+        writeSave(story.id, slot, positionPayload(story, stage.position, stage.step));
+      } catch (err) {
+        console.error(err);
+        toast('Не удалось сохранить: в браузере закончилось место.', 5000);
+        return;
+      }
       toast(slot === 'quick' ? 'Быстрое сохранение записано' : `Сохранено в слот ${slot}`); render();
     } else {
       close();
       if (opts.onLoad) opts.onLoad(slot);
-      else openPlayer(story, { ...opts, slot: slot === 'auto' ? undefined : slot });
+      else openPlayer(story, { ...opts, fresh: false, slot });
     }
   });
   render(); content.append(tabs, current, list, action);
