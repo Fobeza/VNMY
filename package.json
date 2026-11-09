@@ -1,6 +1,6 @@
 {
   "name": "vnmy",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "private": true,
   "description": "VNMY — движок визуальных новелл для мобильного браузера",
   "type": "module",
