@@ -85,6 +85,7 @@ try {
       const choices = [...document.querySelectorAll('.choice')];
       return { stageBottom: r.bottom, height: r.height, viewportHeight: innerHeight, viewportWidth: innerWidth,
         overflow: document.documentElement.scrollWidth > innerWidth, toolbarFits: toolbar.bottom <= r.bottom + 1 && toolbar.top >= r.top,
+        panelBottom: panel.getBoundingClientRect().bottom, toolbarTop: toolbar.top,
         choiceAfterText: choices[0].getBoundingClientRect().top >= document.querySelector('.dialogue').getBoundingClientRect().bottom - 1,
         panelFits: panel.getBoundingClientRect().bottom <= toolbar.top + 1,
       };

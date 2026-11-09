@@ -527,10 +527,11 @@
 .stage[data-mode="play"] {
   --accent: #8d9af2;
   --dialogue-edge: rgba(255,255,255,.12);
+  --reader-toolbar-height: max(48px, 8cqh);
   background: #141923;
 }
 .stage[data-mode="play"] .dialogue-layer {
-  left: 3cqw; right: 3cqw; bottom: 9cqh;
+  left: 3cqw; right: 3cqw; bottom: calc(var(--reader-toolbar-height) + 8px);
   padding: 3cqw;
   max-height: 47cqh;
   display: flex; flex-direction: column;
@@ -575,7 +576,7 @@
 .stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; }
 .stage[data-mode="play"] .topbar .icon-btn { min-height: 44px; min-width: 44px; background: none; border: 0; }
 .stage[data-mode="play"] .quick-actions {
-  inset: auto 0 0; height: 8cqh; min-height: 48px;
+  inset: auto 0 0; height: var(--reader-toolbar-height); min-height: 48px;
   display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr;
   gap: 0; padding: 0 3cqw;
   border-top: 1px solid rgba(255,255,255,.1);
@@ -593,11 +594,11 @@
 .stage[data-mode="play"] .scene-vignette { box-shadow: inset 0 0 12cqw rgba(0,0,0,.2); }
 .stage.ui-hidden .quick-actions { pointer-events: none; }
 @media (orientation: landscape) and (max-height: 600px) {
-  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 2%; bottom: 15%; max-height: 65cqh; padding: 14px; }
+  .stage[data-mode="play"] .dialogue-layer { left: 50%; right: 2%; bottom: calc(var(--reader-toolbar-height) + 8px); max-height: 65cqh; padding: 14px; }
   .stage[data-mode="play"] .text { font-size: calc(18px * var(--text-scale)); max-height: 32cqh; }
   .stage[data-mode="play"] .choice { font-size: calc(16px * var(--text-scale)); padding: 10px; }
   .stage[data-mode="play"] .topbar { min-height: 44px; padding: 0 10px; }
-  .stage[data-mode="play"] .quick-actions { left: 50%; height: 44px; }
+  .stage[data-mode="play"] .quick-actions { left: 50%; height: var(--reader-toolbar-height); }
   .stage[data-mode="play"] .sprite { bottom: 0; height: 85cqh; width: 32cqw; }
   .stage[data-mode="play"] .speaker { font-size: 16px; }
 }
