@@ -47,9 +47,12 @@ try {
     window.testStage = openPlayer(story, { fresh: true });
   });
   await page.waitForSelector('.sprite img[src]');
-  const geometry = () => page.locator('.sprite:not(.is-leaving)').evaluateAll(nodes => Object.fromEntries(nodes.map(node => {
+  const geometry = async () => {
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    return page.locator('.sprite:not(.is-leaving)').evaluateAll(nodes => Object.fromEntries(nodes.map(node => {
     const r = node.getBoundingClientRect(); return [node.dataset.char, { center: r.x + r.width / 2, bottom: r.bottom, width: r.width, height: r.height, position: node.dataset.pos }];
   })));
+  };
   const original = await geometry();
   await page.getByRole('button', { name: 'Меню игры', exact: true }).click();
   await page.getByRole('button', { name: /Масштаб персонажей/ }).click();
@@ -57,6 +60,8 @@ try {
   await slider.evaluate(node => { node.value = '1.5'; node.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.waitForFunction(() => getComputedStyle(document.querySelector('.dialogue-layer')).opacity === '0');
   const zoomed = await geometry();
+  console.log('Sprite zoom geometry', JSON.stringify({ original, zoomed, css: await page.locator('.stage').evaluate(node => ({ zoom: node.style.getPropertyValue('--sprite-scale'), transform: getComputedStyle(node.querySelector('.sprite')).transform })) }));
+  await page.screenshot({ path: path.join(output, 'sprite-zoom-390.png') });
   for (const id of ['a', 'b']) {
     assert.ok(Math.abs(zoomed[id].center - original[id].center) < 1, 'zoom preserves horizontal anchor');
     assert.ok(Math.abs(zoomed[id].bottom - original[id].bottom) < 1, 'zoom preserves foot anchor');
