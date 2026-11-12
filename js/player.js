@@ -208,9 +208,17 @@ function openJournal(story) {
   if (!entries.length) {
     list.append(el('p', { class: 'field-hint', text: 'Здесь появятся прочитанные реплики: листайте историю, и они будут копиться.' }));
   }
+  // имя в журнале того же цвета, что и на сцене; у старых записей без
+  // speaker персонажа находим по имени
+  const colorOf = (entry) => {
+    const char = entry.speaker ? characterById(story, entry.speaker)
+      : story.characters.find((c) => c.name && c.name === entry.name);
+    return char?.color || '';
+  };
   for (const entry of entries) {
+    const color = entry.choice ? '' : colorOf(entry);
     list.append(el('div', { class: `journal-line${entry.choice ? ' is-choice' : ''}` },
-      entry.name || entry.choice ? el('span', { class: `journal-name${entry.choice || entry.name === 'Вы' ? ' is-player' : ''}`, text: entry.choice ? 'Вы' : entry.name }) : null,
+      entry.name || entry.choice ? el('span', { class: `journal-name${entry.choice ? ' is-player' : ''}`, style: color ? { color } : null, text: entry.choice ? 'Вы' : entry.name }) : null,
       el('span', { class: 'journal-text', text: plainLine(entry.text).replace(/^→\s*/, '') }),
     ));
   }
@@ -241,7 +249,9 @@ export function openSaves(story, opts = {}, mode = 'save') {
     tabs.replaceChildren(); list.replaceChildren(); current.replaceChildren();
     if (mode === 'save' && stage && currentStory?.id === story.id) {
       const bg = resolveUrl(story, stage.visual.bg || story.cover);
-      current.append(bg ? el('img', { src: bg, alt: '' }) : null, el('span', { text: stage.scene?.name || 'Текущая сцена' }), el('span', { class: 'chev', text: '›', 'aria-hidden': 'true' }));
+      // справка о месте, которое будет сохранено, — не кнопка, поэтому без шеврона
+      current.append(bg ? el('img', { src: bg, alt: '' }) : null,
+        el('span', { class: 'current-save-copy' }, el('small', { text: 'Сейчас' }), el('span', { text: stage.scene?.name || 'Текущая сцена' })));
     }
     current.hidden = !current.childElementCount;
     for (const [id, label] of [['manual', 'Ручные'], ['auto', 'Авто'], ['quick', 'Быстрые']]) {
@@ -316,14 +326,17 @@ function openPlayerMenu(story, opts) {
     title: 'Пауза',
     subtitle: `${story.title} · ${stage?.scene?.name || 'Начало'}`,
     content: close => el('button', { class: 'solid-btn pause-resume', type: 'button', text: 'Продолжить', onclick: close }),
+    // «Журнал» есть на нижней панели и открывается свайпом — здесь не повторяем
     rows: [
+      { section: 'Игра' },
       { label: 'Сохранить', icon: ICONS.save, onSelect: () => openSaves(story, opts, 'save') },
       { label: 'Загрузить', icon: ICONS.download, onSelect: () => openSaves(story, opts, 'load') },
-      { label: 'Журнал', icon: ICONS.journal, onSelect: () => openJournal(story) },
       { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story, { audio: stage?.audio }) },
-      { label: 'Масштаб персонажей', icon: ICONS.eye, onSelect: () => openSpriteTuner() },
+      { section: 'Вид' },
+      { label: 'Масштаб персонажей', icon: ICONS.zoom, onSelect: () => openSpriteTuner() },
+      { label: 'Скрыть интерфейс', icon: ICONS.eyeOff, onSelect: () => stage?.node.classList.add('ui-hidden') },
       { label: 'Настройки', icon: ICONS.settings, onSelect: () => openSettings() },
-      { label: 'Скрыть интерфейс', icon: ICONS.eye, onSelect: () => stage?.node.classList.add('ui-hidden') },
+      { section: '' },
       { label: 'В главное меню', icon: ICONS.home, onSelect: () => (opts.onHome || opts.onExit)?.() },
     ],
   });

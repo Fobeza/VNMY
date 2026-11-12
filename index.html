@@ -31,9 +31,9 @@
       <div id="home-stories" class="home-stories"></div>
       <div class="lib-actions">
         <div class="lib-actions-row">
-          <button class="ghost-btn" id="btn-import-story" type="button">
+          <button class="ghost-btn" id="btn-import-story" type="button" title="Импортировать новеллу из файла .vnmy">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-            Импортировать .vnmy
+            Импорт
           </button>
           <button class="ghost-btn" id="btn-backup" type="button" title="Скачать все свои новеллы одним файлом">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
@@ -55,7 +55,7 @@
         <code>http://localhost:8000</code>. Если папку скачали архивом — проще взять
         свежую версию из репозитория: там собранные файлы уже лежат.</p>
       </div>
-      <p id="library-note" class="lib-note"></p>
+      <div id="library-note" class="lib-note" hidden></div>
     </div>
   </section>
 
@@ -131,10 +131,10 @@
     </div>
 
     <nav class="quick-actions" aria-label="Управление чтением">
-      <button class="pill quick-auto" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Авто</button>
-      <button class="pill quick-journal" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg>Журнал</button>
-      <button class="pill quick-save" type="button" aria-label="Сохранить игру"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
-      <button class="pill quick-menu" type="button" aria-label="Меню игры"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+      <button class="pill quick-auto" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span class="pill-label">Авто</span></button>
+      <button class="pill quick-journal" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span class="pill-label">Журнал</span></button>
+      <button class="pill quick-save" type="button" aria-label="Сохранить игру"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span class="pill-label" aria-hidden="true">Сохранить</span></button>
+      <button class="pill quick-menu" type="button" aria-label="Меню игры"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><span class="pill-label" aria-hidden="true">Меню</span></button>
     </nav>
     <header class="topbar">
       <button class="icon-btn topbar-back" type="button" data-act="back" aria-label="В библиотеку">

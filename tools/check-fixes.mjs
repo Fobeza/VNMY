@@ -48,6 +48,18 @@ try {
     [{ char: 'a', pos: 'left' }, { char: 'b', pos: 'left', move: true }]).map(c => [c.char, c.pos]));
   assert.deepEqual(swapped, { a: 'right', b: 'left' });
 
+  // stable: состав выравнивается по числу персонажей, порядок сохраняется
+  const placed = (prev, next) => Object.fromEntries(stabilizeCast(prev, next).map(c => [c.char, c.pos]));
+  assert.deepEqual(placed([{ char: 'a', pos: 'center' }], [{ char: 'a', pos: 'center' }, { char: 'b', pos: 'right' }]), { a: 'left', b: 'right' });
+  assert.deepEqual(placed([{ char: 'a', pos: 'center' }], [{ char: 'a', pos: 'center' }, { char: 'b', pos: 'left' }]), { a: 'right', b: 'left' });
+  assert.deepEqual(placed([{ char: 'a', pos: 'left' }, { char: 'b', pos: 'right' }], [{ char: 'b', pos: 'right' }]), { b: 'center' });
+  assert.deepEqual(placed([{ char: 'a', pos: 'left' }, { char: 'b', pos: 'center' }, { char: 'c', pos: 'right' }],
+    [{ char: 'a', pos: 'left' }, { char: 'c', pos: 'right' }]), { a: 'left', c: 'right' });
+
+  // сцену нельзя прокрутить вбок: иначе экран концовки съезжает
+  const playerCss = readFileSync(new URL('../css/player.css', import.meta.url), 'utf8');
+  assert.match(playerCss, /\.stage \{[^}]*overflow: clip;/s);
+
   // картинка пакета не запрашивается у сайта приложения
   assert.equal(resolveUrl({ id: 'pkg', packaged: true }, 'assets/missing.webp'), '');
   registerAssetUrls('pkg', new Map([['assets/bg.webp', 'blob:https://vnmy.test/bg']]));
@@ -122,6 +134,15 @@ try {
   closePlayer();
   store.saveSettings({ skipSeen: false });
 
+  // журнал окрашивает имя цветом персонажа, как на сцене
+  const colored = normalizeStory({ id: 'colors', characters: [{ id: 'anya', name: 'Аня', color: '#e7a0b8' }],
+    scenes: [{ id: 's', card: false, steps: [{ id: 'a', speaker: 'anya', text: 'Привет' }, { id: 'b', text: 'Дальше' }] }] });
+  stage = openPlayer(colored, { fresh: true });
+  stage.opts.onJournal(); await tick();
+  assert.equal(top().querySelector('.journal-name').style.color, 'rgb(231, 160, 184)');
+  closeTopModal(); await tick();
+  closePlayer();
+
   // «Назад» телефона закрывает верхнее окно
   openSheet({ title: 'Окно' }); await tick();
   assert.equal(closeTopModal(), true);
@@ -152,7 +173,7 @@ try {
   await assert.rejects(validateStories([{ dir: 'bad', single: true, novels: [{ dir: 'bad', path: 'tools', story: badVars }] }]),
     (err) => /некорректное имя переменной «a b»/.test(err.message) && /«x» объявлена дважды/.test(err.message));
 
-  console.log('Исправления 2.8: сохранения и «Продолжить», журнал ask, карточка сцены, авточтение, условия, расстановка, «Назад», импорт — пройдено');
+  console.log('Исправления 2.8–2.9: сохранения и «Продолжить», журнал ask и цвета имён, карточка сцены, авточтение, условия, расстановка, «Назад», импорт, сцена без прокрутки — пройдено');
 } finally {
   dom.window.close();
 }

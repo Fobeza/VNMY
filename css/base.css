@@ -289,6 +289,7 @@ img { display: block; max-width: 100%; }
 }
 .boot-fallback code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; color: var(--accent); }
 .lib-note { margin-top: 26px; font-size: 12.5px; color: var(--ink-mute); line-height: 1.6; }
+.lib-note p { margin: 0 0 10px; }
 .lib-note code { font-size: 11.5px; background: rgba(255, 255, 255, .06); padding: 1px 5px; border-radius: 5px; }
 
 /* ─────────────── тосты ─────────────── */
@@ -363,9 +364,12 @@ img { display: block; max-width: 100%; }
   text-align: left;
   width: 100%;
   color: var(--ink);
-  transition: opacity .2s;
+  transition: background .2s;
 }
-.sheet-row:hover { opacity: .8; }
+/* hover только там, где есть мышь: на телефоне он «залипает» после касания,
+ * и строка выглядит отключённой */
+@media (hover: hover) { .sheet-row:hover { background: rgba(255, 255, 255, .035); } }
+.sheet-row:active { background: rgba(255, 255, 255, .04); }
 .sheet-row small { display: block; font-size: 12px; color: var(--ink-mute); margin-top: 3px; }
 .sheet-row-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .sheet-icon { flex: none; width: 20px; height: 20px; display: grid; place-items: center; color: var(--ink-soft); }
@@ -706,7 +710,13 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 
 .universe-card { min-height: 82px; aspect-ratio: auto; padding-left: 76px; border-radius: 10px; background: var(--bg-soft); }
 .universe-card-cover { width: 64px; right: auto; }
 .universe-card-cover::after { display: none; }
-.universe-card-initial { width: 64px; right: auto; padding: 0; place-items: center; font-size: 30px; background: var(--bg-soft); }
+.universe-card-initial { width: 64px; right: auto; padding: 0; place-items: center; font-size: 28px; font-weight: 600; color: var(--accent); background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 26%, var(--bg-soft)), var(--bg-soft)); }
+/* одна вселенная — короткая строка-ссылка вместо раздела с карточками */
+.universe-card.is-compact { min-height: 64px; padding-left: 62px; }
+.universe-card.is-compact .universe-card-cover, .universe-card.is-compact .universe-card-initial { width: 50px; font-size: 22px; }
+.universe-card.is-compact .universe-card-body { padding: 11px 42px 11px 6px; }
+.universe-card-kicker { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 2px; }
+.universe-card.is-compact .universe-card-menu { top: 10px; }
 .universe-card-body { padding: 18px 42px 18px 8px; }
 .universe-card-title { font: 600 16px/1.35 var(--font); }
 .universe-card-badge { display: none; }
@@ -777,6 +787,11 @@ input[type="range"]::-webkit-slider-thumb { box-shadow: none; }
 .sheet-pause .pause-resume { margin: 0 0 18px; }
 .sheet-pause .sheet-row { padding-block: 12px; min-height: 48px; font-size: 15px; }
 .sheet-pause .sheet-row:first-child { border-top: 0; }
+.sheet-section { padding: 14px 2px 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); }
+.sheet-section:first-child { padding-top: 0; }
+.sheet-section.is-gap { padding: 6px 0 0; }
+.sheet-section + .sheet-row { border-top: 0; }
+.sheet-pause .sheet-section.is-gap + .sheet-row { border-top: 1px solid var(--line); }
 .save-grid.is-load { display: flex; flex-direction: column; }
 .save-grid.is-load .save-select { display: grid; grid-template-columns: 96px minmax(0,1fr); grid-template-rows: auto auto; gap: 6px 14px; min-height: 100px; padding: 12px; align-content: center; }
 .save-grid.is-load .slot-cover, .save-grid.is-load .slot-placeholder { grid-row: 1 / 3; width: 96px; height: 76px; margin: 0; border-radius: 6px; }
@@ -798,10 +813,9 @@ input[type="range"]::-webkit-slider-thumb { box-shadow: none; }
 .has-brand-header > h3 { padding: 0; margin: 22px 0 8px; font-size: 28px; min-height: 0; }
 .has-brand-header > .sheet-sub { margin: 0 0 16px; font-size: 14px; }
 .sheet-page:not(.has-brand-header) > .sheet-sub { padding-left: 40px; }
-.page-more { position: absolute; top: calc(22px + var(--safe-t)); right: 14px; background: none; border: 0; }
 .reader-settings { min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 118px); display: flex; flex-direction: column; }
 .reader-settings .reset-settings { margin-top: auto; padding-top: 22px; min-height: 66px; flex: none; }
-.reader-settings .app-version { display: none; }
+.reader-settings .app-version { margin-top: 6px; }
 .reader-tabs { gap: 0; }
 .reader-tab { font-size: 14px; }
 .setting-range { padding: 13px 0; }
@@ -822,15 +836,20 @@ input[type="range"]::-webkit-slider-thumb { width: 17px; height: 17px; margin-to
 .extra-settings summary { min-height: 44px; cursor: pointer; padding: 12px 0; font-size: 14px; }
 .current-save-scene { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; margin: 0 0 14px; background: var(--bg-soft); font-size: 14px; }
 .current-save-scene img { width: 60px; height: 42px; object-fit: cover; border-radius: 5px; }
-.current-save-scene .chev { margin-left: auto; font-size: 24px; }
+.current-save-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.current-save-copy small { color: var(--ink-mute); font-size: 12px; }
 .saves-page { min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 195px); display: flex; flex-direction: column; }
 .save-grid { gap: 12px; }
 .save-select { min-height: 126px; gap: 5px; padding-bottom: 10px; }
 .slot-cover { height: 82px; margin-bottom: 3px; }
 .save-slot-meta { font-size: 11px; }
-.save-cell.is-empty .save-select { min-height: 104px; justify-content: center; align-items: center; text-align: center; }
+/* пустой слот компактный, заполненный — с крупной миниатюрой и сценой */
+.save-cell.is-empty .save-select { min-height: 68px; flex-direction: row; gap: 6px; padding: 0 12px; justify-content: center; align-items: center; text-align: center; }
 .save-cell.is-empty .save-select strong { display: none; }
-.save-cell.is-empty .slot-placeholder { height: 54px; margin-bottom: 0; }
+.save-cell.is-empty .slot-placeholder { width: auto; height: auto; font-size: 22px; margin-bottom: 0; }
+.save-grid:not(.is-load) .save-cell.is-filled .slot-cover { height: 104px; }
+.save-cell.is-filled .save-select strong { font-size: 15px; }
+.save-cell.is-filled .save-slot-meta { font-size: 12px; color: var(--ink-mute); }
 .save-action { position: sticky; bottom: 0; width: 100%; margin-top: auto; flex: none; min-height: 48px; box-shadow: 0 -12px 0 var(--bg); }
 .save-grid { margin-bottom: 24px; }
 .save-grid + .save-action { margin-top: auto; }
@@ -848,7 +867,12 @@ input[type="range"]::-webkit-slider-thumb { width: 17px; height: 17px; margin-to
 .music-row[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .music-row.is-locked { color: var(--ink-mute); justify-content: center; }
 .music-row.is-locked > svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.6; fill: none; }
-.detail-cover { height: auto; max-height: 220px; aspect-ratio: 2; }
+/* Обложка показывается целиком, как постер; поля по бокам заполняет
+ * размытая копия, поэтому вертикальная обложка не обрезается в полосу. */
+.detail-cover-wrap { position: relative; display: grid; place-items: center; height: min(44dvh, 340px); border-radius: 12px; overflow: hidden; background: var(--bg-soft); }
+.detail-cover-backdrop { position: absolute; inset: -20px; background-size: cover; background-position: center; filter: blur(22px) brightness(.45); }
+.detail-cover { position: relative; display: block; width: auto; height: min(44dvh, 340px); max-width: 100%; max-height: none; aspect-ratio: auto; object-fit: contain; border-radius: 0; box-shadow: 0 12px 30px rgba(0,0,0,.45); }
+.detail-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-mute); font-size: 14px; }
 .genre-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .genre-chips span { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--ink-soft); font-size: 13px; }
 .detail-link { justify-content: flex-start; gap: 12px; }
@@ -873,3 +897,12 @@ input[type="range"]::-webkit-slider-thumb { width: 17px; height: 17px; margin-to
 .import-add { width: 100%; margin-top: auto; min-height: 48px; flex: none; }
 
 .sheet-page:not(.has-brand-header) > h3 { padding-left: 46px; }
+/* Низкие экраны: меню паузы целиком помещается без прокрутки. */
+@media (max-height: 640px) {
+  .sheet-pause { padding: 16px 20px; }
+  .sheet-pause .sheet-sub { margin: 4px 0 12px; }
+  .sheet-pause .pause-resume { margin: 0 0 8px; }
+  .sheet-pause .sheet-row { min-height: 44px; padding-block: 8px; }
+  .sheet-pause .sheet-section { padding: 8px 2px 2px; }
+  .sheet-pause .sheet-section.is-gap { padding: 2px 0 0; }
+}

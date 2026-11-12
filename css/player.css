@@ -23,6 +23,10 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  /* clip, а не только hidden: спрайт у края делает сцену шире экрана, и
+   * контейнер с hidden можно прокрутить фокусом или scrollIntoView —
+   * тогда вся сцена, включая экран концовки, съезжает вбок */
+  overflow: clip;
   background: #07080b;
   color: var(--ink);
   isolation: isolate;
@@ -115,7 +119,13 @@
 .sprite[data-pos="left"] { left: 23%; }
 .sprite[data-pos="center"] { left: 50%; }
 .sprite[data-pos="right"] { left: 77%; }
-.sprite-inner { height: 100%; width: 100%; }
+.sprite-inner {
+  height: 100%;
+  width: 100%;
+  /* низ спрайта растворяется, а не обрывается ровной линией над панелью */
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 9%);
+  mask-image: linear-gradient(to top, transparent 0, #000 9%);
+}
 .sprite img {
   display: block;
   height: 100%;
@@ -209,7 +219,7 @@
   overflow-wrap: break-word;
 }
 .text::-webkit-scrollbar { display: none; }
-.stage.is-narration .text { color: rgba(240, 237, 230, .88); font-style: italic; }
+.stage.is-narration .text { color: rgba(240, 237, 230, .88); }
 .text.is-scrollable { overflow-y: auto; }
 .text em { font-style: italic; color: rgba(255, 255, 255, .92); }
 .text strong { font-weight: 600; color: #fff; }
@@ -560,38 +570,55 @@
   line-height: 1.5; color: #f3f4f8; text-shadow: none;
   max-height: 25cqh; overflow-y: auto;
 }
-.stage[data-mode="play"] .choice-layer { flex: none; margin: 0; gap: 0; }
+/* рассказчик — прямым шрифтом, чуть мягче по цвету: курсив остаётся
+ * для *выделений* в тексте */
+.stage[data-mode="play"].is-narration .text { color: #d6d9e3; font-style: normal; }
+.stage[data-mode="play"] .choice-layer { flex: none; margin: 0; gap: 8px; }
+/* Варианты — явные кнопки: фон, рамка, метка акцента, отклик на нажатие. */
 .stage[data-mode="play"] .choice {
-  min-height: 44px; padding: 1.2cqh 2cqw;
-  border: 0; border-top: 1px solid rgba(255,255,255,.14); border-radius: 0;
-  background: transparent; color: #f3f4f8;
+  min-height: 48px; padding: 12px 14px 12px 16px;
+  border: 1px solid rgba(255,255,255,.16); border-radius: 10px;
+  background: rgba(255,255,255,.06); color: #f3f4f8;
   box-shadow: none; backdrop-filter: none;
   font-size: calc(clamp(15px,3.6cqw,20px) * var(--text-scale));
 }
-.stage[data-mode="play"] .choice::before { display: none; }
-.stage[data-mode="play"] .choice:hover,
-.stage[data-mode="play"] .choice:focus-visible { background: rgba(141,154,242,.16); border-color: var(--accent); }
-.stage[data-mode="play"] .next-hint { right: 0; bottom: 0; width: 14px; height: 14px; color: var(--ink-mute); }
+.stage[data-mode="play"] .choice::before { display: block; top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; }
+.stage[data-mode="play"] .choice span { padding-left: 2px; }
+.stage[data-mode="play"] .choice:focus-visible { background: rgba(141,154,242,.18); border-color: var(--accent); outline: none; }
+.stage[data-mode="play"] .choice:active { background: rgba(141,154,242,.24); border-color: var(--accent); transform: scale(.985); }
+@media (hover: hover) {
+  .stage[data-mode="play"] .choice:hover { background: rgba(141,154,242,.14); border-color: rgba(141,154,242,.6); }
+}
+/* «Дальше» заметен, но не спорит с текстом */
+.stage[data-mode="play"] .next-hint { right: 2px; bottom: 0; width: 18px; height: 18px; color: var(--accent); }
+.stage[data-mode="play"] .next-hint.is-visible { opacity: 1; }
+.stage[data-mode="play"] .next-hint span::before { width: 9px; height: 9px; border-width: 2px; }
+/* Панели полупрозрачные: фон сцены идёт от края до края экрана. */
 .stage[data-mode="play"] .topbar {
   min-height: 56px; padding: 6px 3cqw;
-  background: rgba(20,25,35,.76); backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(10,12,18,.72) 0%, rgba(10,12,18,.38) 70%, transparent 100%);
+  backdrop-filter: none;
 }
-.stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; }
+.stage[data-mode="play"] .topbar-title { font-size: clamp(13px,3.5cqw,18px); color: var(--ink); letter-spacing: 0; text-transform: none; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
 .stage[data-mode="play"] .topbar .icon-btn { min-height: 44px; min-width: 44px; background: none; border: 0; }
 .stage[data-mode="play"] .quick-actions {
   inset: auto 0 0; height: var(--reader-toolbar-height); min-height: 48px;
-  display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr;
-  gap: 0; padding: 0 3cqw;
-  border-top: 1px solid rgba(255,255,255,.1);
-  background: rgba(20,25,35,.92);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px; padding: 4px 3cqw;
+  border-top: 0;
+  background: linear-gradient(to top, rgba(10,12,18,.94) 0%, rgba(10,12,18,.82) 70%, rgba(10,12,18,.55) 100%);
 }
+/* Все четыре кнопки одинаковые: иконка и подпись под ней. */
 .stage[data-mode="play"] .quick-actions .pill {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  height: 100%; min-height: 44px; padding: 0 4px;
-  border: 0; border-radius: 0; background: none;
-  font-size: clamp(12px,3cqw,16px); color: var(--ink-soft);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  height: 100%; min-height: 44px; padding: 0 2px;
+  border: 0; border-radius: 10px; background: none;
+  font-size: 11px; line-height: 1.1; color: var(--ink-soft);
+  white-space: nowrap;
 }
-.stage[data-mode="play"] .quick-actions .pill[aria-pressed="true"] { color: var(--accent); }
+.stage[data-mode="play"] .quick-actions .pill-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.stage[data-mode="play"] .quick-actions .pill[aria-pressed="true"] { color: var(--accent); background: rgba(141,154,242,.16); }
+.stage[data-mode="play"] .quick-actions .pill[aria-pressed="true"] svg { fill: currentColor; }
 .quick-actions svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .stage[data-mode="play"] .bg-shade { background: linear-gradient(180deg,rgba(20,25,35,.25),transparent 25%,transparent 65%,rgba(20,25,35,.5)); }
 .stage[data-mode="play"] .scene-vignette { box-shadow: inset 0 0 12cqw rgba(0,0,0,.2); }
