@@ -14,7 +14,7 @@ export async function checkRendering() {
 
   // Minimal mode must keep choices accessible and the player UI hideable.
   assert.match(css, /\.stage\[data-mode="play"\] \.dialogue-layer\s*\{[^}]*border:[^}]*var\(--dialogue-edge\)/s);
-  assert.match(css, /\.stage\[data-mode="play"\] \.choice\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(css, /\.stage\[data-mode="play"\] \.choice\s*\{[^}]*min-height:\s*(4[4-9]|[5-9]\d)px/s);
   assert.match(css, /\.stage\[data-mode="play"\] \.speaker\.is-empty\s*\{[^}]*display:\s*none/s);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /\.stage\.ui-hidden \.dialogue-layer/);

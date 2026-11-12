@@ -115,14 +115,18 @@ export function openStoryDetails(story, actions = hooks) {
   const save = progressOf(story.id);
   const cover = resolveUrl(story, story.cover);
   let close;
-  close = openSheet({ layout: 'page', title: 'Об истории', onMenu: () => openSheet({ title: story.title, rows: [
-    { label: 'Сохранения', icon: ICONS.download, onSelect: () => openSaves(story, { onLoad: slot => { close(); actions.onPlay?.(story, { slot }); } }, 'load') },
-    { label: 'Галерея', icon: ICONS.image, onSelect: () => openGallery(story) },
-  ] }), content: close => el('div', { class: 'story-details' },
-    cover ? el('img', { class: 'detail-cover', src: cover, alt: '' }) : null,
+  const minutes = Math.max(1, Math.round(countWords(story).words / 180));
+  const scenes = story.scenes.length;
+  // Сохранения и галерея — строками ниже; отдельное меню «⋯» их только повторяло.
+  close = openSheet({ layout: 'page', title: 'Об истории', content: close => el('div', { class: 'story-details' },
+    cover ? el('div', { class: 'detail-cover-wrap' },
+      el('div', { class: 'detail-cover-backdrop', style: { backgroundImage: `url("${cover.replace(/"/g, '%22')}")` } }),
+      el('img', { class: 'detail-cover', src: cover, alt: '' })) : null,
     el('h2', { text: story.title }),
     story.genres?.length ? el('div', { class: 'genre-chips' }, ...story.genres.map(text => el('span', { text }))) : null,
-    story.author ? el('p', { class: 'field-hint', text: story.author }) : null,
+    el('p', { class: 'detail-meta' },
+      story.author ? el('span', { text: `Автор: ${story.author}` }) : null,
+      el('span', { text: `${scenes} ${plural(scenes, 'сцена', 'сцены', 'сцен')} · около ${minutes} мин` })),
     story.description ? el('p', { class: 'detail-description', text: story.description }) : null,
     save ? el('p', { class: 'field-hint', text: save.ended ? 'История прочитана' : save.sceneName || 'Чтение начато' }) : null,
     save ? el('progress', { class: 'reading-progress', max: 1, value: Math.max(0, Math.min(1, save.percent || 0)), 'aria-label': 'Прогресс чтения' }) : null,

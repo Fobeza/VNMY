@@ -19,7 +19,6 @@ import { toast } from './ui.js';
 import { openImport } from './import.js';
 import { openSettings } from './settings.js';
 import { openStoryDetails, openUniverseMenu } from './novels.js';
-import { APP_VERSION } from './version.js';
 
 let hooks = {};
 let universes = [];
@@ -64,46 +63,46 @@ export async function renderLibrary(nextHooks) {
         el('button', { class: 'solid-btn', type: 'button', onclick: () => hooks.onPlay?.(story) }, 'Продолжить'))));
   }
 
-  if (!universes.length) {
-    list.append(el('p', { class: 'lib-note', text: 'Пока нет ни одной новеллы. Нажмите «Импорт» и выберите файл новеллы .vnmy (или .json).' }));
-  }
-  if (universes.some(u => !u.loose)) list.append(el('h2', { class: 'section-title', text: 'Вселенные' }));
-  for (const universe of universes.filter(u => !u.loose)) list.append(universeCard(universe));
+  // Все новеллы уже перечислены в «Библиотеке». Раздел вселенных нужен,
+  // когда их несколько; одна вселенная — короткая строка-ссылка без заголовка.
+  const named = universes.filter(u => !u.loose);
+  if (named.length > 1) list.append(el('h2', { class: 'section-title', text: 'Вселенные' }));
+  for (const universe of named) list.append(universeCard(universe, { compact: named.length === 1 }));
 
+  // Подсказки нужны только пустой библиотеке; версия приложения — в настройках.
   const note = $('#library-note');
-  note.innerHTML = '';
-  note.append(
-    el('span', { text: 'Выберите вселенную и откройте историю. Ваше место сохраняется автоматически.' }),
-  );
-  if (location.protocol === 'file:') {
-    note.append(el('br'), el('br'), el('span', {
-      text: 'Открыто с диска: встроенные вселенные работают сразу, а свои и прогресс хранятся в этом браузере — как и при обычном запуске.',
-    }));
+  note.replaceChildren();
+  const lines = [];
+  if (!allStories.length) lines.push('Нажмите «Импорт» и выберите файл новеллы .vnmy. Место чтения сохраняется автоматически.');
+  if (location.protocol === 'file:' && !allStories.length) {
+    lines.push('Открыто с диска: новеллы и прогресс хранятся в этом браузере — как и при обычном запуске.');
   }
-  note.append(el('br'), el('br'), el('span', { class: 'lib-version', text: `VNMY ${APP_VERSION}` }));
 
   const usage = storageUsage();
   const usedMb = usage.used / 1024 / 1024;
   if (usedMb > 0.2) {
-    note.append(el('br'), el('br'), el('span', {
-      text: `На устройстве: ${usedMb.toFixed(1)} МБ${usage.limit ? ' из примерно 5 МБ' : ''}. Полная копия — кнопка «Бэкап» на главном экране.`,
-    }));
+    lines.push(`На устройстве: ${usedMb.toFixed(1)} МБ${usage.limit ? ' из примерно 5 МБ' : ''}. Полная копия — кнопка «Бэкап».`);
   }
   if (builtinWarning) {
-    note.append(el('br'), el('br'), el('span', { text: 'Встроенные вселенные не открылись. Проверьте, что папка stories на месте и страница открыта через сервер (а не как файл с диска).' }));
+    lines.push('Встроенные вселенные не открылись. Проверьте, что папка stories на месте и страница открыта через сервер (а не как файл с диска).');
   }
+  for (const line of lines) note.append(el('p', { text: line }));
+  note.hidden = !lines.length;
 }
 
 function novelCount(n) {
   return `${n} ${plural(n, 'новелла', 'новеллы', 'новелл')}`;
 }
 
-function universeCard(universe) {
+function universeCard(universe, { compact = false } = {}) {
   const novels = universe.novels || [];
-  const cover = universe.cover ? resolveUrl(universe, universe.cover) : '';
+  // без своей обложки вселенная берёт обложку первой новеллы с обложкой
+  const novelWithCover = novels.find(story => story.cover);
+  const cover = universe.cover ? resolveUrl(universe, universe.cover)
+    : novelWithCover ? resolveUrl(novelWithCover, novelWithCover.cover) : '';
 
   const card = el('div', {
-    class: `universe-card${universe.builtin ? ' is-builtin' : ''}${universe.loose ? ' is-loose' : ''}`,
+    class: `universe-card${universe.builtin ? ' is-builtin' : ''}${universe.loose ? ' is-loose' : ''}${compact ? ' is-compact' : ''}`,
     role: 'button',
     tabindex: '0',
     style: universe.accent ? { '--card-accent': universe.accent } : {},
@@ -115,6 +114,7 @@ function universeCard(universe) {
   cover ? null : el('div', { class: 'universe-card-initial', text: (universe.title || '?').trim().charAt(0).toUpperCase() }),
   universe.builtin ? el('span', { class: 'universe-card-badge', text: 'встроенная' }) : null,
   el('div', { class: 'universe-card-body' },
+    compact ? el('div', { class: 'universe-card-kicker', text: 'Вселенная' }) : null,
     el('div', { class: 'universe-card-title', text: universe.title }),
     el('div', { class: 'universe-card-meta' }, el('span', { text: novelCount(novels.length) })),
   ),

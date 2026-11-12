@@ -103,7 +103,11 @@ export function openSettings(initialTab = 'text') {
       slider('Скорость текста', 'textSpeed', String(TEXT_SPEED_FASTEST), String(TEXT_SPEED_SLOWEST), '1', textSpeedPercent, textSpeedPosition, textSpeedPosition),
       slider('Непрозрачность окна', 'dialogueOpacity', '.35', '1', '.05', value => `${Math.round(value * 100)}%`),
       toggle('Мгновенный текст', 'instantText'),
-      el('button', { class: 'sheet-row', type: 'button', text: 'Масштаб персонажей', onclick: () => { close(); openSpriteTuner(); } }));
+      el('button', { class: 'sheet-row', type: 'button', onclick: () => { close(); openSpriteTuner(); } },
+        el('span', { class: 'sheet-row-main' },
+          el('span', { class: 'sheet-icon', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.zoom}</svg>` }),
+          el('span', { text: 'Масштаб персонажей' })),
+        el('span', { class: 'chev', text: '›', 'aria-hidden': 'true' })));
     } else if (active === 'sound') {
       panel.append(
         slider('Общая громкость', 'masterVolume', '0', '1', '.01', value => `${Math.round(value * 100)}%`),

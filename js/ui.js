@@ -98,7 +98,7 @@ export function toast(message, ms = 2400) {
 }
 
 /** Нижняя шторка. content — элемент или функция(close). */
-export function openSheet({ title, subtitle, content, rows, layout = 'sheet', onClose, header = 'simple', onSettings, onMenu } = {}) {
+export function openSheet({ title, subtitle, content, rows, layout = 'sheet', onClose, header = 'simple', onSettings } = {}) {
   const root = $('#overlay-root');
   const backdrop = el('div', { class: `overlay-backdrop${layout === 'tune' ? ' overlay-tune' : ''}` });
   const sheet = el('div', { class: `sheet${layout === 'page' ? ' sheet-page' : layout === 'tune' ? ' sheet-tune' : layout === 'pause' ? ' sheet-pause' : ''}`, role: 'dialog', 'aria-modal': 'true' },
@@ -127,7 +127,6 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet', on
         el('span', { class: 'mini-brand', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.logo}</svg> VNMY` }),
         onSettings ? el('button', { class: 'icon-btn chrome-settings', type: 'button', 'aria-label': 'Настройки', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.settings}</svg>`, onclick: onSettings }) : null));
     } else sheet.prepend(back);
-    if (onMenu) sheet.append(el('button', { class: 'icon-btn page-more', type: 'button', 'aria-label': 'Действия с историей', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.dots}</svg>`, onclick: onMenu }));
   }
   const appendContent = () => {
     if (content) sheet.append(typeof content === 'function' ? content(close) : content);
@@ -137,6 +136,11 @@ export function openSheet({ title, subtitle, content, rows, layout = 'sheet', on
     const list = el('div', { class: 'sheet-list' });
     for (const row of rows) {
       if (!row) continue;
+      // { section: 'Игра' } — подпись группы; пустая строка — просто отступ
+      if ('section' in row && !row.label) {
+        list.append(el('div', { class: `sheet-section${row.section ? '' : ' is-gap'}`, text: row.section || '' , 'aria-hidden': row.section ? null : 'true' }));
+        continue;
+      }
       const main = el('span', { class: 'sheet-row-main' },
         row.icon ? el('span', { class: 'sheet-icon', html: `<svg viewBox="0 0 24 24" aria-hidden="true">${row.icon}</svg>` }) : null,
         el('span', {}, el('span', { class: 'sheet-label', text: row.label }), row.hint ? el('small', { text: row.hint }) : null),

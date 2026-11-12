@@ -226,7 +226,7 @@ export class Stage extends NarrativeState {
     const last = this.history[this.history.length - 1];
     if (last && last.key === key && last.text === plain) return;
     const name = step.speaker ? interpolate(characterById(this.story, step.speaker)?.name || '', this.vars) : '';
-    this.history.push({ key, name, text: plain });
+    this.history.push({ key, name, text: plain, ...(step.speaker ? { speaker: step.speaker } : {}) });
     if (this.history.length > HISTORY_LIMIT) this.history.splice(0, this.history.length - HISTORY_LIMIT);
     this.opts.onHistory?.(this.history);
   }

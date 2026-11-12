@@ -202,6 +202,9 @@ function normalizeCast(entry) {
   };
 }
 
+/** Равномерная расстановка по числу видимых персонажей. */
+const BALANCED = { 1: ['center'], 2: ['left', 'right'], 3: ['left', 'center', 'right'] };
+
 /** Порядок запасных позиций, если желаемая занята. */
 const FALLBACK = { left: ['left', 'center', 'right'], center: ['center', 'right', 'left'], right: ['right', 'center', 'left'] };
 
@@ -211,6 +214,11 @@ const FALLBACK = { left: ['left', 'center', 'right'], center: ['center', 'right'
  * другая; новичок встаёт на указанную позицию или ближайшую свободную.
  * Перейти на другое место можно явно: { "move": true }. Если это место
  * занято стоящим персонажем, они меняются местами.
+ *
+ * Без явных move состав раскладывается по сцене равномерно: один — в центре,
+ * двое — слева и справа, трое — на всех местах. Порядок слева направо
+ * сохраняется, поэтому персонажи никогда не перебегают друг через друга,
+ * а смещаются только при изменении их числа (это плавно анимируется).
  */
 export function stabilizeCast(prev = [], next = []) {
   const before = new Map(prev.filter((c) => c && !c.hidden).map((c) => [c.char, c.pos]));
@@ -237,6 +245,11 @@ export function stabilizeCast(prev = [], next = []) {
     claim(c, wish, taken.has(wish) ? vacated : []);
   }
   for (const c of visible) if (!c.move && !before.has(c.char)) claim(c, c.pos);
+  const layout = BALANCED[visible.length];
+  if (layout && !visible.some((c) => c.move)) {
+    const order = (c) => POSITIONS.indexOf(placed.get(c));
+    [...visible].sort((a, b) => order(a) - order(b)).forEach((c, i) => placed.set(c, layout[i]));
+  }
   return next.map((c) => (placed.has(c) && placed.get(c) !== c.pos ? { ...c, pos: placed.get(c) } : { ...c }));
 }
 
